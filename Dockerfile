@@ -2,8 +2,12 @@
 WORKDIR /app
 
 COPY . ./
+
+# 👇 IMPORTANT: go into project folder
+WORKDIR /app/OACTsys
+
 RUN dotnet restore
-RUN dotnet publish -c Release -o out
+RUN dotnet publish -c Release -o /app/out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
