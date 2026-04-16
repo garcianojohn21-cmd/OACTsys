@@ -1,0 +1,699 @@
+@{
+    ViewData["Title"] = "GCash Payment";
+    Layout = null;
+    decimal amount = ViewBag.Amount ?? 0m;
+    int studentId = ViewBag.StudentId ?? 0;
+    string payType = ViewBag.PaymentType ?? "Down Payment";
+    string studentEmail = ViewBag.StudentEmail ?? "";
+    string studentName = ViewBag.StudentName ?? "";
+
+    string amountJs = amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+    string payTypeJs = payType.Replace("'", "\\'");
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>GCash Payment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blue: #007AFF;
+            --blue-dark: #0055CC;
+            --blue-pale: #EBF4FF;
+            --green: #16A34A;
+            --green-bg: #F0FDF4;
+            --warn-bg: #FFFBEB;
+            --warn: #92400E;
+            --text: #0F172A;
+            --mid: #475569;
+            --light: #94A3B8;
+            --border: #E2E8F0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #F1F5F9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            background: linear-gradient(135deg, #0050A0, #0090FF);
+            padding: 1.4rem 1rem 5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .header::before {
+                content: '';
+                position: absolute;
+                top: -60px;
+                right: -60px;
+                width: 200px;
+                height: 200px;
+                background: rgba(255,255,255,.07);
+                border-radius: 50%;
+            }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .logo-icon svg {
+                width: 22px;
+                height: 22px;
+            }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            width: calc(100% - 2rem);
+            max-width: 460px;
+            margin: -3rem auto 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,.1);
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        .txn-strip {
+            background: var(--blue-pale);
+            padding: .9rem 1.4rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .5rem;
+        }
+
+        .txn-item label {
+            display: block;
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--light);
+            margin-bottom: .15rem;
+        }
+
+        .txn-item .val {
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+            .txn-item .val.blue {
+                color: var(--blue);
+                font-size: 1rem;
+            }
+
+        .panel {
+            display: none;
+        }
+
+            .panel.active {
+                display: block;
+            }
+
+        .step-body {
+            padding: 1.5rem 1.4rem;
+        }
+
+        .step-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: .2rem;
+        }
+
+        .step-sub {
+            font-size: .8rem;
+            color: var(--mid);
+            margin-bottom: 1.4rem;
+            line-height: 1.55;
+        }
+
+        .field-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .field-label {
+            display: block;
+            font-size: .73rem;
+            font-weight: 600;
+            color: var(--mid);
+            margin-bottom: .45rem;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: .6rem .9rem;
+            gap: .5rem;
+            transition: border-color .2s;
+        }
+
+            .field-row:focus-within {
+                border-color: var(--blue);
+            }
+
+            .field-row.err {
+                border-color: #EF4444;
+            }
+
+        .field-prefix {
+            font-size: .92rem;
+            font-weight: 700;
+            color: var(--mid);
+        }
+
+        .field-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: .92rem;
+            font-family: inherit;
+            color: var(--text);
+            background: transparent;
+        }
+
+            .field-input::placeholder {
+                color: var(--light);
+            }
+
+        .error-msg {
+            font-size: .72rem;
+            color: #EF4444;
+            margin-top: .3rem;
+            display: none;
+        }
+
+        .steps-box {
+            background: var(--blue-pale);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .steps-box-title {
+            font-size: .68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            color: var(--blue);
+            margin-bottom: .6rem;
+        }
+
+        .step-row {
+            display: flex;
+            align-items: flex-start;
+            gap: .6rem;
+            margin-bottom: .35rem;
+            font-size: .8rem;
+            color: var(--text);
+            line-height: 1.45;
+        }
+
+        .step-badge {
+            background: var(--blue);
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: .6rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: .85rem;
+            background: linear-gradient(135deg,#0060C0,#0090FF);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: .9rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: .4px;
+            transition: opacity .2s,transform .1s;
+        }
+
+            .btn-primary:active {
+                transform: scale(.98);
+            }
+
+            .btn-primary:disabled {
+                opacity: .5;
+                cursor: not-allowed;
+            }
+
+        .btn-secondary {
+            display: block;
+            width: 100%;
+            padding: .8rem;
+            background: #F1F5F9;
+            color: var(--mid);
+            border: none;
+            border-radius: 50px;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: .75rem;
+            transition: background .2s;
+        }
+
+            .btn-secondary:hover {
+                background: var(--border);
+            }
+
+        .qr-body {
+            padding: 1.5rem 1.4rem;
+            text-align: center;
+        }
+
+        .qr-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: .2rem;
+        }
+
+        .qr-sub {
+            font-size: .8rem;
+            color: var(--mid);
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
+        }
+
+        .pay-tabs {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: .6rem;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            font-family: inherit;
+            font-size: .82rem;
+            font-weight: 700;
+            color: var(--mid);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .tab-btn.active {
+                background: var(--blue-pale);
+                border-color: var(--blue);
+                color: var(--blue);
+            }
+
+        .tab-content {
+            display: none;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        .qr-frame {
+            display: inline-block;
+            padding: 14px;
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 6px 24px rgba(0,0,0,.09);
+            margin-bottom: 1rem;
+        }
+
+            .qr-frame img {
+                width: 210px;
+                height: 210px;
+                display: block;
+                object-fit: contain;
+            }
+
+            .qr-frame .qr-label {
+                font-size: .68rem;
+                font-weight: 700;
+                color: var(--blue);
+                text-align: center;
+                margin-top: .5rem;
+                letter-spacing: .5px;
+                text-transform: uppercase;
+            }
+
+        .number-box {
+            background: var(--blue-pale);
+            border-radius: 14px;
+            padding: 1.2rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .number-label {
+            font-size: .72rem;
+            color: var(--mid);
+            margin-bottom: .35rem;
+            font-weight: 600;
+        }
+
+        .gcash-number {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: 1.5px;
+        }
+
+        .account-name {
+            font-size: .8rem;
+            color: var(--mid);
+            margin-top: .2rem;
+        }
+
+        .copy-btn {
+            margin: .6rem auto 0;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: #fff;
+            border: 1.5px solid var(--border);
+            padding: .45rem 1rem;
+            border-radius: 50px;
+            font-family: inherit;
+            font-size: .78rem;
+            font-weight: 700;
+            color: var(--blue);
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+            .copy-btn:hover {
+                background: var(--blue-pale);
+            }
+
+        .amount-badge {
+            display: inline-block;
+            background: linear-gradient(135deg,#0060C0,#0090FF);
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-radius: 50px;
+            padding: .5rem 1.6rem;
+            margin: .5rem 0 1rem;
+        }
+
+        .note-box {
+            background: var(--green-bg);
+            border: 1px solid #BBF7D0;
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            font-size: .78rem;
+            color: var(--green);
+            text-align: left;
+            line-height: 1.5;
+            margin-bottom: .9rem;
+        }
+
+        .warn-box {
+            background: var(--warn-bg);
+            border: 1px solid #FDE68A;
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            font-size: .78rem;
+            color: var(--warn);
+            text-align: left;
+            line-height: 1.5;
+            margin-bottom: .9rem;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,.9);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: .9rem;
+        }
+
+            .loading-overlay.show {
+                display: flex;
+            }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid #E0EAFF;
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        .loading-txt {
+            font-size: .88rem;
+            font-weight: 600;
+            color: var(--mid);
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .footer {
+            font-size: .68rem;
+            color: var(--light);
+            text-align: center;
+            padding: .75rem 1rem 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-txt">Processing…</div>
+    </div>
+
+    <div class="header">
+        <div class="header-logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 4.5c2.071 0 3.9.948 5.12 2.438H13v1.5h5.82c.117.5.18 1.022.18 1.562H13v1.5h6c0 3.314-2.686 6-6 6s-6-2.686-6-6 2.686-6 6-6z" fill="#007AFF" /></svg>
+            </div>
+            GCash Payment
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="txn-strip">
+            <div class="txn-item"><label>Merchant</label><div class="val">OACT Registrar</div></div>
+            <div class="txn-item"><label>Amount Due</label><div class="val blue">PHP @amount.ToString("N2")</div></div>
+            <div class="txn-item"><label>Purpose</label><div class="val">@payType</div></div>
+            <div class="txn-item"><label>Method</label><div class="val">GCash</div></div>
+        </div>
+
+        <!-- Panel 1: Enter Details -->
+        <div class="panel active" id="panelForm">
+            <div class="step-body">
+                <p class="step-title">Enter Your GCash Number</p>
+                <p class="step-sub">We'll record your number so the admin can match your payment.</p>
+                <div class="field-group">
+                    <span class="field-label">Your GCash Mobile Number</span>
+                    <div class="field-row" id="phoneRow">
+                        <span class="field-prefix">+63</span>
+                        <input type="tel" id="senderMobile" class="field-input" placeholder="9XXXXXXXXX" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')">
+                    </div>
+                    <div class="error-msg" id="phoneError">Please enter a valid 10-digit number starting with 9.</div>
+                </div>
+                <div class="steps-box">
+                    <div class="steps-box-title">⚡ How to Pay</div>
+                    <div class="step-row"><span class="step-badge">1</span><span>Enter your GCash number → tap <strong>Next</strong></span></div>
+                    <div class="step-row"><span class="step-badge">2</span><span>Scan the QR or send to the GCash number shown</span></div>
+                    <div class="step-row"><span class="step-badge">3</span><span>Send exactly <strong>PHP @amount.ToString("N2")</strong></span></div>
+                    <div class="step-row"><span class="step-badge">4</span><span>Upload your screenshot as proof of payment ✅</span></div>
+                </div>
+                <button class="btn-primary" onclick="handleNext()">NEXT — VIEW PAYMENT DETAILS</button>
+            </div>
+        </div>
+
+        <!-- Panel 2: QR + Number -->
+        <div class="panel" id="panelQr">
+            <div class="qr-body">
+                <p class="qr-title">Send Payment</p>
+                <p class="qr-sub">Send exactly <strong>PHP @amount.ToString("N2")</strong> using either method below</p>
+                <div class="pay-tabs">
+                    <button class="tab-btn active" onclick="switchTab('qr',this)">📷 Scan QR</button>
+                    <button class="tab-btn" onclick="switchTab('num',this)">📱 Send to Number</button>
+                </div>
+                <div class="tab-content active" id="tabQr">
+                    <div class="qr-frame">
+                        <img id="adminQrImg" src="" alt="GCash QR Code" />
+                        <div class="qr-label">GCash QR Code</div>
+                    </div>
+                    <p style="font-size:.78rem;color:var(--mid);margin-bottom:.75rem;">GCash → <strong>Scan QR</strong> → point camera at the code</p>
+                </div>
+                <div class="tab-content" id="tabNum">
+                    <div class="number-box">
+                        <div class="number-label">GCash Number</div>
+                        <div class="gcash-number" id="displayNumber">—</div>
+                        <div class="account-name" id="displayName"></div>
+                        <button class="copy-btn" onclick="copyNumber()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                            <span id="copyLabel">Copy Number</span>
+                        </button>
+                    </div>
+                    <p style="font-size:.78rem;color:var(--mid);margin-bottom:.75rem;">GCash → <strong>Send Money</strong> → enter number → type exact amount</p>
+                </div>
+                <div class="amount-badge">PHP @amount.ToString("N2")</div>
+                <div class="warn-box">⚠️ Send <em>exactly</em> <strong>PHP @amount.ToString("N2")</strong>. Include your name in the notes/message if your app allows it.</div>
+                <div class="note-box">📸 <strong>After sending:</strong> Take a screenshot of your GCash receipt, then tap the button below to upload it as proof.</div>
+                <button class="btn-primary" id="sentBtn" onclick="handleSent()">✅ I'VE SENT THE PAYMENT — UPLOAD PROOF</button>
+                <button class="btn-secondary" onclick="handleBack()">← Back</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">Secured GCash Payment · OACT Registrar Office</div>
+
+    <script>
+        const STUDENT_ID   = @studentId;
+        const PAY_AMOUNT   = @amountJs;
+        const PAY_TYPE     = '@payTypeJs';
+        const STUDENT_NAME = '@Html.Raw(studentName.Replace("'", "\\'"))';
+        let senderMobileVal = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res  = await fetch('/Payment/GetGcashConfig');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('adminQrImg').src        = data.qrImageUrl;
+                    document.getElementById('displayNumber').textContent = data.gcashNumber;
+                    document.getElementById('displayName').textContent   = data.accountName;
+                }
+            } catch(e) { console.warn('Config load failed:', e); }
+
+            document.getElementById('senderMobile').addEventListener('keydown', e => {
+                if (e.key === 'Enter') handleNext();
+            });
+        });
+
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tab === 'qr' ? 'tabQr' : 'tabNum').classList.add('active');
+        }
+
+        function handleNext() {
+            const mobile = document.getElementById('senderMobile').value.trim();
+            const row = document.getElementById('phoneRow');
+            const err = document.getElementById('phoneError');
+            if (mobile.length !== 10 || mobile.charAt(0) !== '9') {
+                row.classList.add('err'); err.style.display = 'block'; return;
+            }
+            row.classList.remove('err'); err.style.display = 'none';
+            senderMobileVal = mobile;
+            document.getElementById('panelForm').classList.remove('active');
+            document.getElementById('panelQr').classList.add('active');
+        }
+
+        function handleBack() {
+            document.getElementById('panelQr').classList.remove('active');
+            document.getElementById('panelForm').classList.add('active');
+        }
+
+        async function handleSent() {
+            const btn = document.getElementById('sentBtn');
+            btn.disabled = true;
+            document.getElementById('loadingOverlay').classList.add('show');
+            try {
+                const res = await fetch('/Payment/CreatePendingPayment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId:    STUDENT_ID,
+                        paymentType:  PAY_TYPE,
+                        amount:       PAY_AMOUNT,
+                        senderNumber: senderMobileVal
+                    })
+                });
+                const data = await res.json();
+                document.getElementById('loadingOverlay').classList.remove('show');
+                if (!data.success) {
+                    btn.disabled = false;
+                    showError(data.message || 'Failed to record. Please try again.');
+                    return;
+                }
+                // Redirect to proof upload page with paymentId
+                window.location.href = `/Payment/GCashPayView?paymentId=${data.paymentId}&amount=@amountJs&paymentType=@Uri.EscapeDataString(payType)`;
+            } catch(err) {
+                document.getElementById('loadingOverlay').classList.remove('show');
+                btn.disabled = false;
+                showError('Network error. Please try again.');
+            }
+        }
+
+        function copyNumber() {
+            const num = document.getElementById('displayNumber').textContent;
+            if (!num || num === '—') return;
+            navigator.clipboard.writeText(num).then(() => {
+                document.getElementById('copyLabel').textContent = 'Copied!';
+                setTimeout(() => document.getElementById('copyLabel').textContent = 'Copy Number', 2000);
+            });
+        }
+
+        function showError(msg) {
+            const ex = document.getElementById('errBox'); if (ex) ex.remove();
+            const box = document.createElement('div');
+            box.id = 'errBox';
+            box.style.cssText = 'background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:.85rem 1rem;margin:0 0 1rem;font-size:.8rem;color:#991B1B;line-height:1.55;text-align:left;';
+            box.innerHTML = '⚠️ ' + msg;
+            const btn = document.getElementById('sentBtn');
+            btn.parentNode.insertBefore(box, btn);
+            box.scrollIntoView({ behavior:'smooth', block:'center' });
+        }
+    </script>
+</body>
+</html>

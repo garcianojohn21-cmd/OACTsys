@@ -1,0 +1,39 @@
+﻿@{
+    ViewBag.Title = "Pending Students";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container py-4">
+    <h3 class="mb-4" style="color:#051094;">
+        <i class="bi bi-clock-history"></i> Pending Enrollments
+    </h3>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Program</th>
+                            <th>Year Level</th>
+                            <th>Submitted Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No pending enrollments.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-outline-primary mt-3" onclick="history.back()">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+</div>

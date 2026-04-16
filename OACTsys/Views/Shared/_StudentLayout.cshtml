@@ -1,0 +1,572 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Portal — OACTsys</title>
+    <link rel="icon" type="image/x-icon" href="~/images/logo.png" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        /* ═══════════════════════════════════════
+           CSS VARIABLES
+        ═══════════════════════════════════════ */
+        :root {
+            --navy:        #051094;
+            --navy-deep:   #020b5c;
+            --navy-mid:    #0d2f6e;
+            --white:       #ffffff;
+            --off-white:   #e8edf8;
+            --muted:       rgba(255,255,255,0.50);
+            --border-dim:  rgba(255,255,255,0.15);
+            --sidebar-w:   270px;
+            --topbar-h:    64px;
+            --speed:       0.32s;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        /* ═══════════════════════════════════════
+           BODY — white top → navy bottom + aerospace grid
+        ═══════════════════════════════════════ */
+        body {
+            font-family: 'DM Sans', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+
+            /* ── WHITE (top) → NAVY (bottom) vertical fade ── */
+            background:
+                /* Aerospace grid — navy tinted lines on light area, white lines on dark area */
+                linear-gradient(rgba(5,16,148,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(5,16,148,0.06) 1px, transparent 1px),
+                /* Vertical gradient: white → light blue → mid navy → deep navy */
+                linear-gradient(180deg,
+                    #ffffff        0%,
+                    #dce6ff       18%,
+                    #8faae8       38%,
+                    #2a50b8       58%,
+                    #051094       75%,
+                    #020b5c      100%);
+
+            background-size: 60px 60px, 60px 60px, 100% 100%;
+            background-attachment: fixed;
+            color: #1a2060;
+        }
+
+        /* ═══════════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════════ */
+        #sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--sidebar-w);
+            height: 100vh;
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--speed) cubic-bezier(.4,0,.2,1);
+
+            /* Sidebar — same white → navy vertical fade with grid */
+            background:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(180deg,
+                    #1a3a9e        0%,
+                    #051094       25%,
+                    #040d7a       55%,
+                    #020b5c       80%,
+                    #010738      100%);
+            background-size: 60px 60px, 60px 60px, 100% 100%;
+
+            border-right: 1px solid var(--border-dim);
+            box-shadow: 4px 0 32px rgba(2,11,92,0.35);
+        }
+
+        /* Top accent line */
+        #sidebar::before {
+            content: '';
+            display: block;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--white) 50%, transparent);
+            flex-shrink: 0;
+        }
+
+        /* Sidebar header */
+        .sb-head {
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .sb-head img {
+            width: 44px; height: 44px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        .sb-head-text { line-height: 1.15; }
+
+        .sb-head-abbr {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: 3px;
+        }
+
+        .sb-head-sub {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.58rem;
+            color: var(--muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* Status dot */
+        .sb-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-dim);
+            flex-shrink: 0;
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @@keyframes pulse-dot {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:.4; transform:scale(.7); }
+        }
+
+        /* Nav links */
+        .sb-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 10px;
+            list-style: none;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .sb-nav::-webkit-scrollbar { width: 4px; }
+        .sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+        .sb-nav li { margin-bottom: 2px; }
+
+        .sb-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            transition: background .18s, color .18s, border-color .18s;
+            letter-spacing: 0.3px;
+        }
+
+        .sb-link i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+            opacity: .75;
+            flex-shrink: 0;
+        }
+
+        .sb-link:hover {
+            background: rgba(255,255,255,0.09);
+            color: var(--white);
+            border-left-color: rgba(255,255,255,0.4);
+        }
+
+        .sb-link:hover i { opacity: 1; }
+
+        .sb-link.active {
+            background: rgba(255,255,255,0.14);
+            color: var(--white);
+            border-left-color: var(--white);
+            font-weight: 700;
+        }
+
+        .sb-link.active i { opacity: 1; }
+
+        .sb-link.danger { color: #f87171; }
+        .sb-link.danger:hover { background: rgba(248,113,113,0.1); color: #fca5a5; border-left-color: #f87171; }
+
+        .sb-divider {
+            height: 1px;
+            background: var(--border-dim);
+            margin: 8px 4px;
+        }
+
+        /* Sidebar foot — user info */
+        .sb-foot {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border-dim);
+            flex-shrink: 0;
+        }
+
+        .sb-user-email {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: .5px;
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+
+        .sb-user-role {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ═══════════════════════════════════════
+           TOP NAVBAR
+        ═══════════════════════════════════════ */
+        #topbar {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            height: var(--topbar-h);
+            display: flex;
+            align-items: center;
+            padding: 0 28px;
+            gap: 16px;
+
+            /* Frosted glass on the light area */
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(5,16,148,0.12);
+            box-shadow: 0 2px 20px rgba(5,16,148,0.07);
+        }
+
+        /* Accent line on top of topbar */
+        #topbar::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--navy-mid) 30%, var(--navy) 50%, var(--navy-mid) 70%, transparent);
+        }
+
+        .topbar-toggle {
+            display: none;
+            background: none;
+            border: 1.5px solid rgba(5,16,148,0.25);
+            color: var(--navy);
+            width: 38px; height: 38px;
+            border-radius: 6px;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background .2s, border-color .2s;
+            flex-shrink: 0;
+        }
+
+        .topbar-toggle:hover {
+            background: rgba(5,16,148,0.07);
+            border-color: var(--navy);
+        }
+
+        .topbar-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--navy);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .topbar-user {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-email {
+            font-size: 0.8rem;
+            color: var(--navy-mid);
+            font-weight: 500;
+        }
+
+        .topbar-avatar {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            border: 2px solid rgba(5,16,148,0.2);
+        }
+
+        /* ═══════════════════════════════════════
+           MAIN CONTENT AREA
+        ═══════════════════════════════════════ */
+        #content {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left var(--speed) cubic-bezier(.4,0,.2,1);
+        }
+
+        .content-body {
+            flex: 1;
+            padding: 28px 32px;
+        }
+
+        /* ═══════════════════════════════════════
+           CARDS — glassmorphism on the light bg
+        ═══════════════════════════════════════ */
+        .oact-card {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(5,16,148,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(5,16,148,0.08);
+        }
+
+        /* Bootstrap card override */
+        .card {
+            border-radius: 12px;
+            border: 1px solid rgba(5,16,148,0.1);
+            background: rgba(255,255,255,0.82);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(5,16,148,0.07);
+        }
+
+        /* ═══════════════════════════════════════
+           UTILITY
+        ═══════════════════════════════════════ */
+        .text-admiral { color: var(--navy) !important; }
+        .bg-admiral   { background-color: var(--navy) !important; }
+
+        .btn-admiral {
+            background: var(--navy);
+            color: white;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: background .2s, box-shadow .2s;
+        }
+
+        .btn-admiral:hover {
+            background: var(--navy-deep);
+            color: white;
+            box-shadow: 0 4px 16px rgba(5,16,148,0.3);
+        }
+
+        /* ═══════════════════════════════════════
+           OVERLAY (mobile)
+        ═══════════════════════════════════════ */
+        #sidebarOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2,11,92,0.45);
+            backdrop-filter: blur(3px);
+            z-index: 1040;
+        }
+
+        #sidebarOverlay.show { display: block; }
+
+        /* ═══════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════ */
+        @@media (max-width: 991px) {
+            #sidebar {
+                transform: translateX(calc(-1 * var(--sidebar-w)));
+            }
+
+            #sidebar.open {
+                transform: translateX(0);
+            }
+
+            #content {
+                margin-left: 0;
+            }
+
+            .topbar-toggle {
+                display: flex;
+            }
+
+            .content-body {
+                padding: 20px 16px;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            :root { --sidebar-w: 260px; }
+
+            .topbar-email { display: none; }
+
+            .content-body { padding: 16px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── SIDEBAR OVERLAY (mobile tap-to-close) ── -->
+    <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- ══════════════ SIDEBAR ══════════════ -->
+    <nav id="sidebar">
+        <!-- Brand -->
+        <div class="sb-head">
+            <img src="~/images/logo.png" alt="OACT" />
+            <div class="sb-head-text">
+                <div class="sb-head-abbr">OACT</div>
+                <div class="sb-head-sub">Student Portal</div>
+            </div>
+        </div>
+
+        <!-- Live status -->
+        <div class="sb-status">
+            <div class="status-dot"></div>
+            PORTAL ONLINE
+        </div>
+
+        <!-- Nav items -->
+        <ul class="sb-nav">
+            <li>
+                <a href="@Url.Action("Index","Student")" class="sb-link active">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("ProfileManagement","Student")" class="sb-link">
+                    <i class="bi bi-person-gear"></i> Profile Management
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("SemesterEnrollment","Student")" class="sb-link">
+                    <i class="bi bi-pencil-square"></i> Semester Enrollment
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("DocumentRequest","Student")" class="sb-link">
+                    <i class="bi bi-file-earmark-text"></i> Document Requests
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Grades","Student")" class="sb-link">
+                    <i class="bi bi-graph-up"></i> Grades
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("ViewCOR","Student")" target="_blank" class="sb-link">
+                    <i class="bi bi-patch-check"></i> Certificate of Registration
+                </a>
+            </li>
+
+            <li><div class="sb-divider"></div></li>
+
+            <li>
+                <a asp-controller="Account" asp-action="SignOut" class="sb-link danger">
+                    <i class="bi bi-box-arrow-left"></i> Sign Out
+                </a>
+            </li>
+        </ul>
+
+        <!-- User foot -->
+        <div class="sb-foot">
+            <div class="sb-user-email">@Context.Session.GetString("UserEmail")</div>
+            <div class="sb-user-role">Student</div>
+        </div>
+    </nav>
+
+    <!-- ══════════════ MAIN CONTENT ══════════════ -->
+    <div id="content">
+
+        <!-- Top bar -->
+        <header id="topbar">
+            <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <span class="topbar-title">Student Portal</span>
+
+            <div class="topbar-user">
+                <span class="topbar-email d-none d-md-block">
+                    @Context.Session.GetString("UserEmail")
+                </span>
+                <div class="topbar-avatar">
+                    <i class="bi bi-person"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <div class="content-body">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+            document.body.style.overflow =
+                document.getElementById('sidebar').classList.contains('open') ? 'hidden' : '';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Auto-close sidebar on nav link click (mobile)
+        document.querySelectorAll('.sb-link').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 992) closeSidebar();
+            });
+        });
+
+        // Active link highlight based on current URL
+        (function() {
+            var path = window.location.pathname.toLowerCase();
+            document.querySelectorAll('.sb-link').forEach(function(link) {
+                link.classList.remove('active');
+                var href = link.getAttribute('href');
+                if (href && path.includes(href.toLowerCase().split('?')[0])) {
+                    link.classList.add('active');
+                }
+            });
+        })();
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,982 @@
+﻿@{
+    ViewData["Title"] = "Registration Success";
+
+    var accreditationRaw = Context.Session.GetString("AccreditationData") ?? "";
+    var accreditedCodes = accreditationRaw
+        .Split('|', StringSplitOptions.RemoveEmptyEntries)
+        .Select(s => s.Split('-')[0].Trim().ToUpper())
+        .ToList();
+
+    double totalLec = 0, totalLab = 0, totalHours = 0, runningTotalUnits = 0;
+
+    bool feeFound        = ViewBag.FeeFound      ?? false;
+    bool hasDiscount     = ViewBag.HasDiscount    ?? false;
+    decimal tuitionFee   = ViewBag.TuitionFee     ?? 0m;
+    decimal miscFee      = ViewBag.MiscFee        ?? 0m;
+    decimal labFee       = ViewBag.LabFee         ?? 0m;
+    decimal otherFee     = ViewBag.OtherFee       ?? 0m;
+    decimal totalAssessment = ViewBag.TotalAssessment ?? 0m;
+    decimal downPayment  = ViewBag.DownPayment    ?? 0m;
+    decimal discountAmount  = ViewBag.DiscountAmount  ?? 0m;
+    decimal discountPercent = ViewBag.DiscountPercent ?? 0m;
+    decimal prelimPay    = ViewBag.PrelimPayment    ?? 0m;
+    decimal midtermPay   = ViewBag.MidtermPayment   ?? 0m;
+    decimal semiFinalPay = ViewBag.SemiFinalPayment  ?? 0m;
+    decimal finalPay     = ViewBag.FinalPayment      ?? 0m;
+    int studentId        = ViewBag.Student?.StudentId ?? 0;
+
+    // ── Email TempData ──────────────────────────────────────────────────
+    bool   emailSent    = TempData["EmailSent"]?.ToString() == "true";
+    string emailAddress = TempData["EmailAddress"]?.ToString() ?? "";
+    string emailError   = TempData["EmailError"]?.ToString()   ?? "";
+}
+
+<style>
+    .form-banner {
+        background-image: url("@Url.Content("~/css/assets/images/bg-banner.jpg")");
+    }
+
+    .form-section {
+        background-image: linear-gradient(
+            135deg,
+            rgba(255,255,255,0.98) 0%,
+            rgba(244,246,255,0.94) 40%,
+            rgba(102,155,188,0.15) 75%,
+            rgba(5,16,148,0.08)   100%
+        ), url("@Url.Content("~/css/assets/images/bg-banners.png")");
+    }
+</style>
+
+<!-- ─── BANNER ──────────────────────────────────────────────────────── -->
+<div class="form-banner">
+    <div class="form-banner__overlay"></div>
+    <div class="container form-banner__content">
+        <p class="form-banner__eyebrow">Enrollment · Confirmation</p>
+        <h1 class="form-banner__title">
+            <i class="bi bi-check-circle-fill banner-check me-2"></i>Registration Submitted!
+        </h1>
+        <p class="form-banner__sub">
+            Review your subject load, statement of account, and settle your enrollment fee below.
+        </p>
+    </div>
+</div>
+
+<!-- ─── MAIN CONTENT ────────────────────────────────────────────────── -->
+<section class="form-section">
+    <div class="container">
+
+        @* ══════════════════════════════════════════════════════════════
+           EMAIL STATUS BANNERS
+           ══════════════════════════════════════════════════════════════ *@
+
+        @if (emailSent)
+        {
+            <div class="alert alert-email alert-dismissible fade show mb-4" role="alert">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="email-icon-wrap">
+                        <i class="bi bi-envelope-check-fill"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="font-size:.95rem;">
+                            Acknowledgment Email Sent!
+                        </div>
+                        <div style="font-size:.84rem;opacity:.9;">
+                            A confirmation letter has been sent to
+                            <strong>@emailAddress</strong>.
+                            Please check your inbox and spam folder.
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-auto"
+                        data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(emailError))
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert"
+                 style="border-left:5px solid #dc3545;">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-envelope-x-fill fs-5 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <div class="fw-bold mb-1">📧 Email Failed — Debug Info</div>
+                        <div class="small"><code>@emailError</code></div>
+                        <div class="mt-2 small text-muted">
+                            Common fixes:
+                            <ul class="mb-0 mt-1">
+                                <li><strong>No e-mail address found</strong> → In Admin → Enrollment Fields, set <code>FieldType = email</code> or <code>TemplateKey = email_address</code></li>
+                                <li><strong>5.5.1 Authentication Required</strong> → Regenerate your Gmail App Password at <em>myaccount.google.com → Security → App Passwords</em></li>
+                                <li><strong>Invalid address</strong> → Add <code>"FromAddress": "you@gmail.com"</code> to <em>appsettings.json → SmtpSettings</em></li>
+                                <li><strong>Failure sending mail</strong> → Check that <code>Configure&lt;SmtpSettings&gt;</code> and <code>AddScoped&lt;EmailAcknowledgementService&gt;</code> are in <em>Program.cs</em></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 mb-4 shadow-sm"
+                 role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-envelope-exclamation-fill fs-5"></i>
+                    <span>
+                        No acknowledgment email was sent because no email address was found
+                        in your registration. In the Admin panel, make sure your email
+                        enrollment field has <code>FieldType = email</code> or
+                        <code>TemplateKey = email_address</code>.
+                    </span>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @* ── Fee config warning ── *@
+        @if (!feeFound)
+        {
+            <div class="alert alert-warning border-0 rounded-3 mb-4 shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>No tuition fee record found</strong> for
+                <code>Program: @ViewBag.DebugProgram</code> /
+                <code>Type: @ViewBag.DebugStudentType</code> /
+                <code>Year: @ViewBag.DebugYearLevel</code> /
+                <code>Sem: @ViewBag.DebugSemester</code>.
+                Please ask an administrator to add the matching fee in the Tuition Fees module.
+            </div>
+        }
+
+        <div class="row g-4">
+
+            <!-- ══ LEFT ══ -->
+            <div class="col-lg-8">
+
+                <!-- Subject Load -->
+                <div class="content-card">
+                    <div class="content-card__header">
+                        <h5 class="content-card__title">
+                            <i class="bi bi-journal-text me-2"></i>Official Subject Load
+                        </h5>
+                        <span class="badge-ay">
+                            A.Y. @(DateTime.Now.Month >= 6 ? DateTime.Now.Year : DateTime.Now.Year - 1)-@(DateTime.Now.Month >= 6 ? DateTime.Now.Year + 1 : DateTime.Now.Year)
+                        </span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover border align-middle mb-0">
+                            <thead class="tbl-head text-center small text-uppercase fw-bold">
+                                <tr>
+                                    <th class="text-start" style="width:15%;">Course Code</th>
+                                    <th class="text-start" style="width:35%;">Descriptive Title</th>
+                                    <th>Lec</th>
+                                    <th>Lab</th>
+                                    <th>Hours</th>
+                                    <th>Units</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                @if (ViewBag.Subjects != null)
+                                {
+                                    foreach (var sub in ViewBag.Subjects)
+                                    {
+                                        bool isAccredited = accreditedCodes.Contains(sub.Code.Trim().ToUpper());
+                                        if (!isAccredited)
+                                        {
+                                            totalLec          += (double)sub.Lec;
+                                            totalLab          += (double)sub.Lab;
+                                            totalHours        += (double)sub.Hours;
+                                            runningTotalUnits += (double)sub.Units;
+                                        }
+                                        <tr class="@(isAccredited ? "row-accredited" : "")">
+                                            <td class="fw-bold">@sub.Code</td>
+                                            <td>@sub.Name</td>
+                                            <td class="text-center">@sub.Lec</td>
+                                            <td class="text-center">@sub.Lab</td>
+                                            <td class="text-center">@sub.Hours</td>
+                                            <td class="text-center fw-bold">@sub.Units</td>
+                                            <td class="text-center">
+                                                @if (isAccredited)
+                                                {
+                                                    <span class="status-badge status-badge--accredited">ACCREDITED</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="status-badge status-badge--regular">REGULAR</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-3">
+                                            <i class="bi bi-inbox me-2"></i>No subjects found.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="tbl-footer text-center fw-bold">
+                                    <td colspan="2" class="text-end">FINAL TOTALS:</td>
+                                    <td>@totalLec</td>
+                                    <td>@totalLab</td>
+                                    <td>@totalHours</td>
+                                    <td class="total-units">@runningTotalUnits.ToString("0")</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    @if (accreditedCodes.Any())
+                    {
+                        <div class="accredited-note mt-3">
+                            <i class="bi bi-info-circle-fill me-1"></i>
+                            <strong>Note:</strong> Accredited subjects are highlighted.
+                            Their units are excluded from your total assessment.
+                        </div>
+                    }
+                </div>
+
+                <!-- Payment Schedule -->
+                @if (feeFound)
+                {
+                    <div class="content-card mt-4">
+                        <div class="content-card__header">
+                            <h5 class="content-card__title">
+                                <i class="bi bi-calendar3 me-2"></i>Payment Schedule
+                            </h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm border align-middle mb-0 text-center">
+                                <thead class="tbl-head small text-uppercase fw-bold">
+                                    <tr>
+                                        <th class="text-start">Period</th>
+                                        <th>Amount Due</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="small">
+                                    <tr>
+                                        <td class="text-start fw-bold">
+                                            <i class="bi bi-calendar-check me-1 text-admiral"></i>Down Payment
+                                            <span class="text-muted fw-normal">(Upon Enrollment)</span>
+                                        </td>
+                                        <td class="fw-bold text-admiral">₱@downPayment.ToString("N2")</td>
+                                        <td>
+                                            <span class="status-badge"
+                                                  style="background:#fff3cd;color:#856404;border:1px solid #ffc107;">
+                                                PENDING
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @if (prelimPay > 0)
+                                    {
+                                        <tr>
+                                            <td class="text-start"><i class="bi bi-calendar2 me-1 text-muted"></i>Prelim</td>
+                                            <td class="fw-bold">₱@prelimPay.ToString("N2")</td>
+                                            <td><span class="status-badge status-badge--regular">UPCOMING</span></td>
+                                        </tr>
+                                    }
+                                    @if (midtermPay > 0)
+                                    {
+                                        <tr>
+                                            <td class="text-start"><i class="bi bi-calendar2 me-1 text-muted"></i>Midterm</td>
+                                            <td class="fw-bold">₱@midtermPay.ToString("N2")</td>
+                                            <td><span class="status-badge status-badge--regular">UPCOMING</span></td>
+                                        </tr>
+                                    }
+                                    @if (semiFinalPay > 0)
+                                    {
+                                        <tr>
+                                            <td class="text-start"><i class="bi bi-calendar2 me-1 text-muted"></i>Semi-Final</td>
+                                            <td class="fw-bold">₱@semiFinalPay.ToString("N2")</td>
+                                            <td><span class="status-badge status-badge--regular">UPCOMING</span></td>
+                                        </tr>
+                                    }
+                                    @if (finalPay > 0)
+                                    {
+                                        <tr>
+                                            <td class="text-start"><i class="bi bi-calendar2 me-1 text-muted"></i>Final</td>
+                                            <td class="fw-bold">₱@finalPay.ToString("N2")</td>
+                                            <td><span class="status-badge status-badge--regular">UPCOMING</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="tbl-footer fw-bold text-center">
+                                        <td class="text-end">TOTAL AMOUNT:</td>
+                                        <td class="total-units">₱@totalAssessment.ToString("N2")</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div><!-- /.col-lg-8 -->
+
+            <!-- ══ RIGHT ══ -->
+            <div class="col-lg-4 d-flex flex-column gap-4">
+
+                <!-- SOA -->
+                <div class="soa-card">
+                    <div class="soa-card__header">
+                        <i class="bi bi-receipt me-2"></i>Statement of Account
+                    </div>
+                    <div class="soa-card__body">
+                        @if (!feeFound)
+                        {
+                            <div class="text-center text-muted py-3 small">
+                                <i class="bi bi-database-x fs-3 d-block mb-2"></i>
+                                No fee record found.<br />Please contact the registrar.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="soa-row"><span>Tuition Fee</span><span>₱@tuitionFee.ToString("N2")</span></div>
+                            <div class="soa-row"><span>Miscellaneous</span><span>₱@miscFee.ToString("N2")</span></div>
+                            <div class="soa-row"><span>Laboratory</span><span>₱@labFee.ToString("N2")</span></div>
+                            <div class="soa-row"><span>Others</span><span>₱@otherFee.ToString("N2")</span></div>
+                            @if (hasDiscount && discountAmount > 0)
+                            {
+                                <div class="soa-row" style="color:#198754;">
+                                    <span><i class="bi bi-tag-fill me-1"></i>Discount (@discountPercent.ToString("0")%)</span>
+                                    <span>- ₱@discountAmount.ToString("N2")</span>
+                                </div>
+                            }
+                            <div class="soa-total">
+                                <span>TOTAL DUE</span>
+                                <span>₱@totalAssessment.ToString("N2")</span>
+                            </div>
+                            <div class="soa-downpayment mt-2">
+                                <span><i class="bi bi-cash-coin me-1"></i>Down Payment</span>
+                                <span>₱@downPayment.ToString("N2")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Student Info -->
+                <div class="content-card">
+                    <div class="content-card__header">
+                        <h5 class="content-card__title">
+                            <i class="bi bi-person-badge me-2"></i>Student Info
+                        </h5>
+                    </div>
+                    <div class="small">
+                        <div class="info-row">
+                            <span class="text-muted">Student No.</span>
+                            <strong class="text-admiral">@ViewBag.StudentNumber</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Program</span>
+                            <strong>@(ViewBag.Student?.Program ?? "—")</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Year Level</span>
+                            <strong>@(ViewBag.Student?.CurrentYearLevel == 1 ? "1st" : ViewBag.Student?.CurrentYearLevel == 2 ? "2nd" : ViewBag.Student?.CurrentYearLevel == 3 ? "3rd" : ViewBag.Student?.CurrentYearLevel + "th") Year</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Semester</span>
+                            <strong>@(ViewBag.Student?.CurrentSemester == 1 ? "1st" : "2nd") Semester</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Status</span>
+                            <span class="status-badge"
+                                  style="background:#fff3cd;color:#856404;border:1px solid #ffc107;">
+                                PENDING
+                            </span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(emailAddress))
+                        {
+                            <div class="info-row">
+                                <span class="text-muted">Email</span>
+                                <strong class="text-truncate" style="max-width:160px;"
+                                        title="@emailAddress">@emailAddress</strong>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Generated Documents -->
+                <div class="doc-card">
+                    <div class="doc-card__header">
+                        <i class="bi bi-file-earmark-text me-2"></i>Generated Documents
+                    </div>
+                    <p class="small text-muted mb-3">
+                        Your admission form is prepared automatically after registration.
+                    </p>
+
+                    <div id="docSpinner">
+                        <div class="d-flex align-items-center gap-2 text-muted small py-1">
+                            <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+                            <span>Generating admission form&hellip;</span>
+                        </div>
+                    </div>
+
+                    <div id="docReady" class="d-none">
+                        <a href="/Enrollment/ViewAdmissionForm?studentId=@studentId"
+                           target="_blank"
+                           class="btn btn-success w-100 fw-bold mb-2">
+                            <i class="bi bi-file-earmark-word me-2"></i>Download as Word (.docx)
+                        </a>
+
+                        <div id="pdfSpinner" class="d-flex align-items-center gap-2 text-muted small py-1">
+                            <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+                            <span>Converting to PDF&hellip;</span>
+                        </div>
+
+                        <a id="pdfDownloadLink"
+                           href="#"
+                           target="_blank"
+                           class="btn btn-danger w-100 fw-bold mb-2 d-none">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Download as PDF
+                        </a>
+
+                        <div id="pdfError" class="d-none">
+                            <div class="alert alert-warning border-0 py-2 small mb-2">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                <span id="pdfErrorMsg">PDF conversion failed.</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-warning w-100"
+                                    onclick="generatePdf()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Retry PDF
+                            </button>
+                        </div>
+
+                        <p class="text-muted small mb-0 text-center mt-1">
+                            <i class="bi bi-box-arrow-down me-1"></i>Click to download
+                        </p>
+                    </div>
+
+                    <div id="docError" class="d-none">
+                        <div class="alert alert-danger border-0 py-2 small mb-2">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <span id="docErrorMsg">Could not generate admission form.</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger w-100"
+                                onclick="generateAdmissionForm()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="content-card">
+                    <div class="content-card__header">
+                        <h5 class="content-card__title">
+                            <i class="bi bi-credit-card me-2"></i>Payment Method
+                        </h5>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted d-block mb-1">
+                            SELECT HOW YOU WANT TO PAY:
+                        </label>
+                        <select class="form-select border-admiral" id="paymentMethodSelect"
+                                onchange="switchPaymentMethod(this.value)">
+                            <option value="gcash">GCash (Mobile Wallet)</option>
+                            <option value="onsite">On-Site Payment (Cashier)</option>
+                        </select>
+                    </div>
+
+                    <div id="payment-content">
+
+                        <!-- ══ GCash Panel ══ -->
+                        <div id="method-gcash" class="payment-method-panel">
+                            <div class="pay-box text-center mb-3">
+                                <div id="gcashQrDisplay" class="mb-2">
+                                    <i class="bi bi-qr-code" style="font-size:3rem;color:#ccc;"></i>
+                                </div>
+                                <p class="small fw-bold mb-1 text-uppercase text-muted"
+                                   id="gcashAccountName">Loading…</p>
+                                <p class="h6 fw-bold text-admiral mb-0" id="gcashPhoneDisplay">—</p>
+                            </div>
+                            <div class="ref-box mb-3">
+                                <span class="ref-label">DOWN PAYMENT DUE</span>
+                                <strong class="ref-number text-success">₱@downPayment.ToString("N2")</strong>
+                            </div>
+                            <ol class="small text-muted mb-3 ps-3" style="line-height:2">
+                                <li>Click <strong>Pay via GCash</strong> below.</li>
+                                <li>Enter your GCash mobile number.</li>
+                                <li>Amount &amp; recipient are <strong>pre-filled</strong>.</li>
+                                <li>Tap <strong>Send Now</strong> in GCash.</li>
+                            </ol>
+                            <a href="@Url.Action("GcashMethod", "Payment", new { studentId = studentId, amount = downPayment, paymentType = "Down Payment" })"
+                               class="btn btn-admiral w-100 fw-bold" style="padding:.75rem;font-size:.95rem;">
+                                <i class="bi bi-phone-fill me-2"></i>Pay via GCash
+                            </a>
+                            <p class="text-center text-muted small mt-2 mb-0">
+                                <i class="bi bi-shield-check me-1"></i>Secure · Powered by GCash
+                            </p>
+                        </div>
+
+                        <!-- ══ On-Site Panel ══ -->
+                        <div id="method-onsite" class="payment-method-panel d-none">
+
+                            <!-- Cashier info box -->
+                            <div class="pay-box mb-3">
+                                <h6 class="fw-bold small mb-2">
+                                    <i class="bi bi-building me-2 text-admiral"></i>CASHIER'S OFFICE
+                                </h6>
+                                <p class="small mb-2">
+                                    Visit the <strong>Main Building, Second Floor</strong> to settle your account.
+                                </p>
+                                <div class="ref-box">
+                                    <span class="ref-label">REFERENCE NO.</span>
+                                    <strong class="ref-number">REG-@ViewBag.StudentNumber</strong>
+                                </div>
+                                <div class="ref-box mt-2">
+                                    <span class="ref-label">DOWN PAYMENT DUE</span>
+                                    <strong class="ref-number text-success">₱@downPayment.ToString("N2")</strong>
+                                </div>
+                                <p class="small mt-2 text-muted mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Enrollment is confirmed only upon receipt from the cashier.
+                                </p>
+                            </div>
+
+                            <!-- ── Confirm button ── -->
+                            <button id="btnConfirmOnsite"
+                                    class="btn btn-admiral w-100 fw-bold"
+                                    style="padding:.75rem; font-size:.95rem;"
+                                    onclick="confirmOnsitePayment()">
+                                <i class="bi bi-check2-circle me-2"></i>Confirm On-Site Payment
+                            </button>
+
+                            <!-- Saving spinner -->
+                            <div id="onsiteSpinner" class="d-none text-center mt-2 py-1">
+                                <div class="spinner-border spinner-border-sm text-admiral" role="status"></div>
+                                <span class="small text-muted ms-2">Saving your payment preference…</span>
+                            </div>
+
+                            <!-- ── Success state ── -->
+                            <div id="onsiteSuccess" class="d-none mt-3">
+                                <div class="alert border-0 rounded-3 mb-3"
+                                     style="background:#d1f0e0; color:#0f5132;">
+                                    <div class="fw-bold mb-1">
+                                        <i class="bi bi-check-circle-fill me-2"></i>On-Site Payment Confirmed!
+                                    </div>
+                                    <div class="small">
+                                        Your payment intent has been recorded.
+                                        Please proceed to the cashier with your reference number.
+                                    </div>
+                                </div>
+
+                                <!-- Confirmed slip details -->
+                                <div class="pay-box mb-3">
+                                    <div class="ref-box mb-2">
+                                        <span class="ref-label">CONFIRMED REFERENCE NO.</span>
+                                        <strong class="ref-number" id="onsiteRefNumber">—</strong>
+                                    </div>
+                                    <div class="ref-box mb-2">
+                                        <span class="ref-label">AMOUNT TO PAY AT CASHIER</span>
+                                        <strong class="ref-number text-success" id="onsiteAmountConfirmed">—</strong>
+                                    </div>
+                                    <div class="ref-box">
+                                        <span class="ref-label">PAYMENT LOCATION</span>
+                                        <strong class="ref-number" style="font-size:.78rem; letter-spacing:0;">
+                                            Main Building, Second Floor — Cashier's Office
+                                        </strong>
+                                    </div>
+                                    <p class="small text-muted mt-2 mb-0 text-center">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Office Hours: Mon–Fri, 8:00 AM – 5:00 PM
+                                    </p>
+                                </div>
+
+                                <button class="btn btn-outline-secondary w-100 btn-sm"
+                                        onclick="window.print()">
+                                    <i class="bi bi-printer me-1"></i>Print Payment Slip
+                                </button>
+                            </div>
+
+                            <!-- Error state -->
+                            <div id="onsiteError" class="d-none mt-2">
+                                <div class="alert alert-danger border-0 py-2 small mb-1">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                    <span id="onsiteErrorMsg">Could not save. Please try again.</span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger w-100"
+                                        onclick="document.getElementById('onsiteError').classList.add('d-none');
+                                                 document.getElementById('btnConfirmOnsite').disabled=false;
+                                                 confirmOnsitePayment();">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                                </button>
+                            </div>
+
+                        </div><!-- /#method-onsite -->
+                    </div><!-- /#payment-content -->
+                </div><!-- /.content-card (Payment Method) -->
+
+            </div><!-- /.col-lg-4 -->
+        </div><!-- /.row -->
+    </div><!-- /.container -->
+</section>
+
+<!-- ─── STYLES ──────────────────────────────────────────────────────── -->
+<style>
+    :root {
+        --admiral:      #051094;
+        --admiral-dark: #030a6e;
+        --accent:       #669bbc;
+        --white:        #ffffff;
+        --off-white:    #f4f6ff;
+        --text-dark:    #0d1b4b;
+        --text-muted:   #5a6a8a;
+    }
+
+    /* ── Banner ── */
+    .form-banner {
+        position:        relative;
+        background-size: cover;
+        background-position: center;
+        min-height:      180px;
+        display:         flex;
+        align-items:     center;
+        overflow:        hidden;
+    }
+    .form-banner__overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(
+            to right,
+            rgba(5,16,148,.88)  0%,
+            rgba(5,16,148,.60) 50%,
+            rgba(102,155,188,.22) 100%);
+        z-index: 1;
+    }
+    .form-banner__content { position:relative; z-index:2; padding:2.5rem 0; }
+    .form-banner__eyebrow {
+        font-size:.7rem; font-weight:700; letter-spacing:3px;
+        text-transform:uppercase; color:rgba(255,255,255,.6); margin-bottom:.25rem;
+    }
+    .form-banner__title {
+        font-size:clamp(1.6rem,4vw,2.4rem); font-weight:800;
+        color:var(--white); letter-spacing:-.5px; margin-bottom:.35rem;
+    }
+    .form-banner__sub { font-size:.88rem; color:rgba(255,255,255,.72); margin:0; }
+    .banner-check     { color:rgba(255,255,255,.9); font-size:1.5rem; vertical-align:middle; }
+
+    /* ── Section ── */
+    .form-section {
+        padding:3rem 0 5rem;
+        background-size:cover; background-position:center; background-repeat:no-repeat;
+    }
+
+    /* ── Email success banner ── */
+    .alert-email {
+        background: linear-gradient(135deg,#0f3460 0%,#051094 100%);
+        color:#fff; border:none; border-radius:12px;
+        padding:1rem 1.25rem; display:flex; align-items:center;
+        box-shadow:0 4px 18px rgba(5,16,148,.18);
+    }
+    .alert-email .btn-close { filter:brightness(0) invert(1); opacity:.7; }
+    .email-icon-wrap {
+        flex-shrink:0; width:46px; height:46px;
+        background:rgba(255,255,255,.15); border-radius:50%;
+        display:flex; align-items:center; justify-content:center; font-size:1.4rem;
+    }
+
+    /* ── Cards ── */
+    .content-card {
+        background:var(--white); border-radius:14px;
+        border-top:4px solid var(--admiral);
+        padding:1.75rem;
+        box-shadow:0 2px 14px rgba(5,16,148,.07);
+    }
+    .content-card__header {
+        display:flex; align-items:center; justify-content:space-between;
+        border-bottom:2px solid var(--off-white);
+        padding-bottom:.75rem; margin-bottom:1.25rem;
+    }
+    .content-card__title {
+        font-size:.78rem; font-weight:800; color:var(--admiral);
+        letter-spacing:1px; text-transform:uppercase; margin:0;
+    }
+    .badge-ay {
+        font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+        background:var(--admiral); color:var(--white); padding:.28rem .75rem; border-radius:50px;
+    }
+
+    /* ── Table ── */
+    .tbl-head { background:var(--off-white); color:var(--text-dark); }
+    .tbl-head th { border-bottom:2px solid rgba(5,16,148,.15); padding:.6rem .5rem; }
+    .row-accredited { background-color:#d1f0e0 !important; color:var(--text-muted); }
+    .status-badge {
+        display:inline-block; font-size:.58rem; font-weight:700;
+        letter-spacing:.8px; text-transform:uppercase;
+        padding:.2rem .5rem; border-radius:50px;
+    }
+    .status-badge--accredited { background:#198754; color:white; }
+    .status-badge--regular    { background:var(--off-white); color:var(--text-muted); border:1px solid rgba(5,16,148,.12); }
+    .tbl-footer { background:var(--admiral) !important; color:var(--white) !important; }
+    .tbl-footer td { padding:.6rem .5rem; }
+    .total-units { color:#ffd700 !important; font-size:1rem; }
+    .accredited-note {
+        background:#d1f0e0; border:1px solid #a3d9be; border-radius:8px;
+        padding:.6rem .9rem; font-size:.8rem; color:#0f5132;
+    }
+
+    /* ── SOA ── */
+    .soa-card {
+        background:var(--white); border-radius:14px;
+        border-top:4px solid var(--admiral); overflow:hidden;
+        box-shadow:0 2px 14px rgba(5,16,148,.07);
+    }
+    .soa-card__header {
+        background:var(--admiral); color:var(--white);
+        font-size:.75rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase;
+        padding:.75rem 1.5rem;
+    }
+    .soa-card__body { padding:1.25rem 1.5rem; }
+    .soa-row {
+        display:flex; justify-content:space-between;
+        font-size:.88rem; padding:.4rem 0;
+        border-bottom:1px solid rgba(5,16,148,.06);
+    }
+    .soa-row span:first-child { color:var(--text-muted); }
+    .soa-row span:last-child  { font-weight:700; color:var(--text-dark); }
+    .soa-total {
+        display:flex; justify-content:space-between; align-items:center;
+        margin-top:.75rem; padding-top:.75rem;
+        border-top:2px solid var(--admiral);
+        font-size:1rem; font-weight:800; color:var(--admiral);
+    }
+    .soa-downpayment {
+        display:flex; justify-content:space-between;
+        font-size:.82rem; font-weight:600; color:#198754;
+        background:#d1f0e0; border-radius:8px; padding:.4rem .75rem;
+    }
+
+    /* ── Student Info ── */
+    .info-row {
+        display:flex; justify-content:space-between;
+        padding:.35rem 0; border-bottom:1px solid var(--off-white); font-size:.85rem;
+    }
+    .info-row:last-child { border-bottom:none; }
+
+    /* ── Doc card ── */
+    .doc-card {
+        background:var(--white); border-radius:14px;
+        border-top:4px solid #198754;
+        padding:1.5rem;
+        box-shadow:0 2px 14px rgba(25,135,84,.08);
+    }
+    .doc-card__header {
+        font-size:.75rem; font-weight:800; letter-spacing:1px;
+        text-transform:uppercase; color:#198754; margin-bottom:.75rem;
+    }
+
+    /* ── Payment ── */
+    .pay-box {
+        background:var(--off-white); border:1px solid rgba(5,16,148,.1);
+        border-radius:10px; padding:1rem;
+    }
+    .ref-box {
+        background:var(--white); border:1px solid rgba(5,16,148,.15);
+        border-radius:8px; padding:.6rem 1rem; text-align:center; margin-top:.5rem;
+    }
+    .ref-label {
+        display:block; font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase;
+        color:var(--text-muted); margin-bottom:.15rem;
+    }
+    .ref-number { font-size:1rem; color:var(--admiral); letter-spacing:1px; }
+
+    /* ── Utilities ── */
+    .text-admiral   { color:var(--admiral) !important; }
+    .border-admiral { border:1px solid var(--admiral) !important; }
+    .btn-admiral    { background-color:var(--admiral); color:white; border:none; }
+    .btn-admiral:hover { background-color:var(--admiral-dark); color:white; }
+    .btn-outline-admiral {
+        color:var(--admiral); border:1px solid var(--admiral); background:transparent;
+    }
+    .btn-outline-admiral:hover { background:var(--admiral); color:white; }
+    input:focus, select:focus {
+        border-color:var(--admiral) !important;
+        box-shadow:0 0 0 .2rem rgba(5,16,148,.12) !important;
+    }
+
+    /* ── Print styles ── */
+    @@media print {
+        .form-banner, .doc-card, #paymentMethodSelect,
+        .btn, nav, footer, .alert { display: none !important; }
+        .form-section { padding: 0 !important; background: none !important; }
+        .content-card, .soa-card {
+            box-shadow: none !important;
+            border: 1px solid #ccc !important;
+        }
+        #method-gcash { display: none !important; }
+        #method-onsite { display: block !important; }
+        #btnConfirmOnsite, #onsiteSpinner, #onsiteError { display: none !important; }
+        #onsiteSuccess { display: block !important; }
+    }
+</style>
+
+<!-- ─── SCRIPTS ──────────────────────────────────────────────────────── -->
+<script>
+    const _studentId = @studentId;
+
+    // ── Payment panel switcher ────────────────────────────────────────
+    function switchPaymentMethod(method) {
+        document.querySelectorAll('.payment-method-panel')
+                .forEach(p => p.classList.add('d-none'));
+        const panel = document.getElementById('method-' + method);
+        if (panel) panel.classList.remove('d-none');
+    }
+
+    // ── GCash preview ─────────────────────────────────────────────────
+    async function loadGCashPreview() {
+        try {
+            const res  = await fetch('/PaymentAdmin/GetGCashConfig');
+            const json = await res.json();
+            if (json.success) {
+                document.getElementById('gcashAccountName').textContent =
+                    json.accountName || 'OACT Registrar';
+                document.getElementById('gcashPhoneDisplay').textContent =
+                    formatPhone(json.gcashNumber);
+                if (json.qrCodePath) {
+                    document.getElementById('gcashQrDisplay').innerHTML =
+                        `<img src="${json.qrCodePath}"
+                              style="width:100px;height:100px;object-fit:contain;
+                                     border-radius:8px;border:1px solid #ddd;"
+                              alt="GCash QR">`;
+                }
+            } else {
+                document.getElementById('gcashAccountName').textContent =
+                    'GCash not configured — contact registrar.';
+            }
+        } catch {
+            document.getElementById('gcashAccountName').textContent =
+                'Could not load GCash info.';
+        }
+    }
+
+    function formatPhone(n) {
+        n = (n || '').replace(/\D/g, '');
+        return n.replace(/(\d{4})(\d{3})(\d{4})/, '$1-$2-$3');
+    }
+
+    // ── Generate PDF ──────────────────────────────────────────────────
+    async function generatePdf() {
+        const pdfSpinner = document.getElementById('pdfSpinner');
+        const pdfLink    = document.getElementById('pdfDownloadLink');
+        const pdfError   = document.getElementById('pdfError');
+
+        pdfSpinner.classList.remove('d-none');
+        pdfLink.classList.add('d-none');
+        pdfError.classList.add('d-none');
+
+        try {
+            const res  = await fetch('/Enrollment/GenerateAdmissionFormPdf', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ studentId: _studentId })
+            });
+            const json = await res.json();
+
+            pdfSpinner.classList.add('d-none');
+
+            if (json.success) {
+                pdfLink.href = json.url;
+                pdfLink.classList.remove('d-none');
+            } else {
+                document.getElementById('pdfErrorMsg').textContent =
+                    json.error || 'PDF conversion failed.';
+                pdfError.classList.remove('d-none');
+            }
+        } catch (e) {
+            pdfSpinner.classList.add('d-none');
+            document.getElementById('pdfErrorMsg').textContent = 'Network error: ' + e.message;
+            pdfError.classList.remove('d-none');
+        }
+    }
+
+    // ── Generate DOCX then PDF ────────────────────────────────────────
+    async function generateAdmissionForm() {
+        document.getElementById('docSpinner').classList.remove('d-none');
+        document.getElementById('docReady').classList.add('d-none');
+        document.getElementById('docError').classList.add('d-none');
+
+        try {
+            const res  = await fetch('/Enrollment/GenerateAdmissionForm', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ studentId: _studentId })
+            });
+            const json = await res.json();
+
+            document.getElementById('docSpinner').classList.add('d-none');
+
+            if (json.success) {
+                document.getElementById('docReady').classList.remove('d-none');
+                generatePdf();
+            } else {
+                document.getElementById('docErrorMsg').textContent =
+                    json.error || 'Unknown error.';
+                document.getElementById('docError').classList.remove('d-none');
+            }
+        } catch (e) {
+            document.getElementById('docSpinner').classList.add('d-none');
+            document.getElementById('docErrorMsg').textContent = 'Network error: ' + e.message;
+            document.getElementById('docError').classList.remove('d-none');
+        }
+    }
+
+    // ── Confirm On-Site Payment → creates Payment record in DB ────────
+    async function confirmOnsitePayment() {
+        const btn     = document.getElementById('btnConfirmOnsite');
+        const spinner = document.getElementById('onsiteSpinner');
+        const success = document.getElementById('onsiteSuccess');
+        const errDiv  = document.getElementById('onsiteError');
+
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        errDiv.classList.add('d-none');
+
+        try {
+            const res  = await fetch('/Enrollment/SelectOnsitePayment', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ studentId: _studentId })
+            });
+            const json = await res.json();
+
+            spinner.classList.add('d-none');
+
+            if (json.success) {
+                btn.classList.add('d-none');
+
+                // Populate confirmed slip with server-returned values
+                if (json.referenceNumber) {
+                    document.getElementById('onsiteRefNumber').textContent =
+                        json.referenceNumber;
+                }
+                if (json.amount !== undefined) {
+                    document.getElementById('onsiteAmountConfirmed').textContent =
+                        '₱' + Number(json.amount).toLocaleString('en-PH', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                }
+
+                success.classList.remove('d-none');
+            } else {
+                btn.disabled = false;
+                document.getElementById('onsiteErrorMsg').textContent =
+                    json.error || 'Could not save payment method.';
+                errDiv.classList.remove('d-none');
+            }
+        } catch (e) {
+            spinner.classList.add('d-none');
+            btn.disabled = false;
+            document.getElementById('onsiteErrorMsg').textContent =
+                'Network error: ' + e.message;
+            errDiv.classList.remove('d-none');
+        }
+    }
+
+    // ── Kick everything off on load ───────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        loadGCashPreview();
+        generateAdmissionForm();
+    });
+</script>

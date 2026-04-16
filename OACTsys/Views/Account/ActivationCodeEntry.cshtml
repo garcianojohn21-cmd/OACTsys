@@ -1,0 +1,100 @@
+﻿@{
+    ViewData["Title"] = "Enter Activation Code";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0 card-oact">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <span style="font-size:3rem;">🔑</span>
+                        </div>
+                        <h4 class="text-admiral fw-bold uppercase">Activation Code Required</h4>
+                        <p class="text-muted small">
+                            Your Google account has been verified. To complete your registration,
+                            please enter the <strong>activation code</strong> provided by the
+                            OACT Registrar's Office.
+                        </p>
+                    </div>
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger small">@TempData["Error"]</div>
+                    }
+
+                    <form asp-action="ConfirmActivationCode" method="post">
+                        <div class="mb-4">
+                            <label class="small fw-bold text-admiral">ACTIVATION CODE</label>
+                            <input type="text" name="ActivationCode"
+                                   class="form-control border-admiral text-center fw-bold"
+                                   placeholder="e.g. STU-2025-ALPHA1"
+                                   style="letter-spacing: 3px; font-size: 1.1rem; text-transform: uppercase;"
+                                   required autofocus>
+                            <div class="form-text text-muted small mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Don't have an activation code?
+                                <a href="mailto:registrar@oact.edu.ph" class="text-admiral">
+                                    Contact the Registrar
+                                </a>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-admiral w-100 py-2 shadow-sm">
+                            CONFIRM & CONTINUE
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a asp-action="SignIn" class="small text-muted text-decoration-none">
+                            ← Back to Sign In
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --admiral: #051094;
+    }
+
+    .text-admiral {
+        color: var(--admiral) !important;
+    }
+
+    .border-admiral {
+        border: 1px solid var(--admiral);
+    }
+
+    .btn-admiral {
+        background-color: var(--admiral);
+        color: white;
+        border: none;
+    }
+
+        .btn-admiral:hover {
+            background-color: #030a6e;
+            color: white;
+        }
+
+    .card-oact {
+        border-top: 5px solid var(--admiral);
+        border-radius: 10px;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    input:focus {
+        border-color: var(--admiral) !important;
+        box-shadow: 0 0 0 0.25rem rgba(5, 16, 148, 0.1) !important;
+    }
+</style>

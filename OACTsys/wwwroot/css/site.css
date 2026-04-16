@@ -1,0 +1,176 @@
+:root {
+    --primary-blue: #0d6efd;
+    --light-blue: #e7f1ff;
+    --white: #ffffff;
+    --navbar-color: #5c6c8c;
+    --text-dark: #2c3e50;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+    color: var(--text-dark);
+}
+
+p, .card-text, .service-subtitle {
+    color: #4a5568;
+}
+
+/* Navbar */
+.navbar {
+    padding: 1rem 0;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    color: white !important;
+}
+
+    .navbar-brand img {
+        transition: transform 0.3s ease;
+    }
+
+    .navbar-brand:hover img {
+        transform: scale(1.1);
+    }
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    transition: color 0.3s ease;
+}
+
+    .nav-link:hover,
+    .nav-link.active {
+        color: white !important;
+    }
+
+/* Hero Section */
+.hero-section {
+    padding-top: 80px;
+    background: linear-gradient(135deg, var(--light-blue) 0%, var(--white) 100%);
+}
+
+    .hero-section h1 {
+        color: var(--text-dark);
+    }
+
+    .hero-section .lead {
+        color: #4a5568;
+    }
+
+/* Service Cards */
+.service-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 15px;
+}
+
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2) !important;
+    }
+
+    .service-card .card-title {
+        color: var(--text-dark);
+    }
+
+.service-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        transform: scale(1.05);
+    }
+
+/* Contact Items */
+.contact-item {
+    padding: 2rem;
+    transition: transform 0.3s ease;
+}
+
+    .contact-item:hover {
+        transform: translateY(-5px);
+    }
+
+    .contact-item h5 {
+        color: var(--text-dark);
+    }
+
+    .contact-item p {
+        color: #4a5568;
+    }
+
+/* About Section */
+#about h2 {
+    color: var(--text-dark);
+}
+
+#about p {
+    color: #4a5568;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+
+    .hero-section i {
+        font-size: 8rem !important;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+
+        .navbar-brand img {
+            height: 35px;
+        }
+}
+
+@media (max-width: 576px) {
+    .hero-section h1 {
+        font-size: 1.75rem;
+    }
+
+    .service-card .card-body {
+        padding: 2rem !important;
+    }
+
+    .navbar-brand img {
+        height: 30px;
+    }
+}

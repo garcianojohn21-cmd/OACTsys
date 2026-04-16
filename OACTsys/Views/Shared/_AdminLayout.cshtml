@@ -1,0 +1,478 @@
+﻿@{
+    Layout = null;
+    string adminName = ViewBag.AdminName ?? "Administrator";
+    string adminRole = ViewBag.AdminRole ?? "Admin";
+    List<string> permissions = ViewBag.Permissions as List<string> ?? new List<string>();
+
+    string currentController = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower() ?? "";
+    string currentAction     = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower() ?? "";
+
+    // Dashboard
+    bool isDashboardGroup = currentAction == "dashboard";
+
+    // Student Records — all sub-pages + StudentController
+    bool isStudentGroup =
+        currentController == "student" ||
+        currentAction == "studentrecords" ||
+        currentAction == "viewstudentdata" ||
+        currentAction == "createstudentrecord" ||
+        currentAction == "donestudents" ||
+        currentAction == "pendingstudents" ||
+        currentAction == "archivedstudents";
+
+    // Enrollment — EnrollmentController + EnrollmentAdminController
+    bool isEnrollmentGroup =
+        currentController == "enrollment" ||
+        currentController == "enrollmentadmin" ||
+        currentAction == "enrollment";
+
+    // Licensure — LicensureController + LicensureAdminController + sub-pages
+    bool isLicensureGroup =
+        currentController == "licensure" ||
+        currentController == "licensureadmin" ||
+        currentAction == "licensure" ||
+        currentAction == "editlocation";
+
+    // Payments — PaymentController + PaymentAdminController + PayMongoController
+    bool isPaymentsGroup =
+        currentController == "payment" ||
+        currentController == "paymentadmin" ||
+        currentController == "paymongo" ||
+        currentAction == "payments";
+
+    // Grades — GradesController + grades action
+    bool isGradesGroup =
+        currentController == "grades" ||
+        currentAction == "grades";
+
+    // Reports
+    bool isReportsGroup = currentAction == "reports";
+
+    // Messages
+    bool isMessagesGroup = currentAction == "messages";
+
+    // Admin Management — AdminList + EditAdmin
+    bool isAdminManagementGroup =
+        currentAction == "adminlist" ||
+        currentAction == "editadmin";
+
+    // Create Admin
+    bool isCreateAdminGroup = currentAction == "createadmin";
+
+    // System Settings
+    bool isSettingsGroup = currentAction == "settings";
+
+    // Audit Logs
+    bool isLogsGroup = currentAction == "logs";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>ORSON AEROSPACE COLLEGE AND TECHNOLOGY, INC.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy-blue: #001f3f;
+            --light-navy: #1a3a5c;
+            --hover-blue: #2c5f8d;
+            --accent-blue: #4a90e2;
+            --sidebar-width: 280px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #ffffff;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 15px rgba(0, 31, 63, 0.08);
+        }
+
+        #sidebar.active { margin-left: calc(-1 * var(--sidebar-width)); }
+
+        /* --- HEADER --- */
+        .sidebar-header {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 2px solid #e8ecf1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fb 100%);
+        }
+
+        .brand-logo {
+            width: 110px;
+            height: auto;
+            margin-bottom: 12px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 2px 4px rgba(0, 31, 63, 0.1));
+        }
+
+        .brand-logo:hover { transform: scale(1.08) translateY(-2px); }
+
+        .brand-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.4;
+            letter-spacing: 0.5px;
+            margin: 0;
+            text-transform: uppercase;
+            color: var(--navy-blue);
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: var(--navy-blue);
+            color: #ffffff;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 31, 63, 0.15);
+        }
+
+        .admin-badge:hover {
+            background: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.3);
+        }
+
+        /* --- NAV LINKS --- */
+        .sidebar-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--navy-blue) #f0f3f7;
+        }
+
+        .sidebar-content::-webkit-scrollbar { width: 8px; }
+        .sidebar-content::-webkit-scrollbar-track { background: #f0f3f7; border-radius: 10px; margin: 10px 0; }
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--navy-blue) 0%, var(--light-navy) 100%);
+            border-radius: 10px;
+        }
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent-blue) 0%, var(--hover-blue) 100%);
+        }
+
+        .nav-link {
+            color: #4a5568 !important;
+            padding: 13px 16px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            text-decoration: none !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.95rem;
+            font-weight: 500;
+            position: relative;
+            overflow: visible;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--accent-blue);
+            transform: scaleY(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-link:hover::before { transform: scaleY(1); }
+
+        .nav-link:hover {
+            background: linear-gradient(90deg, #f0f4ff 0%, #e8f0fe 100%);
+            color: var(--navy-blue) !important;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 31, 63, 0.08);
+        }
+
+        .nav-link.active {
+            background: var(--navy-blue);
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(0, 31, 63, 0.25);
+            border-radius: 12px;
+            transform: translateX(0);
+        }
+
+        .nav-link.active::before { transform: scaleY(0); background: transparent; }
+        .nav-link.active i { color: #ffffff; }
+
+        .nav-link i {
+            font-size: 1.25rem;
+            margin-right: 14px;
+            width: 28px;
+            text-align: center;
+            color: var(--navy-blue);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover i { transform: scale(1.15) rotate(5deg); color: var(--accent-blue); }
+        .nav-link.active:hover i { color: #ffffff; transform: scale(1.15); }
+
+        .nav-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #d1d9e6 20%, #d1d9e6 80%, transparent);
+            margin: 18px 10px;
+            opacity: 0.6;
+        }
+
+        /* --- CONTENT AREA --- */
+        #content {
+            width: calc(100% - var(--sidebar-width));
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+        }
+
+        #content.active { width: 100%; margin-left: 0; }
+
+        .navbar {
+            background: #ffffff;
+            padding: 16px 28px;
+            box-shadow: 0 2px 12px rgba(0, 31, 63, 0.06);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            border-bottom: 1px solid #e8ecf1;
+        }
+
+        #sidebarToggle {
+            background: none;
+            border: 2px solid transparent;
+            color: var(--navy-blue);
+            font-size: 1.6rem;
+            cursor: pointer;
+            padding: 8px 14px;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #sidebarToggle:hover {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+            border-color: var(--accent-blue);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+        }
+
+        #sidebarToggle:active { transform: scale(0.95); }
+
+        .user-info {
+            padding: 10px 18px;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+
+        .user-info:hover {
+            background: linear-gradient(135deg, #f8f9fb 0%, #f0f4ff 100%);
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+        }
+
+        .user-info .fw-bold { color: var(--navy-blue); transition: color 0.3s ease; }
+        .user-info:hover .fw-bold { color: var(--accent-blue); }
+
+        .logout-btn { color: #dc3545 !important; font-weight: 600; }
+        .logout-btn:hover {
+            background: linear-gradient(90deg, #fff5f5 0%, #ffe8e8 100%) !important;
+            color: #c82333 !important;
+        }
+        .logout-btn:hover i { animation: slideOut 0.4s ease; }
+
+        @@keyframes slideOut {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(6px); }
+        }
+
+        .container-fluid { max-width: 100%; overflow-x: hidden; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        .card {
+            overflow: hidden;
+            border: 1px solid #e8ecf1;
+            box-shadow: 0 2px 8px rgba(0, 31, 63, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 20px rgba(0, 31, 63, 0.12);
+            transform: translateY(-2px);
+        }
+
+        @@media (max-width: 768px) {
+            #sidebar { margin-left: calc(-1 * var(--sidebar-width)); }
+            #sidebar.active { margin-left: 0; }
+            #content { width: 100%; margin-left: 0; }
+            #content.active { margin-left: var(--sidebar-width); }
+        }
+    </style>
+
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <img src="~/images/MainLogo.png" alt="Logo" class="brand-logo">
+            <p class="brand-name">ORSON AEROSPACE COLLEGE<br>AND TECHNOLOGY, INC.</p>
+            <span class="admin-badge">@adminRole</span>
+        </div>
+
+        <div class="sidebar-content">
+
+            @if (permissions.Contains("Dashboard"))
+            {
+                <a href="/Admin/Dashboard" class="nav-link @(isDashboardGroup ? "active" : "")">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            }
+
+            @if (permissions.Contains("StudentRecords"))
+            {
+                <a href="/Admin/StudentRecords" class="nav-link @(isStudentGroup ? "active" : "")">
+                    <i class="bi bi-people-fill"></i> Student Records
+                </a>
+            }
+
+            @if (permissions.Contains("Enrollment"))
+            {
+                <a href="/Admin/Enrollment" class="nav-link @(isEnrollmentGroup ? "active" : "")">
+                    <i class="bi bi-journal-text"></i> Enrollment
+                </a>
+            }
+
+            @if (permissions.Contains("Licensure"))
+            {
+                <a href="/Admin/Licensure" class="nav-link @(isLicensureGroup ? "active" : "")">
+                    <i class="bi bi-mortarboard-fill"></i> Licensure Exam
+                </a>
+            }
+
+            <div class="nav-divider"></div>
+
+            @if (permissions.Contains("Payments"))
+            {
+                <a href="/Admin/Payments" class="nav-link @(isPaymentsGroup ? "active" : "")">
+                    <i class="bi bi-credit-card-fill"></i> Payments
+                </a>
+            }
+
+            @if (permissions.Contains("Reports"))
+            {
+                <a href="/Admin/Reports" class="nav-link @(isReportsGroup ? "active" : "")">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i> Reports
+                </a>
+            }
+
+            @if (permissions.Contains("Grades"))
+            {
+                <a href="/Admin/Grades" class="nav-link @(isGradesGroup ? "active" : "")">
+                    <i class="bi bi-clipboard-data-fill"></i> Grades
+                </a>
+            }
+
+            <div class="nav-divider"></div>
+
+            @if (permissions.Contains("Messages"))
+            {
+                <a href="/Admin/Messages" class="nav-link @(isMessagesGroup ? "active" : "")">
+                    <i class="bi bi-chat-dots-fill"></i> Messages
+                </a>
+            }
+
+            @if (permissions.Contains("UserManagement"))
+            {
+                <a href="/Admin/AdminList" class="nav-link @(isAdminManagementGroup ? "active" : "")">
+                    <i class="bi bi-shield-lock-fill"></i> Admin Management
+                </a>
+            }
+
+            @if (permissions.Contains("CreateAdmin"))
+            {
+                <a href="/Admin/CreateAdmin" class="nav-link @(isCreateAdminGroup ? "active" : "")">
+                    <i class="bi bi-person-plus-fill"></i> Create Admin
+                </a>
+            }
+
+            @if (permissions.Contains("SystemSettings"))
+            {
+                <a href="/Admin/Settings" class="nav-link @(isSettingsGroup ? "active" : "")">
+                    <i class="bi bi-gear-fill"></i> System Settings
+                </a>
+            }
+
+            @if (permissions.Contains("AuditLogs"))
+            {
+                <a href="/Admin/Logs" class="nav-link @(isLogsGroup ? "active" : "")">
+                    <i class="bi bi-file-text-fill"></i> Audit Logs
+                </a>
+            }
+
+            <div class="nav-divider"></div>
+
+            <a href="/Admin/Logout" class="nav-link logout-btn">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+
+        </div>
+    </nav>
+
+    <div id="content">
+        <nav class="navbar d-flex justify-content-between">
+            <button id="sidebarToggle">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="user-info">
+                <small class="text-muted">Welcome back,</small>
+                <span class="fw-bold ms-1">@adminName</span>
+            </div>
+        </nav>
+
+        <div class="container-fluid p-4">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#sidebarToggle').on('click', function () {
+                $('#sidebar, #content').toggleClass('active');
+            });
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

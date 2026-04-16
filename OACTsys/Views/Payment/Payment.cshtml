@@ -1,0 +1,293 @@
+@{
+    ViewData["Title"] = "Payment - Enrollment";
+    var student = ViewBag.Student as OACTsys.Models.Student;
+    var tuitionFee = ViewBag.TuitionFee as OACTsys.Models.TuitionFee;
+    var studentData = ViewBag.StudentData as Dictionary<string, string>;
+}
+
+<style>
+    :root {
+        --admiral: #051094;
+    }
+
+    .payment-card {
+        border-top: 5px solid var(--admiral);
+    }
+
+    .fee-breakdown {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .total-amount {
+        background-color: #fff3cd;
+        font-size: 1.5rem;
+        font-weight: bold;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .payment-method-card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+        .payment-method-card:hover {
+            border-color: var(--admiral);
+            box-shadow: 0 4px 8px rgba(5, 16, 148, 0.2);
+        }
+
+        .payment-method-card.selected {
+            border-color: var(--admiral);
+            background-color: #e7f3ff;
+        }
+
+    .gcash-qr {
+        max-width: 300px;
+        margin: 20px auto;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow payment-card">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4" style="color: var(--admiral);">
+                        <i class="bi bi-credit-card"></i> Enrollment Payment
+                    </h3>
+
+                    <!-- Student Information -->
+                    <div class="alert alert-info">
+                        <h5>Student Information</h5>
+                        @{
+                            string studentName = "N/A";
+                            if (studentData != null)
+                            {
+                                // Try different possible field names for student name
+                                if (studentData.ContainsKey("Full Name"))
+                                    studentName = studentData["Full Name"];
+                                else if (studentData.ContainsKey("Name"))
+                                    studentName = studentData["Name"];
+                                else if (studentData.ContainsKey("Student Name"))
+                                    studentName = studentData["Student Name"];
+                                else if (studentData.ContainsKey("Complete Name"))
+                                    studentName = studentData["Complete Name"];
+                            }
+                        }
+                        <p class="mb-1"><strong>Name:</strong> @studentName</p>
+                        <p class="mb-1"><strong>Student Number:</strong> @student.StudentNumber</p>
+                        <p class="mb-1"><strong>Program:</strong> @student.Program</p>
+                        <p class="mb-0"><strong>Email:</strong> @student.Email</p>
+                    </div>
+
+                    <!-- Fee Breakdown -->
+                    @if (tuitionFee != null)
+                    {
+                        <div class="fee-breakdown mb-4">
+                            <h5 class="mb-3">Payment Breakdown</h5>
+                            <table class="table table-borderless mb-3">
+                                <tr>
+                                    <td>Tuition Fee</td>
+                                    <td class="text-end">₱@tuitionFee.TuitionFees.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td>Miscellaneous</td>
+                                    <td class="text-end">₱@tuitionFee.Miscellaneous.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td>Laboratory</td>
+                                    <td class="text-end">₱@tuitionFee.Laboratory.ToString("N2")</td>
+                                </tr>
+                                @if (tuitionFee.OtherFees > 0)
+                                {
+                                    <tr>
+                                        <td>Other Fees <small class="text-muted">(@tuitionFee.OtherFeesDescription)</small></td>
+                                        <td class="text-end">₱@tuitionFee.OtherFees.ToString("N2")</td>
+                                    </tr>
+                                }
+                                @if (tuitionFee.HasDiscount)
+                                {
+                                    <tr class="text-success">
+                                        <td>Discount (@(tuitionFee.DiscountPercent)%)</td>
+                                        <td class="text-end">-₱@tuitionFee.DiscountAmount.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </table>
+                            <hr>
+                            <div class="total-amount">
+                                AMOUNT TO PAY: ₱@tuitionFee.TotalPaymentUponEnrollment.ToString("N2")
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                * This is the down payment. Remaining balance can be paid in installments.
+                            </small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Tuition fee information not available. Please contact the registrar office.
+                        </div>
+                    }
+
+                    <!-- Payment Form -->
+                    <form asp-action="SubmitPayment" method="post" enctype="multipart/form-data" id="paymentForm">
+                        <input type="hidden" name="StudentId" value="@student.StudentId" />
+                        <input type="hidden" name="Amount" value="@tuitionFee?.TotalPaymentUponEnrollment" />
+                        <input type="hidden" name="PaymentType" value="Enrollment" />
+
+                        <h5 class="mb-3">Select Payment Method</h5>
+
+                        <!-- Payment Method Selection -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="payment-method-card" onclick="selectPaymentMethod('GCash')">
+                                    <input type="radio" name="PaymentMethod" value="GCash" id="gcash" required>
+                                    <label for="gcash" class="ms-2">
+                                        <i class="bi bi-phone text-success"></i>
+                                        <strong>GCash</strong>
+                                        <p class="small text-muted mb-0">Pay using GCash QR Code</p>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="payment-method-card" onclick="selectPaymentMethod('Manual')">
+                                    <input type="radio" name="PaymentMethod" value="Manual" id="manual" required>
+                                    <label for="manual" class="ms-2">
+                                        <i class="bi bi-building text-primary"></i>
+                                        <strong>Office Payment</strong>
+                                        <p class="small text-muted mb-0">Pay at school office</p>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GCash Details -->
+                        <div id="gcashDetails" style="display: none;">
+                            <div class="alert alert-success">
+                                <h6>GCash Payment Instructions:</h6>
+                                <ol class="mb-0">
+                                    <li>Scan the QR code below or send to: <strong>0917-123-4567</strong></li>
+                                    <li>Account Name: <strong>NORTHERN COLLEGE INC</strong></li>
+                                    <li>Amount: <strong>₱@tuitionFee?.TotalPaymentUponEnrollment.ToString("N2")</strong></li>
+                                    <li>Take a screenshot of the receipt</li>
+                                    <li>Enter the reference number and upload proof</li>
+                                </ol>
+                            </div>
+
+                            <div class="gcash-qr text-center">
+                                <img src="/images/gcash-qr-sample.png" alt="GCash QR Code" class="img-fluid border"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect width=\'200\' height=\'200\' fill=\'%23f8f9fa\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'sans-serif\' font-size=\'14\' fill=\'%236c757d\'%3EGCash QR Code%3C/text%3E%3C/svg%3E'">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">GCash Reference Number *</label>
+                                <input type="text" class="form-control" name="ReferenceNumber"
+                                       placeholder="e.g., 9021-884-112" id="gcashRef">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Upload Proof of Payment (Screenshot) *</label>
+                                <input type="file" class="form-control" name="proofOfPayment"
+                                       accept="image/*" id="gcashProof">
+                                <small class="text-muted">Please upload a clear screenshot of your GCash receipt</small>
+                            </div>
+                        </div>
+
+                        <!-- Manual Payment Details -->
+                        <div id="manualDetails" style="display: none;">
+                            <div class="alert alert-primary">
+                                <h6>Office Payment Instructions:</h6>
+                                <ol class="mb-0">
+                                    <li>Visit any of our payment offices during office hours</li>
+                                    <li>Present your Student Number: <strong>@student.StudentNumber</strong></li>
+                                    <li>Pay the amount and receive your Official Receipt (OR)</li>
+                                    <li>Enter the OR number below for verification</li>
+                                </ol>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Payment Office Location *</label>
+                                <select class="form-select" name="PaymentLocation" id="manualLoc">
+                                    <option value="">-- Select Office --</option>
+                                    <option>Main Accounting Office</option>
+                                    <option>Annex Registrar Window</option>
+                                    <option>Finance Satellite Branch</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Official Receipt (OR) Number *</label>
+                                <input type="text" class="form-control" name="ORNumber"
+                                       placeholder="e.g., OR-2026-0001" id="orNumber">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-lg" style="background-color: var(--admiral); color: white;">
+                                <i class="bi bi-check-circle"></i> Submit Payment
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function selectPaymentMethod(method) {
+            // Clear previous selection
+            document.querySelectorAll('.payment-method-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Hide all details
+            document.getElementById('gcashDetails').style.display = 'none';
+            document.getElementById('manualDetails').style.display = 'none';
+
+            // Clear required attributes
+            document.getElementById('gcashRef').removeAttribute('required');
+            document.getElementById('gcashProof').removeAttribute('required');
+            document.getElementById('manualLoc').removeAttribute('required');
+            document.getElementById('orNumber').removeAttribute('required');
+
+            if (method === 'GCash') {
+                document.getElementById('gcash').checked = true;
+                document.getElementById('gcashDetails').style.display = 'block';
+                document.querySelector('[onclick="selectPaymentMethod(\'GCash\')"]').classList.add('selected');
+
+                // Set required
+                document.getElementById('gcashRef').setAttribute('required', 'required');
+                document.getElementById('gcashProof').setAttribute('required', 'required');
+            } else {
+                document.getElementById('manual').checked = true;
+                document.getElementById('manualDetails').style.display = 'block';
+                document.querySelector('[onclick="selectPaymentMethod(\'Manual\')"]').classList.add('selected');
+
+                // Set required
+                document.getElementById('manualLoc').setAttribute('required', 'required');
+                document.getElementById('orNumber').setAttribute('required', 'required');
+            }
+        }
+
+        // Form validation
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            const paymentMethod = document.querySelector('input[name="PaymentMethod"]:checked');
+            if (!paymentMethod) {
+                e.preventDefault();
+                alert('Please select a payment method');
+                return false;
+            }
+        });
+    </script>
+}

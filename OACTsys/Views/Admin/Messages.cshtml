@@ -1,0 +1,189 @@
+﻿@{
+    ViewBag.Title = "Messages";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .message-wrapper {
+        height: calc(100vh - 180px);
+    }
+
+    .conversation-list {
+        height: 100%;
+        overflow-y: auto;
+        border-right: 1px solid #dee2e6;
+    }
+
+    .conversation-item {
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        .conversation-item:hover,
+        .conversation-item.active {
+            background-color: #f1f3f5;
+        }
+
+    .chat-area {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f8f9fa;
+    }
+
+    .chat-message {
+        max-width: 70%;
+        margin-bottom: 12px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+    }
+
+        .chat-message.student {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            align-self: flex-start;
+        }
+
+        .chat-message.admin {
+            background: #051094;
+            color: white;
+            align-self: flex-end;
+        }
+
+    .chat-footer {
+        border-top: 1px solid #dee2e6;
+        padding: 10px;
+        background: white;
+    }
+
+    .conversation-name {
+        font-weight: 600;
+    }
+
+    .conversation-preview {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- ================= HEADER ================= -->
+    <div class="mb-3">
+        <h3 style="color:#051094;">
+            <i class="bi bi-chat-dots-fill"></i> Messages
+        </h3>
+        <small class="text-muted">Student communication & inquiries</small>
+    </div>
+
+    <div class="card shadow-sm message-wrapper">
+        <div class="row g-0 h-100">
+
+            <!-- ================= LEFT: CONVERSATION LIST ================= -->
+            <div class="col-md-4 conversation-list">
+
+                <div class="p-3 border-bottom">
+                    <input type="text" class="form-control form-control-sm" placeholder="Search student...">
+                </div>
+
+                <!-- Conversation Item -->
+                <div class="p-3 conversation-item active" onclick="openChat('Juan Dela Cruz')">
+                    <div class="conversation-name">Juan Dela Cruz</div>
+                    <div class="conversation-preview">
+                        How can I enroll for next semester?
+                    </div>
+                </div>
+
+                <div class="p-3 conversation-item" onclick="openChat('Maria Santos')">
+                    <div class="conversation-name">Maria Santos</div>
+                    <div class="conversation-preview">
+                        When will grades be released?
+                    </div>
+                </div>
+
+                <div class="p-3 conversation-item" onclick="openChat('Mark Villanueva')">
+                    <div class="conversation-name">Mark Villanueva</div>
+                    <div class="conversation-preview">
+                        Request for COR copy
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= RIGHT: CHAT AREA ================= -->
+            <div class="col-md-8 chat-area">
+
+                <!-- Chat Header -->
+                <div class="p-3 border-bottom">
+                    <strong id="chatStudentName">Juan Dela Cruz</strong>
+                    <span class="badge bg-success ms-2">Online</span>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="chat-body" id="chatBody">
+
+                    <div class="chat-message student">
+                        Good day admin, how can I enroll for next semester?
+                    </div>
+
+                    <div class="chat-message admin">
+                        Hello Juan, enrollment will open next week. Please check the enrollment page.
+                    </div>
+
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-footer">
+                    <div class="input-group">
+                        <input type="text" id="replyInput" class="form-control" placeholder="Type your reply...">
+                        <button class="btn btn-primary" onclick="sendReply()">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        function openChat(studentName) {
+            document.getElementById("chatStudentName").innerText = studentName;
+
+            // UI ONLY: replace chat content sample
+            document.getElementById("chatBody").innerHTML = `
+                <div class="chat-message student">
+                    Hello admin, I have a question regarding my concern.
+                </div>
+            `;
+        }
+
+        function sendReply() {
+            const input = document.getElementById("replyInput");
+            const message = input.value.trim();
+
+            if (message === "") return;
+
+            const chatBody = document.getElementById("chatBody");
+
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "chat-message admin";
+            msgDiv.innerText = message;
+
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            input.value = "";
+        }
+    </script>
+}

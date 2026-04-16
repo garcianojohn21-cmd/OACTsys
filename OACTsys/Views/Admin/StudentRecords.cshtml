@@ -1,0 +1,734 @@
+﻿@{
+    ViewBag.Title = "Student Records";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --navy:        #051094;
+        --navy-deep:   #030b72;
+        --navy-mid:    #0a1fa8;
+        --navy-soft:   #1a3fd4;
+        --navy-tint:   #e8ebff;
+        --navy-pale:   #f0f3ff;
+        --accent:      #3b82f6;
+        --accent-glow: rgba(59,130,246,.18);
+        --green:       #16a34a;
+        --green-bg:    #dcfce7;
+        --amber:       #d97706;
+        --amber-bg:    #fef3c7;
+        --red:         #dc2626;
+        --red-bg:      #fee2e2;
+        --sky:         #0284c7;
+        --sky-bg:      #e0f2fe;
+        --white:       #ffffff;
+        --surface:     #f5f7ff;
+        --border:      #e2e7ff;
+        --text-1:      #0d1b4b;
+        --text-2:      #4a5b8a;
+        --text-3:      #8a97c0;
+        --shadow-sm:   0 1px 3px rgba(5,16,148,.08);
+        --shadow-md:   0 4px 16px rgba(5,16,148,.10);
+        --shadow-lg:   0 12px 40px rgba(5,16,148,.14);
+        --radius:      14px;
+        --radius-sm:   9px;
+        --radius-xs:   6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    /* ── HERO ── */
+    .sr-hero {
+        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-soft) 100%);
+        padding: 2rem 2rem 3.8rem; position: relative; overflow: hidden;
+    }
+    .sr-hero::before {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background:
+            radial-gradient(ellipse 55% 70% at 85% -5%, rgba(59,130,246,.25) 0%, transparent 55%),
+            radial-gradient(ellipse 35% 55% at -5% 105%, rgba(255,255,255,.07) 0%, transparent 50%);
+    }
+    .sr-hero::after {
+        content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 44px;
+        background: var(--surface); clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .sr-hero-inner {
+        position: relative; z-index: 2;
+        display: flex; align-items: flex-start; justify-content: space-between;
+        flex-wrap: wrap; gap: 1.5rem;
+    }
+    .sr-hero-title {
+        font-size: clamp(1.55rem, 3vw, 2.2rem); font-weight: 800;
+        color: #fff; letter-spacing: -.5px; margin: 0 0 .3rem; line-height: 1.15;
+    }
+    .sr-hero-sub {
+        font-size: .81rem; color: rgba(255,255,255,.62); margin: 0;
+        font-weight: 500; line-height: 1.55; max-width: 480px;
+    }
+    .sr-hero-sub strong { color: rgba(255,255,255,.9); }
+
+    /* Stat pills */
+    .sr-stats-row { display: flex; gap: .65rem; flex-wrap: wrap; margin-top: 1.35rem; }
+    .sr-stat-pill {
+        background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(6px); border-radius: 50px;
+        padding: .33rem .9rem; display: flex; align-items: center; gap: .45rem;
+        font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.88);
+        cursor: pointer; transition: all .2s; white-space: nowrap; user-select: none;
+    }
+    .sr-stat-pill:hover { background: rgba(255,255,255,.2); }
+    .sr-stat-pill.active {
+        background: #fff; color: var(--navy);
+        border-color: transparent; box-shadow: 0 2px 10px rgba(5,16,148,.3);
+    }
+    .pill-count {
+        background: rgba(255,255,255,.22); border-radius: 50px;
+        padding: .08rem .48rem; font-size: .68rem; font-weight: 800;
+        min-width: 20px; text-align: center;
+    }
+    .sr-stat-pill.active .pill-count { background: var(--navy-tint); color: var(--navy); }
+    .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Hero actions */
+    .sr-hero-actions { display: flex; gap: .65rem; flex-wrap: wrap; align-items: flex-start; }
+    .btn-create {
+        background: #fff; color: var(--navy); border: none;
+        border-radius: var(--radius-sm); padding: .62rem 1.2rem;
+        font-size: .81rem; font-weight: 800; font-family: inherit;
+        display: inline-flex; align-items: center; gap: .45rem;
+        text-decoration: none; white-space: nowrap; cursor: pointer;
+        box-shadow: 0 4px 18px rgba(0,0,0,.22);
+        transition: transform .2s, box-shadow .2s;
+    }
+    .btn-create:hover { color: var(--navy-deep); transform: translateY(-2px); box-shadow: 0 8px 26px rgba(0,0,0,.28); }
+    .btn-refresh {
+        background: rgba(255,255,255,.13); color: #fff;
+        border: 1.5px solid rgba(255,255,255,.28);
+        border-radius: var(--radius-sm); padding: .62rem 1rem;
+        font-size: .81rem; font-weight: 700; font-family: inherit;
+        display: inline-flex; align-items: center; gap: .45rem;
+        cursor: pointer; white-space: nowrap; transition: background .2s;
+    }
+    .btn-refresh:hover { background: rgba(255,255,255,.23); }
+
+    /* ── BULK BAR ── */
+    .bulk-bar {
+        background: var(--navy); padding: .7rem 2rem;
+        display: none; align-items: center; gap: .65rem; flex-wrap: wrap;
+        border-bottom: 1px solid rgba(255,255,255,.1);
+        animation: slideIn .2s ease;
+    }
+    .bulk-bar.visible { display: flex; }
+    @@keyframes slideIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
+    .bulk-info { font-size: .82rem; font-weight: 700; color: #fff; flex: 1; }
+    .bulk-info span { color: rgba(255,255,255,.6); font-weight: 500; }
+    .bab {
+        border: none; border-radius: var(--radius-xs); padding: .42rem .95rem;
+        font-size: .74rem; font-weight: 700; font-family: inherit;
+        cursor: pointer; display: flex; align-items: center; gap: .35rem;
+        transition: opacity .15s, transform .15s;
+    }
+    .bab:hover { opacity: .85; transform: translateY(-1px); }
+    .bab-approve { background: #16a34a; color: #fff; }
+    .bab-enroll  { background: #3b82f6; color: #fff; }
+    .bab-reject  { background: #dc2626; color: #fff; }
+    .bab-archive { background: rgba(255,255,255,.13); color: #fff; border: 1px solid rgba(255,255,255,.28); }
+    .bab-clear   { background: none; color: rgba(255,255,255,.55); border: none; font-size: .76rem; font-family: inherit; cursor: pointer; padding: .35rem .4rem; }
+    .bab-clear:hover { color: #fff; }
+
+    /* ── TOOLBAR ── */
+    .sr-toolbar {
+        background: var(--white); border-bottom: 1px solid var(--border);
+        padding: .8rem 2rem; display: flex; align-items: center;
+        gap: .65rem; flex-wrap: wrap;
+        position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm);
+    }
+    .select-all-label {
+        display: flex; align-items: center; gap: .38rem;
+        font-size: .77rem; font-weight: 600; color: var(--text-2);
+        cursor: pointer; white-space: nowrap; user-select: none;
+    }
+    .select-all-label input { width: 16px; height: 16px; accent-color: var(--navy); cursor: pointer; }
+    .toolbar-div { width: 1px; height: 26px; background: var(--border); flex-shrink: 0; }
+    .search-wrap { position: relative; flex: 1; min-width: 190px; max-width: 320px; }
+    .search-wrap i { position: absolute; left: .82rem; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: .85rem; pointer-events: none; }
+    .search-input {
+        width: 100%; padding: .58rem .9rem .58rem 2.35rem;
+        border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+        font-family: inherit; font-size: .82rem; color: var(--text-1);
+        background: var(--surface); outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .search-input:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px var(--accent-glow); }
+    .search-input::placeholder { color: var(--text-3); }
+    .prog-select {
+        padding: .58rem .9rem; border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm); font-family: inherit;
+        font-size: .82rem; color: var(--text-1); background: var(--surface);
+        outline: none; cursor: pointer; min-width: 140px; transition: border-color .2s;
+    }
+    .prog-select:focus { border-color: var(--navy); }
+    .result-badge {
+        font-size: .74rem; font-weight: 700; color: var(--text-2);
+        background: var(--navy-pale); border: 1px solid var(--border);
+        border-radius: 50px; padding: .22rem .72rem; white-space: nowrap;
+    }
+
+    /* ── CONTENT ── */
+    .sr-content { padding: 1.75rem 2rem 3rem; background: var(--surface); }
+    .student-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+        gap: 1rem;
+    }
+
+    /* ── STUDENT CARD ── */
+    .student-card {
+        background: var(--white); border: 1.5px solid var(--border);
+        border-radius: var(--radius); overflow: hidden; position: relative;
+        display: flex; flex-direction: column;
+        transition: transform .22s, box-shadow .22s, border-color .22s;
+        box-shadow: var(--shadow-sm);
+    }
+    .student-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(5,16,148,.2); }
+    .student-card.selected { border-color: var(--navy); box-shadow: 0 0 0 3px var(--accent-glow), var(--shadow-md); }
+
+    /* Left accent strip */
+    .student-card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+        background: var(--navy); border-radius: var(--radius) 0 0 var(--radius);
+    }
+    .student-card.s-approved::before { background: var(--green); }
+    .student-card.s-pending::before  { background: var(--amber); }
+    .student-card.s-rejected::before { background: var(--red); }
+
+    .card-checkbox {
+        position: absolute; top: 11px; left: 13px; z-index: 5;
+        width: 16px; height: 16px; accent-color: var(--navy); cursor: pointer;
+    }
+
+    /* Head */
+    .c-head { padding: 1rem 1rem .65rem 1.55rem; display: flex; align-items: flex-start; gap: .7rem; }
+    .c-avatar {
+        width: 46px; height: 46px; min-width: 46px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
+        color: #fff; font-weight: 800; font-size: .9rem;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 8px rgba(5,16,148,.22);
+    }
+    .c-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .c-head-info { flex: 1; min-width: 0; }
+    .c-name { font-size: .87rem; font-weight: 800; color: var(--text-1); margin: 0 0 .18rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+    .c-program { font-size: .69rem; font-weight: 700; color: var(--navy); letter-spacing: .5px; text-transform: uppercase; }
+    .c-badges { display: flex; flex-direction: column; gap: .28rem; align-items: flex-end; flex-shrink: 0; }
+
+    /* Status / payment badges */
+    .s-badge { font-size: .62rem; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: .18rem .62rem; border-radius: 50px; white-space: nowrap; }
+    .sb-enrolled { background: var(--sky-bg);   color: var(--sky);   }
+    .sb-approved { background: var(--green-bg);  color: var(--green); }
+    .sb-pending  { background: var(--amber-bg);  color: var(--amber); }
+    .sb-rejected { background: var(--red-bg);    color: var(--red);   }
+    .sb-default  { background: var(--navy-pale); color: var(--navy);  }
+    .sb-paid     { background: var(--green-bg);  color: var(--green); }
+    .sb-unpaid   { background: var(--amber-bg);  color: var(--amber); }
+
+    /* Body */
+    .c-body { padding: 0 1rem .7rem 1.55rem; flex: 1; display: flex; flex-direction: column; gap: .48rem; }
+
+    /* Student number row */
+    .snum-row {
+        display: flex; align-items: center; gap: .45rem;
+        background: var(--navy-pale); border-radius: var(--radius-xs); padding: .38rem .65rem;
+    }
+    .snum-icon { color: var(--text-3); font-size: .77rem; flex-shrink: 0; }
+    .snum-display {
+        font-size: .77rem; font-weight: 700; color: var(--navy);
+        cursor: pointer; border-bottom: 1.5px dashed var(--navy);
+        flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        transition: color .15s; line-height: 1.4;
+    }
+    .snum-display:hover { color: var(--navy-soft); }
+    .snum-display.unassigned { color: var(--text-3); border-color: var(--border); font-weight: 500; font-style: italic; }
+    .snum-edit-wrap { display: none; align-items: center; gap: .3rem; flex: 1; }
+    .snum-input { font-size: .76rem; font-weight: 700; color: var(--navy); border: 1.5px solid var(--navy); border-radius: 4px; padding: .18rem .55rem; flex: 1; outline: none; font-family: inherit; }
+    .snum-input:focus { box-shadow: 0 0 0 2px var(--accent-glow); }
+    .snum-save { background: var(--navy); color: #fff; border: none; border-radius: 4px; padding: .2rem .55rem; font-size: .7rem; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .snum-cancel { background: none; color: var(--text-3); border: none; cursor: pointer; font-size: .8rem; padding: .12rem .28rem; line-height: 1; }
+    .snum-cancel:hover { color: var(--red); }
+
+    /* Meta rows */
+    .c-meta { display: flex; align-items: center; gap: .45rem; font-size: .74rem; color: var(--text-2); line-height: 1.3; }
+    .c-meta i { color: var(--text-3); font-size: .76rem; flex-shrink: 0; }
+    .c-meta strong { color: var(--text-1); font-weight: 700; }
+
+    /* Countdown */
+    .cd-chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .66rem; font-weight: 700; padding: .2rem .62rem; border-radius: 50px; background: var(--amber-bg); color: var(--amber); border: 1px solid #f59e0b; }
+    .cd-chip.urgent  { background: var(--red-bg); color: var(--red); border-color: #f87171; }
+    .cd-chip.expired { background: #f1f5f9; color: var(--text-3); border-color: #cbd5e1; }
+
+    /* Account badge */
+    .acct-badge { display: inline-flex; align-items: center; gap: .28rem; font-size: .66rem; font-weight: 700; padding: .18rem .58rem; border-radius: 50px; letter-spacing: .3px; }
+    .acct-yes { background: var(--green-bg); color: var(--green); }
+    .acct-no  { background: var(--navy-pale); color: var(--text-3); border: 1px solid var(--border); }
+
+    /* Footer */
+    .c-foot { padding: .6rem 1rem .7rem 1.55rem; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: .45rem; }
+    .btn-view { flex: 1; background: var(--navy); color: #fff; border: none; border-radius: var(--radius-xs); padding: .48rem .75rem; font-size: .74rem; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .38rem; text-decoration: none; transition: background .2s; }
+    .btn-view:hover { background: var(--navy-deep); color: #fff; }
+    .btn-arch { background: var(--white); color: var(--text-2); border: 1.5px solid var(--border); border-radius: var(--radius-xs); padding: .48rem .58rem; font-size: .8rem; cursor: pointer; transition: all .18s; }
+    .btn-arch:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { grid-column: 1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; }
+    .empty-icon { width: 70px; height: 70px; border-radius: 50%; background: var(--navy-pale); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; color: var(--text-3); margin-bottom: 1rem; }
+    .empty-state h5 { color: var(--text-1); font-weight: 800; margin-bottom: .3rem; }
+    .empty-state p  { color: var(--text-2); font-size: .82rem; margin: 0; }
+
+    /* ── SKELETON ── */
+    .skeleton-card { height: 225px; border-radius: var(--radius); border: 1.5px solid var(--border); background: linear-gradient(90deg,#eef0f8 25%,#e2e7f5 50%,#eef0f8 75%); background-size: 400% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+    @@keyframes shimmer { 0%{background-position:100% 50%} 100%{background-position:-100% 50%} }
+
+    /* ── TOAST ── */
+    #toast-rack { position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 9999; display: flex; flex-direction: column; gap: .45rem; }
+    .toast-item { background: var(--white); border-radius: var(--radius-sm); padding: .72rem 1rem; font-size: .81rem; font-weight: 600; box-shadow: var(--shadow-lg); border-left: 4px solid var(--navy); display: flex; align-items: center; gap: .55rem; min-width: 235px; color: var(--text-1); animation: toastIn .22s ease; transition: opacity .35s; }
+    .toast-item.success { border-color: var(--green); }
+    .toast-item.danger  { border-color: var(--red); }
+    .toast-item i { font-size: .9rem; flex-shrink: 0; }
+    .toast-item.success i { color: var(--green); }
+    .toast-item.danger  i { color: var(--red); }
+    .toast-item.info    i { color: var(--navy); }
+    @@keyframes toastIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+
+    /* ── RESPONSIVE ── */
+    @@media (max-width: 768px) {
+        .sr-hero { padding: 1.5rem 1.25rem 3.5rem; }
+        .sr-toolbar, .bulk-bar, .sr-content { padding-left: 1.25rem; padding-right: 1.25rem; }
+        .sr-hero-inner { flex-direction: column; }
+        .sr-hero-actions { width: 100%; }
+        .btn-create { flex: 1; justify-content: center; }
+        .student-grid { grid-template-columns: 1fr; }
+    }
+    @@media (max-width: 480px) {
+        .sr-stats-row { gap: .45rem; }
+        .sr-stat-pill { font-size: .7rem; padding: .28rem .7rem; }
+    }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE STRUCTURE
+═══════════════════════════════════════════════════════ -->
+
+<!-- ── HERO ───────────────────────────────────────────── -->
+<div class="sr-hero">
+    <div class="sr-hero-inner">
+        <div>
+            <h1 class="sr-hero-title">
+                <i class="bi bi-people-fill me-2" style="font-size:.8em;opacity:.75"></i>
+                Student Records
+            </h1>
+            <p class="sr-hero-sub">
+                Click any <strong>student number</strong> to assign it &bull;
+                Check cards to bulk-select &bull;
+                Pending students auto-reject after <strong>24 hours</strong>
+            </p>
+            <div class="sr-stats-row" id="statusTabs">
+                <div class="sr-stat-pill active" data-status="Enrolled" onclick="switchTab(this)">
+                    <span class="stat-dot" style="background:#38bdf8"></span>
+                    Enrolled <span class="pill-count" id="cnt-Enrolled">…</span>
+                </div>
+                <div class="sr-stat-pill" data-status="Pending" onclick="switchTab(this)">
+                    <span class="stat-dot" style="background:#fbbf24"></span>
+                    Pending <span class="pill-count" id="cnt-Pending">…</span>
+                </div>
+                <div class="sr-stat-pill" data-status="Approved" onclick="switchTab(this)">
+                    <span class="stat-dot" style="background:#4ade80"></span>
+                    Approved <span class="pill-count" id="cnt-Approved">…</span>
+                </div>
+                <div class="sr-stat-pill" data-status="Rejected" onclick="switchTab(this)">
+                    <span class="stat-dot" style="background:#f87171"></span>
+                    Rejected <span class="pill-count" id="cnt-Rejected">…</span>
+                </div>
+                <div class="sr-stat-pill" data-status="all" onclick="switchTab(this)">
+                    <i class="bi bi-grid-3x3-gap" style="font-size:.72rem"></i>
+                    All <span class="pill-count" id="cnt-all">…</span>
+                </div>
+            </div>
+        </div>
+        <div class="sr-hero-actions">
+            <a href="/Admin/CreateStudentRecord" class="btn-create">
+                <i class="bi bi-person-plus-fill"></i> Create Student Record
+            </a>
+            <button class="btn-refresh" onclick="loadStudents()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── BULK ACTION BAR ─────────────────────────────────── -->
+<div class="bulk-bar" id="bulkBar">
+    <span class="bulk-info"><strong id="bulkCount">0</strong><span> student(s) selected</span></span>
+    <button class="bab bab-approve" onclick="bulkAction('Approve')"><i class="bi bi-check-circle-fill"></i> Approve</button>
+    <button class="bab bab-enroll"  onclick="bulkAction('Enroll')"><i class="bi bi-mortarboard-fill"></i> Enroll</button>
+    <button class="bab bab-reject"  onclick="bulkAction('Reject')"><i class="bi bi-x-circle-fill"></i> Reject</button>
+    <button class="bab bab-archive" onclick="bulkAction('Archive')"><i class="bi bi-archive-fill"></i> Archive</button>
+    <button class="bab-clear" onclick="clearSelection()">✕ Clear selection</button>
+</div>
+
+<!-- ── TOOLBAR ────────────────────────────────────────── -->
+<div class="sr-toolbar">
+    <label class="select-all-label">
+        <input type="checkbox" id="selectAllCheck" onchange="toggleSelectAll(this.checked)">
+        Select all
+    </label>
+    <div class="toolbar-div"></div>
+    <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="studentSearch" class="search-input" placeholder="Search name, ID, email…">
+    </div>
+    <select class="prog-select" id="programFilter">
+        <option value="">All Programs</option>
+    </select>
+    <div class="toolbar-div"></div>
+    <span class="result-badge">
+        <i class="bi bi-person-fill" style="margin-right:3px"></i>
+        <span id="resultCount">0</span> student(s)
+    </span>
+    <span id="loadingIndicator" style="display:none;align-items:center;gap:.35rem;font-size:.76rem;color:var(--text-3);">
+        <span class="spinner-border spinner-border-sm"></span> Loading…
+    </span>
+    <span id="errorMsg" style="display:none;font-size:.76rem;color:var(--red);font-weight:600;"></span>
+</div>
+
+<!-- ── CONTENT ────────────────────────────────────────── -->
+<div class="sr-content">
+    <div class="student-grid" id="studentGrid"></div>
+</div>
+
+<!-- Toast rack -->
+<div id="toast-rack"></div>
+
+@section Scripts {
+<script>
+    const GRACE_MS  = 24 * 60 * 60 * 1000;
+    const URGENT_MS =  2 * 60 * 60 * 1000;
+    let allStudents = [], selectedIds = new Set(), currentStatus = 'Enrolled', cdTimer;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStats(); loadPrograms(); loadStudents();
+        let t;
+        document.getElementById('studentSearch').addEventListener('input', () => {
+            clearTimeout(t); t = setTimeout(() => { clearSelection(); loadStudents(); }, 380);
+        });
+        document.getElementById('programFilter').addEventListener('change', () => { clearSelection(); loadStudents(); });
+    });
+
+    async function loadPrograms() {
+        try {
+            const d = await (await fetch('/Admin/GetPrograms')).json();
+            if (!d.success || !d.programs.length) return;
+            const sel = document.getElementById('programFilter');
+            sel.innerHTML = '<option value="">All Programs</option>';
+            d.programs.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
+        } catch {}
+    }
+
+    async function loadStats() {
+        try {
+            const d = await (await fetch('/Admin/GetStudentStats')).json();
+            if (!d.success) return;
+            ['Enrolled','Pending','Approved','Rejected','all'].forEach(k => {
+                const el = document.getElementById(`cnt-${k}`);
+                if (el) el.textContent = d[k.toLowerCase()] ?? d.total ?? '0';
+            });
+            document.getElementById('cnt-all').textContent = d.total;
+        } catch {}
+    }
+
+    function switchTab(el) {
+        document.querySelectorAll('.sr-stat-pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        currentStatus = el.dataset.status;
+        clearSelection(); loadStudents();
+    }
+
+    async function loadStudents() {
+        showLoading(true); clearError(); clearInterval(cdTimer);
+        try {
+            const program = document.getElementById('programFilter').value;
+            const search  = document.getElementById('studentSearch').value.trim();
+            const p = new URLSearchParams({ status: currentStatus });
+            if (program) p.append('program', program);
+            if (search)  p.append('search', search);
+            const d = await (await fetch(`/Admin/GetStudents?${p}`)).json();
+            if (!d.success) throw new Error(d.message);
+            allStudents = d.students;
+            renderCards(allStudents);
+            if (allStudents.some(s => (s.enrollmentStatus||'').toLowerCase() === 'pending'))
+                cdTimer = setInterval(tickCountdowns, 1000);
+        } catch (e) { showError('Could not load students: ' + e.message); renderCards([]); }
+        finally { showLoading(false); }
+    }
+
+    function renderCards(list) {
+        const grid = document.getElementById('studentGrid');
+        document.getElementById('resultCount').textContent = list.length;
+        document.getElementById('selectAllCheck').checked = false;
+        grid.innerHTML = '';
+
+        if (!list.length) {
+            grid.innerHTML = `<div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                <h5>No students found</h5>
+                <p>Try adjusting your search, filter, or status tab.</p>
+            </div>`;
+            return;
+        }
+
+        list.forEach(s => {
+            const initials  = getInitials(s.fullName);
+            const sk        = (s.enrollmentStatus||'').toLowerCase();
+            const hasNum    = !!(s.studentNumber && s.studentNumber.trim());
+            const isSel     = selectedIds.has(s.studentId);
+            const photo     = s.photoUrl
+                ? `<img src="${esc(s.photoUrl)}" alt="" onerror="this.parentElement.innerHTML='<span>${initials}</span>'">`
+                : `<span>${initials}</span>`;
+
+            let cdHtml = '';
+            if (sk === 'pending') {
+                const ref  = s.enrollmentDate || s.createdDate;
+                const dl   = ref ? new Date(ref).getTime() + GRACE_MS : null;
+                cdHtml = `<div class="c-meta"><i class="bi bi-clock"></i>
+                    <span class="cd-chip" id="cd-${s.studentId}" data-deadline="${dl||''}">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span class="cd-text">${dl ? fmtCountdown(dl - Date.now()) : '—'}</span>
+                    </span></div>`;
+            }
+
+            const payLine = s.lastPaymentAmount != null
+                ? `₱${Number(s.lastPaymentAmount).toLocaleString('en-PH')} via ${esc(s.lastPaymentMethod||'—')}`
+                : 'No verified payment';
+
+            const card = document.createElement('div');
+            card.className = `student-card s-${sk} ${isSel ? 'selected' : ''}`;
+            card.id = `card-${s.studentId}`;
+            card.innerHTML = `
+                <input class="card-checkbox" type="checkbox" data-id="${s.studentId}"
+                       ${isSel ? 'checked' : ''} title="Select"
+                       onchange="toggleSelect(${s.studentId}, this.checked)">
+
+                <div class="c-head">
+                    <div class="c-avatar">${photo}</div>
+                    <div class="c-head-info">
+                        <p class="c-name" title="${esc(s.fullName)}">${esc(s.fullName)}</p>
+                        <p class="c-program">${esc(s.program||'—')}</p>
+                    </div>
+                    <div class="c-badges">
+                        ${badgeEnroll(s.enrollmentStatus)}
+                        ${badgePay(s.paymentStatus)}
+                    </div>
+                </div>
+
+                <div class="c-body">
+                    <div class="snum-row">
+                        <i class="bi bi-upc snum-icon"></i>
+                        <span class="snum-display ${hasNum ? '' : 'unassigned'}"
+                              id="snum-display-${s.studentId}" title="Click to edit"
+                              onclick="startEditNum(${s.studentId})">
+                            ${hasNum ? esc(s.studentNumber) : 'Click to assign number'}
+                        </span>
+                        <div class="snum-edit-wrap" id="snum-edit-${s.studentId}">
+                            <input class="snum-input" id="snum-input-${s.studentId}"
+                                   type="text" maxlength="50" placeholder="e.g. 2026-0001"
+                                   value="${hasNum ? esc(s.studentNumber) : ''}"
+                                   onkeydown="if(event.key==='Enter')saveNum(${s.studentId});if(event.key==='Escape')cancelEditNum(${s.studentId})">
+                            <button class="snum-save" onclick="saveNum(${s.studentId})">Save</button>
+                            <button class="snum-cancel" onclick="cancelEditNum(${s.studentId})">✕</button>
+                            <span style="display:none" id="snum-saving-${s.studentId}">
+                                <span class="spinner-border spinner-border-sm"></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="c-meta"><i class="bi bi-mortarboard"></i>
+                        <span>Year <strong>${s.currentYearLevel}</strong> &bull; Sem <strong>${s.currentSemester}</strong> &bull; ${esc(s.studentType||'—')}</span>
+                    </div>
+                    <div class="c-meta"><i class="bi bi-calendar3"></i><span>${formatDate(s.enrollmentDate)}</span></div>
+                    <div class="c-meta"><i class="bi bi-cash-coin"></i><span>${esc(payLine)}</span></div>
+                    ${cdHtml}
+                    <div class="c-meta">
+                        ${s.hasAccount
+                            ? `<span class="acct-badge acct-yes"><i class="bi bi-person-check-fill"></i> Has Account</span>`
+                            : `<span class="acct-badge acct-no"><i class="bi bi-person-x"></i> No Account</span>`}
+                    </div>
+                </div>
+
+                <div class="c-foot">
+                    <a href="/Admin/ViewStudentData/${s.studentId}" class="btn-view">
+                        <i class="bi bi-journal-text"></i> View Details
+                    </a>
+                    <button class="btn-arch" title="Archive" onclick="archiveStudent(${s.studentId}, this)">
+                        <i class="bi bi-archive"></i>
+                    </button>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
+
+    function badgeEnroll(s) {
+        const m = { enrolled:['sb-enrolled','✓ Enrolled'], approved:['sb-approved','✓ Approved'], pending:['sb-pending','⏳ Pending'], rejected:['sb-rejected','✗ Rejected'] };
+        const [c, l] = m[(s||'').toLowerCase()] || ['sb-default', s||'—'];
+        return `<span class="s-badge ${c}">${l}</span>`;
+    }
+    function badgePay(s) {
+        const m = { verified:['sb-paid','₱ Paid'], unpaid:['sb-unpaid','₱ Unpaid'] };
+        const [c, l] = m[(s||'').toLowerCase()] || ['sb-default', s||'—'];
+        return `<span class="s-badge ${c}">${l}</span>`;
+    }
+
+    function tickCountdowns() {
+        document.querySelectorAll('.cd-chip[data-deadline]').forEach(chip => {
+            const dl = parseInt(chip.dataset.deadline); if (!dl) return;
+            const rem = dl - Date.now();
+            const t   = chip.querySelector('.cd-text'); if (!t) return;
+            if (rem <= 0) { t.textContent = 'Expired'; chip.className = 'cd-chip expired'; }
+            else { t.textContent = fmtCountdown(rem); chip.className = rem <= URGENT_MS ? 'cd-chip urgent' : 'cd-chip'; }
+        });
+    }
+    function fmtCountdown(ms) {
+        if (ms <= 0) return 'Expired';
+        const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+        return h > 0 ? `${h}h ${m}m left` : m > 0 ? `${m}m ${sec}s left` : `${sec}s left`;
+    }
+
+    function toggleSelect(id, checked) {
+        selectedIds[checked ? 'add' : 'delete'](id);
+        document.getElementById(`card-${id}`)?.classList.toggle('selected', checked);
+        updateBulkBar(); updateSelectAll();
+    }
+    function toggleSelectAll(checked) {
+        allStudents.forEach(s => {
+            selectedIds[checked ? 'add' : 'delete'](s.studentId);
+            const cb = document.querySelector(`[data-id="${s.studentId}"]`);
+            const card = document.getElementById(`card-${s.studentId}`);
+            if (cb)   cb.checked = checked;
+            if (card) card.classList.toggle('selected', checked);
+        });
+        updateBulkBar();
+    }
+    function updateSelectAll() {
+        const box = document.getElementById('selectAllCheck');
+        if (!allStudents.length) { box.checked = false; box.indeterminate = false; return; }
+        const n = allStudents.filter(s => selectedIds.has(s.studentId)).length;
+        box.indeterminate = n > 0 && n < allStudents.length;
+        box.checked = n === allStudents.length;
+    }
+    function clearSelection() {
+        selectedIds.clear();
+        document.querySelectorAll('.card-checkbox').forEach(c => c.checked = false);
+        document.querySelectorAll('.student-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('selectAllCheck').checked = false;
+        document.getElementById('selectAllCheck').indeterminate = false;
+        updateBulkBar();
+    }
+    function updateBulkBar() {
+        const n = selectedIds.size;
+        document.getElementById('bulkCount').textContent = n;
+        document.getElementById('bulkBar').classList.toggle('visible', n > 0);
+    }
+
+    async function bulkAction(action) {
+        if (!selectedIds.size) return;
+        const verb = {Approve:'approve',Enroll:'enroll',Reject:'reject',Archive:'archive'}[action];
+        if (!confirm(`${verb.charAt(0).toUpperCase()+verb.slice(1)} ${selectedIds.size} student(s)?`)) return;
+        try {
+            const d = await (await fetch('/Admin/BulkUpdateStudents', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ studentIds: Array.from(selectedIds), action })
+            })).json();
+            if (d.success) { toast(d.message,'success'); clearSelection(); loadStats(); loadStudents(); }
+            else toast(d.message||'Action failed.','danger');
+        } catch { toast('Network error. Please try again.','danger'); }
+    }
+
+    function startEditNum(id) {
+        document.getElementById(`snum-display-${id}`).style.display = 'none';
+        document.getElementById(`snum-edit-${id}`).style.display    = 'flex';
+        document.getElementById(`snum-input-${id}`).focus();
+    }
+    function cancelEditNum(id) {
+        document.getElementById(`snum-edit-${id}`).style.display    = 'none';
+        document.getElementById(`snum-display-${id}`).style.display = '';
+    }
+    async function saveNum(id) {
+        const inp = document.getElementById(`snum-input-${id}`);
+        const spn = document.getElementById(`snum-saving-${id}`);
+        const val = inp.value.trim();
+        if (!val) { inp.style.borderColor = 'var(--red)'; inp.focus(); return; }
+        inp.style.borderColor = ''; spn.style.display = 'inline-flex'; inp.disabled = true;
+        try {
+            const d = await (await fetch('/Admin/AssignStudentNumber', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ studentId: id, studentNumber: val })
+            })).json();
+            if (d.success) {
+                const disp = document.getElementById(`snum-display-${id}`);
+                disp.textContent = d.studentNumber; disp.classList.remove('unassigned');
+                const s = allStudents.find(x => x.studentId === id);
+                if (s) s.studentNumber = d.studentNumber;
+                cancelEditNum(id); toast('Student number saved.','success');
+            } else { toast(d.message||'Save failed.','danger'); inp.disabled = false; inp.focus(); }
+        } catch { toast('Network error.','danger'); inp.disabled = false; }
+        finally { spn.style.display = 'none'; inp.disabled = false; }
+    }
+
+    async function archiveStudent(id, btn) {
+        if (!confirm('Archive this student? They will be hidden from active lists.')) return;
+        btn.disabled = true;
+        try {
+            const d = await (await fetch(`/Admin/ArchiveStudent/${id}`,{method:'POST'})).json();
+            if (d.success) {
+                selectedIds.delete(id);
+                allStudents = allStudents.filter(s => s.studentId !== id);
+                renderCards(allStudents); loadStats(); updateBulkBar();
+            } else { toast(d.message||'Archive failed.','danger'); btn.disabled = false; }
+        } catch { toast('Network error.','danger'); btn.disabled = false; }
+    }
+
+    function showLoading(on) {
+        const ind = document.getElementById('loadingIndicator');
+        ind.style.display = on ? 'flex' : 'none';
+        if (on) document.getElementById('studentGrid').innerHTML =
+            Array.from({length: 8}, () => `<div class="skeleton-card"></div>`).join('');
+    }
+    function showError(msg) { const e = document.getElementById('errorMsg'); e.textContent = msg; e.style.display = 'block'; }
+    function clearError()   { document.getElementById('errorMsg').style.display = 'none'; }
+
+    function toast(msg, type = 'info') {
+        const rack = document.getElementById('toast-rack');
+        const icons = {success:'bi-check-circle-fill', danger:'bi-x-circle-fill', info:'bi-info-circle-fill'};
+        const el = document.createElement('div');
+        el.className = `toast-item ${type}`;
+        el.innerHTML = `<i class="bi ${icons[type]||icons.info}"></i>${esc(msg)}`;
+        rack.appendChild(el);
+        setTimeout(() => el.style.opacity = '0', 3000);
+        setTimeout(() => el.remove(), 3400);
+    }
+
+    function getInitials(name) {
+        if (!name) return '?';
+        return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    function formatDate(d) {
+        if (!d) return '—';
+        const dt = new Date(d);
+        return isNaN(dt) ? String(d) : dt.toLocaleDateString('en-PH', {year:'numeric',month:'short',day:'numeric'});
+    }
+    function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+}

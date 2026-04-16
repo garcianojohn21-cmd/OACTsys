@@ -1,0 +1,731 @@
+﻿@{
+    ViewBag.Title = "Tuition Fee Setup";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var isSuperAdmin = (ViewBag.AdminRole as string) == "SuperAdmin";
+    // Programs already come back uppercase from the controller (.ToUpper())
+    var programs = ViewBag.Programs as List<string> ?? new List<string>();
+}
+
+@Html.AntiForgeryToken()
+
+@if (!isSuperAdmin)
+{
+    <div class="container py-5 text-center">
+        <div class="alert alert-danger d-inline-block px-5 py-4 shadow-sm">
+            <i class="bi bi-shield-lock-fill fs-1 d-block mb-3 text-danger"></i>
+            <h4 class="fw-bold">Access Denied</h4>
+            <p class="mb-0">Only <strong>SuperAdmin</strong> can configure Tuition Fees.</p>
+        </div>
+    </div>
+    return;
+}
+
+<style>
+    :root {
+        --brand: #051094;
+    }
+
+    .section-card {
+        border-left: 4px solid var(--brand);
+    }
+
+    .step-badge {
+        background: var(--brand);
+        color: #fff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+
+    .year-tab {
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 6px 18px;
+        font-weight: 500;
+        transition: .2s;
+        color: #333;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .year-tab.active {
+            background: var(--brand);
+            color: #fff !important;
+        }
+
+        .year-tab:not(.active):hover {
+            background: #e9ecef;
+        }
+
+    .sem-tab {
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 5px 14px;
+        font-size: .9rem;
+        transition: .2s;
+        color: #333;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .sem-tab.active {
+            background: #0a58ca;
+            color: #fff !important;
+        }
+
+        .sem-tab:not(.active):hover {
+            background: #dce8ff;
+        }
+
+    .total-hl {
+        background: #fff3cd !important;
+        font-weight: bold;
+    }
+
+    .disc-box {
+        background: #e7f3ff;
+        border-radius: 6px;
+        padding: 10px 15px;
+    }
+
+    .pay-box {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+    }
+
+    .req-item {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+        align-items: center;
+    }
+
+    #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255,255,255,.85);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+        #loadingOverlay.show {
+            display: flex;
+        }
+
+    #toastContainer {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 10000;
+        min-width: 300px;
+    }
+</style>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+    <div class="spinner-border text-primary" style="width:3rem;height:3rem;"></div>
+    <div class="fw-bold text-primary fs-5">Please wait...</div>
+</div>
+
+<!-- Toast -->
+<div id="toastContainer">
+    <div id="toastEl" class="toast align-items-center border-0 text-white" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold fs-6" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-4 px-4">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <h3 class="mb-0 fw-bold" style="color:var(--brand);">
+            <i class="bi bi-currency-dollar"></i> Tuition Fee Setup
+        </h3>
+        <span class="badge bg-warning text-dark fs-6">
+            <i class="bi bi-shield-lock-fill"></i> SuperAdmin Only
+        </span>
+    </div>
+
+    <!-- Nav buttons -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body py-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-success btn-sm"
+                        onclick="location.href='@Url.Action("DoneStudents", "EnrollmentAdmin")'">
+                    <i class="bi bi-check-circle"></i> Done
+                </button>
+                <button class="btn btn-warning btn-sm"
+                        onclick="location.href='@Url.Action("PendingStudents", "EnrollmentAdmin")'">
+                    <i class="bi bi-clock-history"></i> Pending
+                </button>
+                <button class="btn btn-secondary btn-sm"
+                        onclick="location.href='@Url.Action("ArchivedStudents", "EnrollmentAdmin")'">
+                    <i class="bi bi-archive"></i> Archive
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Program / Course</label>
+                    <select class="form-select" id="programSelect">
+                        <option value="">-- Select Program --</option>
+                        @foreach (var p in programs)
+                        {
+                            // Programs are already stored/returned as uppercase ("AMT","AVT")
+                            <option value="@p">@p</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Student Type</label>
+                    <select class="form-select" id="studentTypeSelect">
+                        <option value="Freshmen">Freshmen</option>
+                        <option value="Transferee">Transferee</option>
+                        <option value="OldStudent">Old Student</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-primary w-100" onclick="loadAllFees()">
+                        <i class="bi bi-search"></i> Load / Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year tabs -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white">
+            <div class="d-flex gap-2">
+                <a class="year-tab active" data-year="1" onclick="switchYear(1)">1st Year</a>
+                <a class="year-tab" data-year="2" onclick="switchYear(2)">2nd Year</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year / Semester panels -->
+    @for (int yr = 1; yr <= 2; yr++)
+    {
+        <div class="year-panel" data-year="@yr" style="@(yr > 1 ? "display:none" : "")">
+
+            <!-- Semester tabs -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <div class="d-flex gap-2">
+                        <a class="sem-tab active" data-yr="@yr" data-sem="1" onclick="switchSem(@yr,1)">1st Semester</a>
+                        <a class="sem-tab" data-yr="@yr" data-sem="2" onclick="switchSem(@yr,2)">2nd Semester</a>
+                    </div>
+                </div>
+            </div>
+
+            @for (int sem = 1; sem <= 2; sem++)
+            {
+                string k = "y" + yr + "s" + sem;
+                <div class="sem-panel" data-yr="@yr" data-sem="@sem" style="@(sem > 1 ? "display:none" : "")">
+
+                    <!-- STEP 1: Fee Breakdown -->
+                    <div class="card shadow-sm mb-4 section-card">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3 d-flex align-items-center">
+                                <span class="step-badge">1</span>
+                                Tuition Fee &mdash; Year @yr | Semester @sem
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle mb-2">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Breakdown</th>
+                                            <th width="190">Fee Amount (&#8369;)</th>
+                                            <th width="160">10% Discount (&#8369;)</th>
+                                            <th width="190">Final (&#8369;)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Tuition Fee (TF)</td>
+                                            <td><input type="number" class="form-control" id="tf_@k" value="0" min="0" step="0.01" oninput="calcTotal('@k')"></td>
+                                            <td><input type="number" class="form-control bg-light" id="tf_disc_@k" value="0" step="0.01" readonly></td>
+                                            <td><input type="number" class="form-control bg-light" id="tf_final_@k" value="0" step="0.01" readonly></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Miscellaneous</td>
+                                            <td><input type="number" class="form-control" id="misc_@k" value="0" min="0" step="0.01" oninput="calcTotal('@k')"></td>
+                                            <td><input type="text" class="form-control bg-light" value="&#8212;" readonly></td>
+                                            <td><input type="number" class="form-control bg-light" id="misc_final_@k" value="0" step="0.01" readonly></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Laboratory</td>
+                                            <td><input type="number" class="form-control" id="lab_@k" value="0" min="0" step="0.01" oninput="calcTotal('@k')"></td>
+                                            <td><input type="text" class="form-control bg-light" value="&#8212;" readonly></td>
+                                            <td><input type="number" class="form-control bg-light" id="lab_final_@k" value="0" step="0.01" readonly></td>
+                                        </tr>
+                                        <tr class="table-secondary">
+                                            <td><strong>TOTAL</strong></td>
+                                            <td><input type="number" class="form-control fw-bold" id="total_base_@k" value="0" readonly></td>
+                                            <td></td>
+                                            <td><input type="number" class="form-control fw-bold total-hl" id="total_final_@k" value="0" readonly></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="disc-box mt-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="disc_@k" onchange="calcTotal('@k')">
+                                    <label class="form-check-label fw-bold" for="disc_@k">Apply 10% Discount on Tuition Fee</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: Requirements -->
+                    <div class="card shadow-sm mb-4 section-card">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3 d-flex align-items-center">
+                                <span class="step-badge">2</span> Requirements Upon Enrollment
+                            </h5>
+                            <div id="reqs_@k"></div>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2"
+                                    onclick="addReq('@k')">
+                                <i class="bi bi-plus-circle"></i> Add Requirement
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Payment Upon Enrollment -->
+                    <div class="card shadow-sm mb-4 section-card">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3 d-flex align-items-center">
+                                <span class="step-badge">3</span> Payment Upon Enrollment
+                            </h5>
+                            <div class="pay-box">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Min. Down Payment</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">&#8369;</span>
+                                            <input type="number" class="form-control" id="dp_@k" value="0" min="0" step="0.01" oninput="calcPayTotal('@k')">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Other Fees (Uniform, Books...)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">&#8369;</span>
+                                            <input type="number" class="form-control" id="otherfee_@k" value="0" min="0" step="0.01" oninput="calcPayTotal('@k')">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Description of Other Fees</label>
+                                        <textarea class="form-control" id="otherdesc_@k" rows="2"
+                                          placeholder="e.g., Uniform set, PE shirt, school ID..."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Total Upon Enrollment</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-warning">&#8369;</span>
+                                            <input type="number" class="form-control fw-bold total-hl" id="pay_total_@k" value="0" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: Monthly Schedule -->
+                    <div class="card shadow-sm mb-4 section-card">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3 d-flex align-items-center">
+                                <span class="step-badge">4</span> Monthly Payment Schedule
+                            </h5>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Semester Total</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">&#8369;</span>
+                                        <input type="number" class="form-control" id="semtotal_@k" value="0" min="0" step="0.01" oninput="calcMonthly('@k')">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Less Down Payment</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">&#8369;</span>
+                                        <input type="number" class="form-control" id="lessdp_@k" value="0" min="0" step="0.01" oninput="calcMonthly('@k')">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Number of Months</label>
+                                    <input type="number" class="form-control" id="months_@k" value="4" min="1" max="12" oninput="calcMonthly('@k')">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Balance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-info text-white">&#8369;</span>
+                                        <input type="number" class="form-control fw-bold" id="balance_@k" value="0" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr><th>Period</th><th width="220">Amount (&#8369;)</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>PRELIM</td>    <td><input type="number" class="form-control" id="prelim_@k" value="0" step="0.01"></td></tr>
+                                        <tr><td>MIDTERM</td>   <td><input type="number" class="form-control" id="midterm_@k" value="0" step="0.01"></td></tr>
+                                        <tr><td>SEMI-FINAL</td><td><input type="number" class="form-control" id="semifinal_@k" value="0" step="0.01"></td></tr>
+                                        <tr><td>FINAL</td>     <td><input type="number" class="form-control" id="final_@k" value="0" step="0.01"></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="alert alert-warning py-2 mt-1 mb-0">
+                                <i class="bi bi-info-circle"></i>
+                                <small>Monthly amounts are auto-calculated but can be adjusted manually.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save Button -->
+                    <div class="d-flex justify-content-end mb-5">
+                        <button type="button" class="btn btn-success px-5 py-2 fw-bold fs-6"
+                                onclick="saveFee(@yr, @sem)">
+                            <i class="bi bi-floppy-fill me-2"></i>Save &mdash; Year @yr, Semester @sem
+                        </button>
+                    </div>
+
+                </div>@* /sem-panel *@
+            }
+        </div>@* /year-panel *@
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        /* ═══════════════════════════════════════════════════
+           UTILITY
+        ═══════════════════════════════════════════════════ */
+        function getVal(id)      { var el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+        function setVal(id, num) { var el = document.getElementById(id); if (el) el.value = (typeof num === 'number') ? num.toFixed(2) : (num || ''); }
+        function getToken()      { var el = document.querySelector('input[name="__RequestVerificationToken"]'); return el ? el.value : ''; }
+
+        // KEY FIX: always uppercase+trim the program before sending to server
+        function getProgram() {
+            var el = document.getElementById('programSelect');
+            return el ? el.value.trim().toUpperCase() : '';
+        }
+
+        /* ═══════════════════════════════════════════════════
+           TAB SWITCHING
+        ═══════════════════════════════════════════════════ */
+        function switchYear(yr) {
+            document.querySelectorAll('.year-panel').forEach(function(p) { p.style.display = 'none'; });
+            document.querySelectorAll('.year-tab').forEach(function(t)   { t.classList.remove('active'); });
+            document.querySelector('.year-panel[data-year="' + yr + '"]').style.display = '';
+            document.querySelector('.year-tab[data-year="'   + yr + '"]').classList.add('active');
+        }
+        function switchSem(yr, sem) {
+            document.querySelectorAll('.sem-panel[data-yr="' + yr + '"]').forEach(function(p) { p.style.display = 'none'; });
+            document.querySelectorAll('.sem-tab[data-yr="'   + yr + '"]').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelector('.sem-panel[data-yr="' + yr + '"][data-sem="' + sem + '"]').style.display = '';
+            document.querySelector('.sem-tab[data-yr="'   + yr + '"][data-sem="' + sem + '"]').classList.add('active');
+        }
+
+        /* ═══════════════════════════════════════════════════
+           CALCULATIONS
+        ═══════════════════════════════════════════════════ */
+        function calcTotal(k) {
+            var tf   = getVal('tf_'   + k);
+            var misc = getVal('misc_' + k);
+            var lab  = getVal('lab_'  + k);
+            var discEl = document.getElementById('disc_' + k);
+            var disc   = discEl ? discEl.checked : false;
+            var tfDisc  = disc ? tf * 0.10 : 0;
+            var tfFinal = tf - tfDisc;
+            setVal('tf_disc_'    + k, tfDisc);
+            setVal('tf_final_'   + k, tfFinal);
+            setVal('misc_final_' + k, misc);
+            setVal('lab_final_'  + k, lab);
+            setVal('total_base_' + k, tf + misc + lab);
+            setVal('total_final_'+ k, tfFinal + misc + lab);
+        }
+        function calcPayTotal(k) {
+            setVal('pay_total_' + k, getVal('dp_' + k) + getVal('otherfee_' + k));
+        }
+        function calcMonthly(k) {
+            var bal    = Math.max(0, getVal('semtotal_' + k) - getVal('lessdp_' + k));
+            setVal('balance_' + k, bal);
+            var moEl   = document.getElementById('months_' + k);
+            var months = moEl ? (parseInt(moEl.value) || 1) : 1;
+            var each   = bal / months;
+            ['prelim','midterm','semifinal','final'].forEach(function(p) { setVal(p + '_' + k, each); });
+        }
+
+        /* ═══════════════════════════════════════════════════
+           REQUIREMENTS
+        ═══════════════════════════════════════════════════ */
+        function addReq(k, val) {
+            var box = document.getElementById('reqs_' + k);
+            if (!box) return;
+            var div = document.createElement('div');
+            div.className = 'req-item';
+            div.innerHTML =
+                '<input type="text" class="form-control req-input" placeholder="Enter requirement..." value="' + (val || '') + '">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">' +
+                '<i class="bi bi-trash"></i></button>';
+            box.appendChild(div);
+        }
+        function getReqs(k) {
+            return Array.from(document.querySelectorAll('#reqs_' + k + ' .req-input'))
+                .map(function(i) { return i.value.trim(); }).filter(Boolean);
+        }
+
+        /* ═══════════════════════════════════════════════════
+           LOAD FEES FROM DB
+        ═══════════════════════════════════════════════════ */
+        async function loadAllFees() {
+            var program     = getProgram();  // ← always uppercase
+            var studentType = document.getElementById('studentTypeSelect').value;
+
+            if (!program) { return; }
+
+            showLoading(true);
+            var found = 0;
+
+            for (var yr = 1; yr <= 2; yr++) {
+                for (var sem = 1; sem <= 2; sem++) {
+                    var k = 'y' + yr + 's' + sem;
+                    try {
+                        var url = '/EnrollmentAdmin/GetTuitionFeeDetail?program=' +
+                            encodeURIComponent(program) +
+                            '&studentType=' + encodeURIComponent(studentType) +
+                            '&yearLevel=' + yr + '&semester=' + sem;
+
+                        var res  = await fetch(url);
+                        var data = await res.json();
+
+                        if (data && data.id && data.id > 0) {
+                            populateForm(k, data);
+                            found++;
+                        } else {
+                            resetForm(k);
+                        }
+                    } catch(e) {
+                        resetForm(k);
+                    }
+                }
+            }
+
+            showLoading(false);
+
+            if (found > 0) {
+                showToast('Loaded ' + found + ' saved record(s) for ' + program + '.', 'success');
+            } else {
+                showToast('No saved records found for ' + program + ' ' + studentType + '. Fill in and save.', 'info');
+            }
+        }
+
+        function populateForm(k, d) {
+            function sv(id, v) { var el = document.getElementById(id); if (el) el.value = (v != null ? v : 0); }
+            function sc(id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; }
+            function st(id, v) { var el = document.getElementById(id); if (el) el.value = (v || ''); }
+
+            sv('tf_'       + k, d.tuitionFees);
+            sv('misc_'     + k, d.miscellaneous);
+            sv('lab_'      + k, d.laboratory);
+            sc('disc_'     + k, d.hasDiscount);
+            calcTotal(k);
+
+            sv('dp_'       + k, d.downPayment);
+            sv('otherfee_' + k, d.otherFees);
+            st('otherdesc_'+ k, d.otherFeesDescription);
+            calcPayTotal(k);
+
+            sv('semtotal_' + k, d.total);
+            sv('lessdp_'   + k, d.downPayment);
+            sv('months_'   + k, d.numberOfMonths || 4);
+            sv('balance_'  + k, Math.max(0, (d.total || 0) - (d.downPayment || 0)));
+            sv('prelim_'   + k, d.prelimPayment);
+            sv('midterm_'  + k, d.midtermPayment);
+            sv('semifinal_'+ k, d.semiFinalPayment);
+            sv('final_'    + k, d.finalPayment);
+
+            // Requirements
+            var box = document.getElementById('reqs_' + k);
+            if (box) box.innerHTML = '';
+            if (d.requirements) {
+                try {
+                    JSON.parse(d.requirements).forEach(function(r) { addReq(k, r); });
+                } catch(e) {
+                    d.requirements.split(',').map(function(r) { return r.trim(); })
+                        .filter(Boolean).forEach(function(r) { addReq(k, r); });
+                }
+            }
+        }
+
+        function resetForm(k) {
+            ['tf','misc','lab','dp','otherfee','semtotal','lessdp','prelim','midterm','semifinal','final']
+                .forEach(function(f) { var el = document.getElementById(f + '_' + k); if (el) el.value = 0; });
+            ['tf_disc','tf_final','misc_final','lab_final','total_base','total_final','pay_total','balance']
+                .forEach(function(f) { var el = document.getElementById(f + '_' + k); if (el) el.value = '0.00'; });
+            var desc = document.getElementById('otherdesc_' + k); if (desc) desc.value = '';
+            var disc = document.getElementById('disc_'      + k); if (disc) disc.checked = false;
+            var mo   = document.getElementById('months_'    + k); if (mo)   mo.value = 4;
+            var box  = document.getElementById('reqs_'      + k); if (box)  box.innerHTML = '';
+        }
+
+        /* ═══════════════════════════════════════════════════
+           SAVE
+        ═══════════════════════════════════════════════════ */
+        async function saveFee(yr, sem) {
+            var program     = getProgram();  // ← always uppercase
+            var studentType = document.getElementById('studentTypeSelect').value;
+
+            if (!program)     { alert('Please select a Program first.'); return; }
+            if (!studentType) { alert('Please select a Student Type.'); return; }
+
+            var k     = 'y' + yr + 's' + sem;
+            var token = getToken();
+
+            if (!token) {
+                alert('Security token missing. Please refresh the page (F5) and try again.');
+                return;
+            }
+
+            var discEl = document.getElementById('disc_'      + k);
+            var moEl   = document.getElementById('months_'    + k);
+            var descEl = document.getElementById('otherdesc_' + k);
+
+            var payload = {
+                program:                    program,       // always uppercase, e.g. "AMT"
+                studentType:                studentType,   // e.g. "Freshmen"
+                yearLevel:                  yr,
+                semester:                   sem,
+                tuitionFee:                 getVal('tf_'         + k),
+                miscellaneous:              getVal('misc_'       + k),
+                laboratory:                 getVal('lab_'        + k),
+                total:                      getVal('total_base_' + k),
+                hasDiscount:                discEl ? discEl.checked : false,
+                discountPercent:            (discEl && discEl.checked) ? 10 : 0,
+                discountAmount:             getVal('tf_disc_'    + k),
+                finalTotal:                 getVal('total_final_'+ k),
+                downPayment:                getVal('dp_'         + k),
+                otherFees:                  getVal('otherfee_'   + k),
+                otherFeesDescription:       descEl ? descEl.value : '',
+                totalPaymentUponEnrollment: getVal('pay_total_'  + k),
+                numberOfMonths:             moEl ? (parseInt(moEl.value) || 4) : 4,
+                prelimPayment:              getVal('prelim_'     + k),
+                midtermPayment:             getVal('midterm_'    + k),
+                semiFinalPayment:           getVal('semifinal_'  + k),
+                finalPayment:               getVal('final_'      + k),
+                requirements:               JSON.stringify(getReqs(k))
+            };
+
+            showLoading(true);
+
+            try {
+                var res = await fetch('/EnrollmentAdmin/SaveTuitionFees', {
+                    method:  'POST',
+                    headers: {
+                        'Content-Type':             'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                var data;
+                try {
+                    data = await res.json();
+                } catch(e) {
+                    var text = await res.text();
+                    alert('Server error ' + res.status + ':\n' + text.substring(0, 500));
+                    return;
+                }
+
+                if (data.success) {
+                    showToast('Saved! ' + program + ' | ' + studentType + ' | Year ' + yr + ', Semester ' + sem, 'success');
+                } else {
+                    alert('Save failed: ' + (data.message || 'Unknown error'));
+                    showToast('Save failed!', 'danger');
+                }
+
+            } catch(e) {
+                alert('Network error: ' + e.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════
+           UI HELPERS
+        ═══════════════════════════════════════════════════ */
+        function showLoading(show) {
+            var el = document.getElementById('loadingOverlay');
+            if (el) el.classList.toggle('show', show);
+        }
+        function showToast(msg, type) {
+            var el   = document.getElementById('toastEl');
+            var text = document.getElementById('toastMsg');
+            if (!el || !text) { alert(msg); return; }
+            text.textContent = msg;
+            el.className = 'toast align-items-center text-white border-0 bg-' + (type || 'success');
+            try {
+                bootstrap.Toast.getOrCreateInstance(el, { delay: 4500 }).show();
+            } catch(e) { alert(msg); }
+        }
+
+        /* ═══════════════════════════════════════════════════
+           INIT
+        ═══════════════════════════════════════════════════ */
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Init all calculations to 0
+            for (var yr = 1; yr <= 2; yr++) {
+                for (var sem = 1; sem <= 2; sem++) {
+                    var k = 'y' + yr + 's' + sem;
+                    calcTotal(k);
+                    calcPayTotal(k);
+                }
+            }
+
+            // Auto-load when program changes
+            document.getElementById('programSelect').addEventListener('change', function() {
+                if (this.value) loadAllFees();
+                else {
+                    for (var yr = 1; yr <= 2; yr++)
+                        for (var sem = 1; sem <= 2; sem++)
+                            resetForm('y' + yr + 's' + sem);
+                }
+            });
+
+            // Auto-reload when student type changes
+            document.getElementById('studentTypeSelect').addEventListener('change', function() {
+                if (getProgram()) loadAllFees();
+            });
+
+            // Auto-select first program and load on page open
+            var programSelect = document.getElementById('programSelect');
+            if (programSelect && programSelect.options.length > 1) {
+                programSelect.selectedIndex = 1;
+                loadAllFees();
+            }
+        });
+    </script>
+}

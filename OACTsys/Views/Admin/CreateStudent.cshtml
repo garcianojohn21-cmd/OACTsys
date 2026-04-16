@@ -1,0 +1,983 @@
+@model List<OACTsys.Models.EnrollmentField>
+@{
+    ViewBag.Title = "Create Student Record";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --admiral:      #051094;
+        --admiral-dark: #030a6e;
+        --admiral-light:#e8ebff;
+        --accent:       #669bbc;
+        --white:        #ffffff;
+        --off-white:    #f4f6ff;
+        --text-dark:    #0d1b4b;
+        --text-muted:   #5a6a8a;
+        --gray:         #d2d2d2;
+        --border:       rgba(5,16,148,0.15);
+    }
+
+    /* ── Step Wizard ── */
+    .step-wizard-list {
+        display: flex; padding: 1rem 0.5rem; list-style: none; justify-content: center;
+        background: var(--white); border-radius: 12px;
+        border: 1px solid rgba(5,16,148,0.08); box-shadow: 0 2px 8px rgba(5,16,148,0.05);
+        margin: 0 0 1.25rem; overflow-x: auto; gap: 0;
+    }
+    .step-wizard-item { flex: 1; min-width: 60px; position: relative; display: flex; flex-direction: column; align-items: center; }
+    .progress-count { width: 32px; height: 32px; border-radius: 50%; background: var(--gray); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: .8rem; z-index: 2; transition: background .3s; flex-shrink: 0; }
+    .step-wizard-item.current   .progress-count,
+    .step-wizard-item.completed .progress-count { background: var(--admiral); }
+    .step-wizard-item::after { content: ""; position: absolute; width: 100%; height: 2px; background: var(--gray); top: 15px; left: 50%; z-index: 1; }
+    .step-wizard-item:last-child::after { display: none; }
+    .progress-label { font-size: .62rem; margin-top: 4px; font-weight: 700; color: #999; text-align: center; white-space: nowrap; }
+    .step-wizard-item.current   .progress-label,
+    .step-wizard-item.completed .progress-label { color: var(--admiral); }
+
+    /* ── Card ── */
+    .card-oact-form { border-top: 4px solid var(--admiral) !important; border-radius: 14px !important; }
+    .step-heading { color: var(--admiral); font-weight: 800; font-size: .95rem; border-bottom: 2px solid var(--off-white); padding-bottom: .65rem; margin-bottom: 1.25rem; }
+
+    /* ── Category sections ── */
+    .category-section { background: var(--off-white); border-left: 4px solid var(--admiral); border-radius: 8px; padding: 1.1rem 1rem .85rem; margin-bottom: 1rem; }
+    .category-title { color: var(--admiral); font-weight: 700; font-size: .78rem; letter-spacing: .5px; margin-bottom: .85rem; text-transform: uppercase; }
+    .field-label { font-size: .72rem; font-weight: 700; color: var(--text-dark); letter-spacing: .3px; margin-bottom: 4px; display: block; text-transform: uppercase; }
+    .field-label .req { color: #dc3545; }
+
+    /* ── Program cards ── */
+    .prog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .prog-option {
+        border: 2px solid var(--border); border-radius: 12px; padding: 1.4rem 1.2rem;
+        cursor: pointer; transition: all .2s; background: var(--white); text-align: center;
+        position: relative;
+    }
+    .prog-option:hover { border-color: var(--admiral); background: var(--admiral-light); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(5,16,148,.12); }
+    .prog-option.selected { border-color: var(--admiral); background: var(--admiral); color: white; box-shadow: 0 6px 20px rgba(5,16,148,.25); }
+    .prog-option .prog-icon { font-size: 2rem; margin-bottom: .5rem; display: block; color: var(--admiral); }
+    .prog-option.selected .prog-icon { color: white; }
+    .prog-option .prog-code { font-size: .7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--admiral); margin-bottom: .3rem; display: block; }
+    .prog-option.selected .prog-code { color: rgba(255,255,255,.8); }
+    .prog-option .prog-name { font-size: .9rem; font-weight: 800; color: var(--text-dark); margin-bottom: .2rem; }
+    .prog-option.selected .prog-name { color: white; }
+    .prog-option .prog-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.45; }
+    .prog-option.selected .prog-desc { color: rgba(255,255,255,.75); }
+    .prog-check { position: absolute; top: .7rem; right: .8rem; font-size: 1.1rem; color: white; display: none; }
+    .prog-option.selected .prog-check { display: block; }
+
+    /* ── Year level cards ── */
+    .year-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .year-option { border: 2px solid var(--border); border-radius: 10px; padding: 1.1rem 1rem; cursor: pointer; transition: all .2s; background: var(--white); text-align: center; }
+    .year-option:hover { border-color: var(--admiral); background: var(--admiral-light); }
+    .year-option.selected { border-color: var(--admiral); background: var(--admiral); }
+    .year-option .year-num { font-size: 1.6rem; font-weight: 900; color: var(--admiral); line-height: 1; margin-bottom: .2rem; }
+    .year-option.selected .year-num { color: white; }
+    .year-option .year-label { font-size: .72rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-muted); }
+    .year-option.selected .year-label { color: rgba(255,255,255,.8); }
+
+    /* ── Subject rows ── */
+    .subject-row { border: 1px solid var(--border); border-radius: 8px; padding: .75rem .9rem; margin-bottom: 6px; background: var(--white); transition: border-color .2s, background .2s; }
+    .subject-row:hover { border-color: var(--admiral); background: var(--off-white); }
+    .subject-row:has(.subject-item:checked) { border-color: var(--admiral); background: #e7f0ff; }
+    .badge-units { font-size: .68rem; font-weight: 700; background: var(--admiral); color: white; padding: .2rem .55rem; border-radius: 50px; white-space: nowrap; flex-shrink: 0; }
+    .units-total { background: var(--off-white); border: 1px solid var(--border); border-left: 4px solid var(--admiral); border-radius: 8px; padding: .65rem 1.1rem; font-size: .88rem; color: var(--text-dark); }
+
+    /* ── Selection summary bar ── */
+    .selection-bar { background: var(--white); border: 1px solid var(--border); border-left: 4px solid var(--admiral); border-radius: 10px; padding: .75rem 1.1rem; margin-bottom: 1rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .selection-bar-item { display: flex; flex-direction: column; gap: 1px; }
+    .selection-bar-label { font-size: .6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+    .selection-bar-value { font-size: .88rem; font-weight: 700; color: var(--admiral); }
+
+    /* ── Buttons ── */
+    .btn-admiral { background: var(--admiral); color: white; border: none; }
+    .btn-admiral:hover { background: var(--admiral-dark); color: white; }
+    .border-admiral { border: 1px solid var(--admiral) !important; }
+    input:focus, select:focus, textarea:focus { border-color: var(--admiral) !important; box-shadow: 0 0 0 .18rem rgba(5,16,148,.12) !important; }
+
+    /* ── Nav ── */
+    .wizard-nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--off-white); }
+    .wizard-nav .btn { min-width: 110px; }
+
+    /* ── Review doc ── */
+    #reviewContent { background: #fff; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
+    .doc-paper { padding: 28px 32px 32px; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #111; line-height: 1.4; }
+    .doc-header { text-align: center; margin-bottom: 14px; }
+    .doc-logo { height: 54px; width: auto; margin-bottom: 6px; }
+    .doc-school-name { font-size: 12pt; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin: 0 0 2px; }
+    .doc-school-address { font-size: 7.5pt; color: #444; margin: 0; }
+    .doc-blue-bar { background: #4a86b8; color: white; text-align: center; font-size: 10pt; font-weight: 700; letter-spacing: 1px; padding: 6px 8px; margin: 12px 0; text-transform: uppercase; }
+    .doc-body { display: flex; gap: 18px; align-items: flex-start; }
+    .doc-info-col { flex: 1; min-width: 0; }
+    .doc-subjects-col { width: 230px; flex-shrink: 0; }
+    .doc-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .doc-field { display: flex; align-items: flex-end; flex: 1; min-width: 140px; gap: 3px; }
+    .doc-field.full { flex: 0 0 100%; }
+    .doc-label { font-size: 7.5pt; font-weight: 700; white-space: nowrap; color: #111; flex-shrink: 0; }
+    .doc-value { border-bottom: 1px solid #111; flex: 1; padding: 0 3px 1px; min-height: 16px; font-size: 9pt; word-break: break-word; }
+    .doc-section-title { font-size: 8.5pt; font-weight: 700; text-transform: uppercase; margin: 14px 0 6px; color: #111; }
+    .doc-sig-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+    .doc-sig-box { text-align: right; min-width: 180px; }
+    .doc-sig-line { border-bottom: 1px solid #111; padding-bottom: 2px; font-size: 8.5pt; min-width: 180px; display: inline-block; }
+    .doc-sig-caption { font-size: 7pt; text-align: center; margin-top: 2px; color: #444; }
+    .doc-subjects-box { border: 1px solid #111; padding: 10px; min-height: 180px; font-size: 8.5pt; }
+    .doc-subjects-title { font-weight: 700; font-size: 8.5pt; text-align: center; border-bottom: 1px solid #111; padding-bottom: 6px; margin-bottom: 8px; text-transform: uppercase; line-height: 1.3; }
+    .doc-subject-item { border-bottom: 1px dotted #bbb; padding: 3px 0 4px; margin-bottom: 2px; }
+    .doc-subject-code { font-weight: 700; font-size: 8pt; }
+    .doc-subject-name { font-size: 7.5pt; color: #333; }
+    .doc-subject-units { text-align: right; font-size: 8pt; font-weight: 600; margin-top: 1px; }
+    .doc-subjects-total { border-top: 1.5px solid #111; padding-top: 6px; margin-top: 6px; font-weight: 700; text-align: right; font-size: 8.5pt; }
+    .review-note { font-size: .75rem; color: var(--text-muted); text-align: center; padding: 8px; background: var(--off-white); border-top: 1px solid var(--border); }
+
+    @@media (max-width: 767px) {
+        .doc-paper { padding: 16px 14px 20px; font-size: 8.5pt; }
+        .doc-body  { flex-direction: column; gap: 14px; }
+        .doc-subjects-col { width: 100%; }
+        .wizard-nav .btn { min-width: auto; flex: 1; }
+        .prog-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<!-- ─── PAGE HEADER ─────────────────────────────────────────────── -->
+<div class="container-fluid px-4 pt-4 pb-2">
+    <div class="d-flex align-items-center gap-3 mb-1">
+        <a href="/Admin/StudentRecords" class="btn btn-sm btn-light border">
+            <i class="bi bi-arrow-left me-1"></i> Back to Records
+        </a>
+        <div>
+            <h4 class="fw-bold mb-0" style="color:#051094;">
+                <i class="bi bi-person-plus-fill me-2"></i>Create Student Record
+            </h4>
+            <p class="text-muted small mb-0">
+                For returning students who never used this system — manually enter their information.
+            </p>
+        </div>
+    </div>
+</div>
+
+<section style="padding:1rem 0 4rem;background:linear-gradient(135deg,rgba(255,255,255,.98) 0%,rgba(244,246,255,.94) 40%,rgba(102,155,188,.12) 75%,rgba(5,16,148,.06) 100%);min-height:60vh;">
+    <div class="container">
+
+        @if (TempData["CreateStudentError"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4">
+                @TempData["CreateStudentError"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- Step Tracker -->
+        <ul class="step-wizard-list">
+            <li class="step-wizard-item current" id="tracker-1"><span class="progress-count">1</span><span class="progress-label">Student Info</span></li>
+            <li class="step-wizard-item" id="tracker-2"><span class="progress-count">2</span><span class="progress-label">Program</span></li>
+            <li class="step-wizard-item" id="tracker-3"><span class="progress-count">3</span><span class="progress-label">Subjects</span></li>
+            <li class="step-wizard-item" id="tracker-4"><span class="progress-count">4</span><span class="progress-label">Review</span></li>
+            <li class="step-wizard-item" id="tracker-5"><span class="progress-count">5</span><span class="progress-label">Save</span></li>
+        </ul>
+
+        <!-- Form Card -->
+        <div class="card shadow border-0 card-oact-form">
+            <div class="card-body p-3 p-md-4 p-lg-5">
+
+                <form id="createStudentForm"
+                      asp-action="CreateStudentRecord"
+                      asp-controller="Admin"
+                      method="post"
+                      enctype="multipart/form-data">
+
+                    @Html.AntiForgeryToken()
+
+                
+                    <input type="hidden" name="ChosenProgram" id="ChosenProgram" />
+                    <input type="hidden" name="ChosenYearLevel" id="ChosenYearLevel" value="1" />
+                    <input type="hidden" name="ChosenSemester" id="ChosenSemester" value="1" />
+                    <input type="hidden" name="ChosenStudentType" id="ChosenStudentType" value="Old Student" />
+                
+                    <div id="hiddenSubjectsContainer"></div>
+
+                    <!-- ══ STEP 1: Student Information ══════════════════════ -->
+                    <div class="wizard-step" id="step-1">
+                        <h4 class="step-heading">Step 1 &mdash; Student Information</h4>
+                        <div class="alert mb-3" style="background:#e8f4fd;border-left:4px solid #669bbc;border-radius:8px;padding:.85rem 1rem;font-size:.82rem;color:#0d1b4b;">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Fill in the student's personal information. Fields marked <span style="color:#dc3545">*</span> are required.
+                            A <strong>temporary student number</strong> will be auto-assigned — update it from the Student Records page after saving.
+                        </div>
+
+                        @if (Model != null && Model.Any())
+                        {
+                            var groupedFields = Model
+                                .GroupBy(f => string.IsNullOrEmpty(f.Category) ? "Other Information" : f.Category)
+                                .OrderBy(g => g.Key == "Personal Data" ? 0 :
+                                             g.Key == "Educational Background" ? 1 :
+                                             g.Key == "Contact Information" ? 2 :
+                                             g.Key == "Family Background" ? 3 :
+                                             g.Key == "For Transferees" ? 4 :
+                                             g.Key == "Documents" ? 5 : 6);
+
+                            foreach (var group in groupedFields)
+                            {
+                                <div class="category-section">
+                                    <div class="category-title">
+                                        <i class="bi bi-folder-fill me-2"></i>@group.Key
+                                    </div>
+                                    <div class="row g-2">
+                                        @foreach (var field in group)
+                                        {
+                                            <div class="col-12 col-md-6">
+                                                <label class="field-label">
+                                                    @field.FieldName.ToUpper()
+                                                    @if (field.IsRequired)
+                                                    {
+                                                        <span class="req">*</span>
+                                                    }
+                                                </label>
+                                                @switch (field.FieldType.ToLower())
+                                                {
+                                                    case "text":
+                                                        <input type="text"
+                                                               name="Field_@field.Id"
+                                                               data-field-id="@field.Id"
+                                                               data-field-name="@field.FieldName"
+                                                               data-category="@field.Category"
+                                                               class="form-control form-control-sm border-admiral enrollment-field"
+                                                               placeholder="@field.FieldName"
+                                                        @(field.IsRequired ? "required" : "") />
+                                                        break;
+                                                    case "number":
+                                                        <input type="number"
+                                                               name="Field_@field.Id"
+                                                               data-field-id="@field.Id"
+                                                               data-field-name="@field.FieldName"
+                                                               data-category="@field.Category"
+                                                               class="form-control form-control-sm border-admiral enrollment-field"
+                                                               placeholder="@field.FieldName"
+                                                        @(field.IsRequired ? "required" : "") />
+                                                        break;
+                                                    case "email":
+                                                        <input type="email"
+                                                               name="Field_@field.Id"
+                                                               data-field-id="@field.Id"
+                                                               data-field-name="@field.FieldName"
+                                                               data-category="@field.Category"
+                                                               class="form-control form-control-sm border-admiral enrollment-field"
+                                                               placeholder="email@example.com"
+                                                        @(field.IsRequired ? "required" : "") />
+                                                        break;
+                                                    case "phone":
+                                                        <input type="tel"
+                                                               name="Field_@field.Id"
+                                                               data-field-id="@field.Id"
+                                                               data-field-name="@field.FieldName"
+                                                               data-category="@field.Category"
+                                                               class="form-control form-control-sm border-admiral enrollment-field"
+                                                               placeholder="e.g. 09XX XXX XXXX"
+                                                               pattern="[0-9+\-\s()]+"
+                                                        @(field.IsRequired ? "required" : "") />
+                                                        break;
+                                                    case "date":
+                                                        <input type="date"
+                                                               name="Field_@field.Id"
+                                                               data-field-id="@field.Id"
+                                                               data-field-name="@field.FieldName"
+                                                               data-category="@field.Category"
+                                                               class="form-control form-control-sm border-admiral enrollment-field"
+                                                        @(field.IsRequired ? "required" : "") />
+                                                        break;
+                                                    case "select":
+                                                        var opts = !string.IsNullOrEmpty(field.Options)
+                                                            ? Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(field.Options)
+                                                            : new List<string>();
+                                                        <select name="Field_@field.Id"
+                                                                data-field-id="@field.Id"
+                                                                data-field-name="@field.FieldName"
+                                                                data-category="@field.Category"
+                                                                class="form-select form-select-sm border-admiral enrollment-field"
+                                                            @(field.IsRequired ? "required" : "")>
+                                                            <option value="">-- Select @field.FieldName --</option>
+                                                            @foreach (var opt in opts)
+                                                            {
+                                                                <option value="@opt">@opt</option>
+                                                            }
+                                                        </select>
+                                                        break;
+                                                    case "file":
+                                                    case "image":
+                                                        <input type="file"
+                                                               name="File_@field.Id"
+                                                               data-field-id="@field.Id"
+                                                               data-field-name="@field.FieldName"
+                                                               data-category="@field.Category"
+                                                               class="form-control form-control-sm border-admiral enrollment-file"
+                                                               accept="@GetAcceptedFileTypes(field.AcceptedFileTypes)"
+                                                        @(field.IsRequired ? "required" : "") />
+                                                        @if (!string.IsNullOrEmpty(field.HelperText))
+                                                        {
+                                                            <small class="text-muted d-block mt-1">@field.HelperText (Max: @field.MaxFileSize MB)</small>
+                                                        }
+                                                        break;
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                No enrollment fields configured. Please set up enrollment fields first.
+                            </div>
+                        }
+                    </div>
+
+                    <!-- ══ STEP 2: Program & Year Level ══════════════════════ -->
+                    <div class="wizard-step" id="step-2" style="display:none">
+                        <h4 class="step-heading">Step 2 &mdash; Program &amp; Year Level</h4>
+
+                        <label class="field-label mb-2">SELECT PROGRAM <span class="req">*</span></label>
+                        <div class="prog-grid mb-4">
+                            <div class="prog-option" id="prog-AMT" onclick="selectProgram('AMT')">
+                                <i class="bi bi-gear-wide-connected prog-icon"></i>
+                                <span class="prog-code">AMT</span>
+                                <div class="prog-name">Aircraft Maintenance Technology</div>
+                                <div class="prog-desc">Aircraft maintenance &amp; repair, aviation engineering</div>
+                                <i class="bi bi-check-circle-fill prog-check"></i>
+                            </div>
+                            <div class="prog-option" id="prog-AVT" onclick="selectProgram('AVT')">
+                                <i class="bi bi-cpu-fill prog-icon"></i>
+                                <span class="prog-code">AVT</span>
+                                <div class="prog-name">Aviation Electronics Technology</div>
+                                <div class="prog-desc">Avionics &amp; electronics systems in modern aircraft</div>
+                                <i class="bi bi-check-circle-fill prog-check"></i>
+                            </div>
+                        </div>
+
+                        <label class="field-label mb-2">YEAR LEVEL <span class="req">*</span></label>
+                        <div class="year-grid mb-4">
+                            <div class="year-option selected" id="year-1" onclick="selectYear(1)">
+                                <div class="year-num">1</div>
+                                <div class="year-label">1st Year</div>
+                            </div>
+                            <div class="year-option" id="year-2" onclick="selectYear(2)">
+                                <div class="year-num">2</div>
+                                <div class="year-label">2nd Year</div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="field-label">SEMESTER <span class="req">*</span></label>
+                                <select id="semesterSelect" class="form-select border-admiral" onchange="onSemesterChange()">
+                                    <option value="1" selected>1st Semester</option>
+                                    <option value="2">2nd Semester</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="field-label">STUDENT TYPE</label>
+                                <select id="studentTypeSelect" class="form-select border-admiral"
+                                        onchange="document.getElementById('ChosenStudentType').value = this.value">
+                                    <option value="Old Student" selected>Old Student</option>
+                                    <option value="Freshmen">Freshmen</option>
+                                    <option value="Transferee">Transferee</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="field-label">ENROLLMENT STATUS</label>
+                                <select name="EnrollmentStatus" class="form-select border-admiral">
+                                    <option value="Pending" selected>Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Enrolled">Enrolled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="field-label">PAYMENT STATUS</label>
+                                <select name="PaymentStatus" class="form-select border-admiral">
+                                    <option value="Unpaid" selected>Unpaid</option>
+                                    <option value="Verified">Verified / Paid</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="termPreview" class="units-total mt-3 d-none">
+                            <i class="bi bi-book me-2"></i>
+                            Subjects available for this term:
+                            <strong><span id="termSubjectCount">0</span></strong>
+                        </div>
+                    </div>
+
+                    <!-- ══ STEP 3: Subject Selection ══════════════════════════ -->
+                    <div class="wizard-step" id="step-3" style="display:none">
+                        <h4 class="step-heading">Step 3 &mdash; Select Subjects</h4>
+
+                        <div class="selection-bar">
+                            <div class="selection-bar-item">
+                                <span class="selection-bar-label">Program</span>
+                                <span class="selection-bar-value" id="sumProgram">—</span>
+                            </div>
+                            <div class="selection-bar-item">
+                                <span class="selection-bar-label">Year &amp; Semester</span>
+                                <span class="selection-bar-value" id="sumTerm">—</span>
+                            </div>
+                        </div>
+
+                        <p class="text-muted mb-3" style="font-size:.82rem" id="subjectTermLabel">
+                            Select at least one subject to continue.
+                        </p>
+
+                        <div id="subjectsList">
+                            <div class="text-center text-muted py-4" style="font-size:.85rem">
+                                <i class="bi bi-hourglass-split me-2"></i>
+                                Please complete Step 2 first.
+                            </div>
+                        </div>
+
+                        <div class="units-total mt-3">
+                            Total Units Selected: <strong><span id="totalUnits">0.0</span></strong>
+                        </div>
+                    </div>
+
+                    <!-- ══ STEP 4: Review ══════════════════════════════════════ -->
+                    <div class="wizard-step" id="step-4" style="display:none">
+                        <h4 class="step-heading">Step 4 &mdash; Review</h4>
+                        <p class="text-muted mb-3" style="font-size:.8rem">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Verify all information before saving. Go back to make corrections.
+                        </p>
+                        <div id="reviewContent"></div>
+                    </div>
+
+                    <!-- ══ STEP 5: Save ════════════════════════════════════════ -->
+                    <div class="wizard-step" id="step-5" style="display:none">
+                        <h4 class="step-heading">Step 5 &mdash; Save Student Record</h4>
+                        <div class="alert alert-success d-flex align-items-start gap-3">
+                            <i class="bi bi-check-circle-fill fs-4 flex-shrink-0 mt-1"></i>
+                            <div>
+                                <strong>Ready to save!</strong><br>
+                                <span style="font-size:.88rem">
+                                    Click <strong>Save Student</strong> to create the record.
+                                    A temporary student number will be assigned automatically —
+                                    you can replace it from the <strong>Student Records</strong> page.
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="field-label">ADMIN NOTES (optional)</label>
+                            <textarea name="AdminNotes" class="form-control border-admiral"
+                                      rows="3" placeholder="Any internal notes about this student…"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ── Navigation ── -->
+                    <div class="wizard-nav">
+                        <button type="button" id="prevBtn" class="btn btn-secondary px-3"
+                                onclick="changeStep(-1)" style="display:none">
+                            <i class="bi bi-arrow-left me-1"></i> Previous
+                        </button>
+                        <div class="d-flex gap-2 ms-auto">
+                            <button type="button" id="nextBtn" class="btn btn-admiral px-4"
+                                    onclick="changeStep(1)">
+                                Next <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                            <button type="submit" id="submitBtn" class="btn btn-success px-4 d-none">
+                                <i class="bi bi-person-check-fill me-1"></i> Save Student
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        /* ═══════════════════════════════════════════════════════════════
+           State
+        ═══════════════════════════════════════════════════════════════ */
+        let currentStep    = 1;
+        const totalSteps   = 5;
+        const MONTHS       = ['January','February','March','April','May','June',
+                              'July','August','September','October','November','December'];
+        let chosenProgram  = '';
+        let chosenYear     = 1;
+        let chosenSemester = 1;
+
+        /* ═══════════════════════════════════════════════════════════════
+           Boot
+        ═══════════════════════════════════════════════════════════════ */
+        document.addEventListener('DOMContentLoaded', () => {
+            goToStep(1);
+
+            document.getElementById('createStudentForm')
+                .addEventListener('submit', function (e) {
+
+                    // ── Strip required from ALL fields before submit ──────────
+                    // Hidden wizard panels with [required] fields block native
+                    // form submission silently. Step-by-step JS already validated them.
+                    this.querySelectorAll('[required]')
+                        .forEach(el => el.removeAttribute('required'));
+
+                    // ── Sync subjects one final time ──────────────────────────
+                    syncHiddenSubjects();
+
+                    // ── Guard: program ────────────────────────────────────────
+                    const prog = document.getElementById('ChosenProgram').value.trim();
+                    if (!prog) {
+                        e.preventDefault();
+                        alert('Please go back to Step 2 and select a program.');
+                        return;
+                    }
+
+                    // ── Guard: at least one subject ───────────────────────────
+                    const subs = document.querySelectorAll(
+                        '#hiddenSubjectsContainer input[name="SelectedSubjects"]');
+                    if (!subs.length) {
+                        e.preventDefault();
+                        alert('Please go back to Step 3 and select at least one subject.');
+                        return;
+                    }
+
+                    // ── Disable submit to prevent double-click ────────────────
+                    const btn = document.getElementById('submitBtn');
+                    btn.disabled  = true;
+                    btn.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-2"></span>Saving…';
+                });
+        });
+
+        /* ═══════════════════════════════════════════════════════════════
+           Navigation
+        ═══════════════════════════════════════════════════════════════ */
+        function changeStep(dir) {
+            if (dir === 1 && !validateStep(currentStep)) return;
+
+            // About to enter step 3 — sync hidden fields and load subjects
+            if (dir === 1 && currentStep === 2) {
+                syncHiddenFields();
+                loadSubjects();
+            }
+
+            goToStep(currentStep + dir);
+        }
+
+        function goToStep(step) {
+            step = Math.max(1, Math.min(totalSteps, step));
+            currentStep = step;
+
+            for (let i = 1; i <= totalSteps; i++) {
+                const el = document.getElementById(`step-${i}`);
+                if (el) el.style.display = (i === step) ? 'block' : 'none';
+            }
+
+            for (let i = 1; i <= totalSteps; i++) {
+                const t = document.getElementById(`tracker-${i}`);
+                if (!t) continue;
+                t.classList.remove('current', 'completed');
+                if      (i < step)  t.classList.add('completed');
+                else if (i === step) t.classList.add('current');
+            }
+
+            const prev   = document.getElementById('prevBtn');
+            const next   = document.getElementById('nextBtn');
+            const submit = document.getElementById('submitBtn');
+
+            prev.style.display = step > 1 ? 'inline-flex' : 'none';
+
+            if (step === totalSteps) {
+                next.style.display = 'none';
+                submit.classList.remove('d-none');
+            } else {
+                next.style.display = 'inline-flex';
+                submit.classList.add('d-none');
+            }
+
+            if (step === 4) buildReview();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Per-step validation
+        ═══════════════════════════════════════════════════════════════ */
+        function validateStep(step) {
+            if (step === 1) {
+                const panel = document.getElementById('step-1');
+                for (const f of panel.querySelectorAll('[required]')) {
+                    if (!f.checkValidity()) { f.reportValidity(); return false; }
+                }
+                return true;
+            }
+            if (step === 2) {
+                if (!chosenProgram) {
+                    alert('Please select a program — AMT or AVT.'); return false;
+                }
+                return true;
+            }
+            if (step === 3) {
+                if (!document.querySelector('.subject-item:checked')) {
+                    alert('Please select at least one subject.'); return false;
+                }
+                syncHiddenSubjects();
+                return true;
+            }
+            return true;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Program / Year / Semester selection
+        ═══════════════════════════════════════════════════════════════ */
+        function selectProgram(prog) {
+            chosenProgram = prog;
+            document.getElementById('ChosenProgram').value = prog;
+            document.getElementById('prog-AMT').classList.toggle('selected', prog === 'AMT');
+            document.getElementById('prog-AVT').classList.toggle('selected', prog === 'AVT');
+            fetchSubjectCount();
+        }
+
+        function selectYear(year) {
+            chosenYear = year;
+            document.getElementById('ChosenYearLevel').value = year;
+            document.getElementById('year-1').classList.toggle('selected', year === 1);
+            document.getElementById('year-2').classList.toggle('selected', year === 2);
+            fetchSubjectCount();
+        }
+
+        function onSemesterChange() {
+            chosenSemester = parseInt(document.getElementById('semesterSelect').value);
+            document.getElementById('ChosenSemester').value = chosenSemester;
+            fetchSubjectCount();
+        }
+
+        /* Sync all Step 2 hidden inputs */
+        function syncHiddenFields() {
+            document.getElementById('ChosenProgram').value     = chosenProgram;
+            document.getElementById('ChosenYearLevel').value   = chosenYear;
+            document.getElementById('ChosenSemester').value    = chosenSemester;
+            document.getElementById('ChosenStudentType').value =
+                document.getElementById('studentTypeSelect').value;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Subject count preview (Step 2)
+        ═══════════════════════════════════════════════════════════════ */
+        async function fetchSubjectCount() {
+            if (!chosenProgram) return;
+            try {
+                const url = `/Admin/GetSubjectsForTerm?program=${encodeURIComponent(chosenProgram)}&yearLevel=${chosenYear}&semester=${chosenSemester}`;
+                const d   = await (await fetch(url)).json();
+                const n   = (d.subjects || []).length;
+                document.getElementById('termPreview').classList.remove('d-none');
+                document.getElementById('termSubjectCount').textContent = n;
+            } catch {}
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Load subjects into Step 3
+           — same endpoint used by FreshmenForm
+        ═══════════════════════════════════════════════════════════════ */
+        async function loadSubjects() {
+            const list    = document.getElementById('subjectsList');
+            const label   = document.getElementById('subjectTermLabel');
+            const ordinal = n => ['','1st','2nd','3rd','4th'][n] || `${n}th`;
+
+            document.getElementById('sumProgram').textContent = chosenProgram || '—';
+            document.getElementById('sumTerm').textContent    =
+                `${ordinal(chosenYear)} Year — ${ordinal(chosenSemester)} Semester`;
+            label.textContent =
+                `${ordinal(chosenYear)} Year — ${ordinal(chosenSemester)} Semester (${chosenProgram})`;
+
+            list.innerHTML = `<div class="text-center text-muted py-4">
+                <span class="spinner-border spinner-border-sm me-2"></span>Loading subjects…
+            </div>`;
+
+            try {
+                const url  = `/Admin/GetSubjectsForTerm?program=${encodeURIComponent(chosenProgram)}&yearLevel=${chosenYear}&semester=${chosenSemester}`;
+                const res  = await fetch(url);
+                const d    = await res.json();
+
+                // ── Full debug dump — open DevTools Console to see this ──
+                console.log('[CreateStudent] GetSubjectsForTerm response:', d);
+                console.log('[CreateStudent] URL called:', url);
+                console.log('[CreateStudent] success:', d.success);
+                console.log('[CreateStudent] subjects count:', (d.subjects || []).length);
+                console.log('[CreateStudent] debug_totalSubjectsInDb:', d.debug_totalSubjectsInDb);
+                console.log('[CreateStudent] debug_programsInDb:', d.debug_programsInDb);
+                console.log('[CreateStudent] debug_yearLevelsInDb:', d.debug_yearLevelsInDb);
+                console.log('[CreateStudent] debug_semestersInDb:', d.debug_semestersInDb);
+                console.log('[CreateStudent] debug_autoFixedIsActive:', d.debug_autoFixedIsActive);
+
+                const subs = d.subjects || [];
+
+                if (!d.success) {
+                    list.innerHTML = `<div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        API error: ${esc(d.message || 'Unknown error')}
+                    </div>`;
+                    calcUnits(); return;
+                }
+
+                if (!subs.length) {
+                    // Show what IS in the DB so we can diagnose
+                    const progList  = (d.debug_programsInDb  || []).join(', ') || 'none';
+                    const yearList  = (d.debug_yearLevelsInDb || []).join(', ') || 'none';
+                    const semList   = (d.debug_semestersInDb  || []).join(', ') || 'none';
+                    const total     = d.debug_totalSubjectsInDb ?? '?';
+                    list.innerHTML = `<div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>No subjects matched.</strong><br>
+                        <small>
+                            You selected: <strong>${esc(chosenProgram)}</strong> /
+                            Year <strong>${chosenYear}</strong> /
+                            Sem <strong>${chosenSemester}</strong><br>
+                            DB has <strong>${total}</strong> subject(s) total.<br>
+                            Programs in DB: <strong>${esc(progList)}</strong><br>
+                            Year levels in DB: <strong>${esc(yearList)}</strong><br>
+                            Semesters in DB: <strong>${esc(semList)}</strong>
+                        </small>
+                    </div>`;
+                    calcUnits(); return;
+                }
+
+                list.innerHTML = subs.map(s => `
+                    <div class="subject-row">
+                        <div class="form-check d-flex align-items-start gap-2">
+                            <input class="form-check-input subject-item mt-1 flex-shrink-0"
+                                   type="checkbox"
+                                   value="${s.subjectId}"
+                                   id="sub_${s.subjectId}"
+                                   data-units="${s.units}"
+                                   data-code="${escAttr(s.courseCode)}"
+                                   data-title="${escAttr(s.descriptiveTitle)}" />
+                            <label class="form-check-label w-100" for="sub_${s.subjectId}">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div style="min-width:0">
+                                        <strong style="font-size:.85rem">${esc(s.courseCode)}</strong>
+                                        <span style="font-size:.85rem"> &ndash; ${esc(s.descriptiveTitle)}</span>
+                                        <br/>
+                                        <small class="text-muted" style="font-size:.72rem">
+                                            ${esc(s.program)} &nbsp;|&nbsp;
+                                            Lec: ${s.lectureHours}h &nbsp;|&nbsp;
+                                            Lab: ${s.laboratoryHours}h
+                                        </small>
+                                    </div>
+                                    <span class="badge-units">${parseFloat(s.units).toFixed(1)} units</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>`).join('');
+
+                list.querySelectorAll('.subject-item')
+                    .forEach(cb => cb.addEventListener('change', calcUnits));
+                calcUnits();
+            } catch (err) {
+                list.innerHTML = `<div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Failed to load subjects: ${esc(err.message)}
+                </div>`;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Units counter
+        ═══════════════════════════════════════════════════════════════ */
+        function calcUnits() {
+            let total = 0;
+            document.querySelectorAll('.subject-item:checked')
+                .forEach(cb => { total += parseFloat(cb.dataset.units) || 0; });
+            document.getElementById('totalUnits').textContent = total.toFixed(1);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Write checked subjects into hidden inputs for POST
+           Matches: form["SelectedSubjects"] in CreateStudentRecord POST
+        ═══════════════════════════════════════════════════════════════ */
+        function syncHiddenSubjects() {
+            const container = document.getElementById('hiddenSubjectsContainer');
+            container.innerHTML = '';
+            document.querySelectorAll('.subject-item:checked').forEach(cb => {
+                const inp = document.createElement('input');
+                inp.type  = 'hidden';
+                inp.name  = 'SelectedSubjects';
+                inp.value = cb.value;
+                container.appendChild(inp);
+            });
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Build document-style review (Step 4)
+        ═══════════════════════════════════════════════════════════════ */
+        function buildReview() {
+            const now      = new Date();
+            const month    = now.getMonth();
+            const year     = now.getFullYear();
+            const acYear   = month >= 5 ? `${year}-${year+1}` : `${year-1}-${year}`;
+            const today    = `${MONTHS[month]} ${now.getDate()}, ${year}`;
+            const ordinal  = n => ['','1st','2nd','3rd','4th'][n] || `${n}th`;
+            const semLabel = chosenSemester === 1 ? '1st Semester' : '2nd Semester';
+            const studType = document.getElementById('studentTypeSelect').value;
+
+            const byCategory = {};
+            document.querySelectorAll('.enrollment-field, .enrollment-file').forEach(el => {
+                const cat = el.dataset.category || 'Other Information';
+                if (!byCategory[cat]) byCategory[cat] = [];
+                let val = el.value || '';
+                if (el.classList.contains('enrollment-file'))
+                    val = (el.files && el.files.length) ? el.files[0].name : '';
+                else if (el.type === 'date') val = fmtDate(val);
+                byCategory[cat].push({
+                    name:  (el.dataset.fieldName || '').toUpperCase(),
+                    value: val
+                });
+            });
+
+            let subjectsHtml = '', totalUnits = 0;
+            document.querySelectorAll('.subject-item:checked').forEach(cb => {
+                const u = parseFloat(cb.dataset.units);
+                totalUnits += u;
+                subjectsHtml += `
+                    <div class="doc-subject-item">
+                        <div class="doc-subject-code">${esc(cb.dataset.code)}</div>
+                        <div class="doc-subject-name">${esc(cb.dataset.title)}</div>
+                        <div class="doc-subject-units">${u.toFixed(1)} units</div>
+                    </div>`;
+            });
+            if (!subjectsHtml)
+                subjectsHtml = '<div style="color:#888;font-size:8pt;font-style:italic">No subjects selected</div>';
+
+            const sectionOrder = [
+                'Personal Data', 'Educational Background', 'For Transferees',
+                "Parent's Information", 'Contact Information', 'Family Background', 'Documents'
+            ];
+            let sectionsHtml = '';
+            sectionOrder.forEach(sec => {
+                const fields = byCategory[sec];
+                if (!fields || !fields.length) return;
+                sectionsHtml += `<div class="doc-section-title">${esc(sec)}</div>`;
+                for (let i = 0; i < fields.length; i += 2) {
+                    const f1 = fields[i], f2 = fields[i + 1];
+                    if (f2) {
+                        sectionsHtml += `<div class="doc-row">
+                            <div class="doc-field">
+                                <span class="doc-label">${esc(f1.name)}:</span>
+                                <span class="doc-value">${esc(f1.value)}</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">${esc(f2.name)}:</span>
+                                <span class="doc-value">${esc(f2.value)}</span>
+                            </div>
+                        </div>`;
+                    } else {
+                        sectionsHtml += `<div class="doc-row">
+                            <div class="doc-field full">
+                                <span class="doc-label">${esc(f1.name)}:</span>
+                                <span class="doc-value">${esc(f1.value)}</span>
+                            </div>
+                        </div>`;
+                    }
+                }
+            });
+
+            document.getElementById('reviewContent').innerHTML = `
+            <div>
+                <div class="doc-paper">
+                    <div class="doc-header">
+                        <img src="/images/MainLogo.png" alt="OACT Logo" class="doc-logo">
+                        <div class="doc-school-name">Orson Aerospace College and Technology, Inc.</div>
+                        <p class="doc-school-address">RLW Building, MV Patalinghug Avenue, Barangay Basak, Lapu-Lapu City, Cebu 6015</p>
+                        <p class="doc-school-address">oactech1953@gmail.com &nbsp;|&nbsp; (032) 326-4409 &nbsp;|&nbsp; (63) 977 381 0089</p>
+                    </div>
+                    <div class="doc-blue-bar">Admin &mdash; Student Record Entry (${esc(studType)})</div>
+                    <div class="doc-body">
+                        <div class="doc-info-col">
+                            <div class="doc-row">
+                                <div class="doc-field">
+                                    <span class="doc-label">ACADEMIC YEAR:</span>
+                                    <span class="doc-value">${acYear}</span>
+                                </div>
+                                <div class="doc-field">
+                                    <span class="doc-label">SEMESTER:</span>
+                                    <span class="doc-value">${esc(semLabel)}</span>
+                                </div>
+                            </div>
+                            <div class="doc-row">
+                                <div class="doc-field">
+                                    <span class="doc-label">COURSE &amp; YEAR:</span>
+                                    <span class="doc-value">${esc(chosenProgram)} &ndash; ${ordinal(chosenYear)} Year</span>
+                                </div>
+                                <div class="doc-field">
+                                    <span class="doc-label">STUDENT TYPE:</span>
+                                    <span class="doc-value">${esc(studType)}</span>
+                                </div>
+                            </div>
+                            ${sectionsHtml}
+                            <div class="doc-sig-row">
+                                <div class="doc-sig-box">
+                                    <span class="doc-label" style="font-size:7pt;margin-right:6px">DATE CREATED:</span>
+                                    <span class="doc-sig-line">${today}</span>
+                                    <div class="doc-sig-caption">Created by Admin</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="doc-subjects-col">
+                            <div class="doc-subjects-box">
+                                <div class="doc-subjects-title">
+                                    Selected Subjects<br>
+                                    (${ordinal(chosenYear)} Year &ndash; ${esc(semLabel)})
+                                </div>
+                                ${subjectsHtml}
+                                <div class="doc-subjects-total">Total Units: ${totalUnits.toFixed(1)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-note">
+                    <i class="bi bi-eye me-1"></i>
+                    Verify all details before saving. Go back to make corrections.
+                </div>
+            </div>`;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           Helpers
+        ═══════════════════════════════════════════════════════════════ */
+        function fmtDate(v) {
+            if (!v) return '';
+            const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!m) return v;
+            return `${MONTHS[parseInt(m[2], 10) - 1]} ${parseInt(m[3], 10)}, ${m[1]}`;
+        }
+
+        function esc(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function escAttr(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g,'&amp;').replace(/'/g,'&#39;')
+                .replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+    </script>
+}
+
+@functions {
+    string GetAcceptedFileTypes(string fileTypes)
+    {
+        if (string.IsNullOrEmpty(fileTypes)) return "*";
+        return fileTypes switch
+        {
+            "pdf" => ".pdf",
+            "doc" => ".doc,.docx",
+            "excel" => ".xls,.xlsx",
+            "ppt" => ".ppt,.pptx",
+            "images" => "image/*",
+            "all" => "*",
+            _ => "*"
+        };
+    }
+}

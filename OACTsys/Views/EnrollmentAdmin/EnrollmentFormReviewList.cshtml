@@ -1,0 +1,244 @@
+@{
+    ViewBag.Title = "Enrollment Form Fields Review";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .field-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        transition: all 0.3s;
+        background-color: #fff;
+    }
+
+        .field-card:hover {
+            border-color: #051094;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+    .field-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .field-type-badge {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .required-badge {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+
+    .optional-badge {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+
+    .options-list {
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 20px;
+        }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 style="color:#051094;">
+            <i class="bi bi-ui-checks-grid"></i> Enrollment Form Fields Review
+        </h3>
+        <div>
+            <button class="btn btn-outline-secondary me-2" onclick="navigateBack()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button class="btn btn-primary" onclick="navigateToEnrollment()">
+                <i class="bi bi-plus-circle"></i> Add New Fields
+            </button>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Review all enrollment form fields.</strong> You can delete individual fields or return to the enrollment page to add/edit fields.
+    </div>
+
+    <div id="fieldsContainer">
+        <!-- Fields will be loaded here -->
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading enrollment fields...</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            loadEnrollmentFields();
+        });
+
+        function loadEnrollmentFields() {
+            $.ajax({
+                url: '@Url.Action("GetEnrollmentFields", "EnrollmentAdmin")',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success && response.fields && response.fields.length > 0) {
+                        renderFields(response.fields);
+                    } else {
+                        showEmptyState();
+                    }
+                },
+                error: function() {
+                    $('#fieldsContainer').html(`
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error loading enrollment fields. Please try again.
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        function renderFields(fields) {
+            let html = '<div class="row g-3">';
+
+            fields.forEach(function(field, index) {
+                const fieldTypeName = getFieldTypeName(field.fieldType);
+                const requiredBadge = field.isRequired
+                    ? '<span class="field-badge required-badge"><i class="bi bi-asterisk"></i> Required</span>'
+                    : '<span class="field-badge optional-badge">Optional</span>';
+
+                let optionsHtml = '';
+                if (field.fieldType === 'select' && field.options) {
+                    const optionsArray = field.options.split(',').map(o => o.trim());
+                    optionsHtml = `
+                        <div class="mt-2">
+                            <small class="text-muted d-block mb-1"><strong>Options:</strong></small>
+                            <div class="options-list">
+                                ${optionsArray.map(opt => `<span class="badge bg-secondary me-1">${opt}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                let fileOptionsHtml = '';
+                if (field.fieldType === 'file' || field.fieldType === 'image') {
+                    fileOptionsHtml = `
+                        <div class="mt-2">
+                            <small class="text-muted d-block"><strong>File Settings:</strong></small>
+                            <div class="options-list">
+                                ${field.acceptedFileTypes ? `<span class="badge bg-info me-1">Type: ${field.acceptedFileTypes}</span>` : ''}
+                                <span class="badge bg-info me-1">Max: ${field.maxFileSize || 5}MB</span>
+                                ${field.helperText ? `<br><small>${field.helperText}</small>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="field-card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">${field.fieldName}</h6>
+                                    <span class="field-badge field-type-badge">
+                                        <i class="bi bi-tag"></i> ${fieldTypeName}
+                                    </span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteField(${field.id}, '${field.fieldName}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                ${requiredBadge}
+                            </div>
+                            ${optionsHtml}
+                            ${fileOptionsHtml}
+                            <div class="mt-2">
+                                <small class="text-muted">Order: #${field.displayOrder}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            $('#fieldsContainer').html(html);
+        }
+
+        function showEmptyState() {
+            $('#fieldsContainer').html(`
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h5>No Enrollment Fields Found</h5>
+                    <p class="text-muted">Get started by adding enrollment form fields.</p>
+                    <button class="btn btn-primary mt-3" onclick="navigateToEnrollment()">
+                        <i class="bi bi-plus-circle"></i> Add Fields
+                    </button>
+                </div>
+            `);
+        }
+
+        function getFieldTypeName(type) {
+            const types = {
+                'text': 'Text',
+                'number': 'Number',
+                'date': 'Date',
+                'select': 'Dropdown',
+                'file': 'Document',
+                'image': 'Image'
+            };
+            return types[type] || type;
+        }
+
+        function deleteField(id, fieldName) {
+            if (!confirm(`Are you sure you want to delete the field "${fieldName}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("DeleteEnrollmentField", "EnrollmentAdmin")',
+                type: 'POST',
+                data: { id: id },
+                success: function(response) {
+                    if (response.success) {
+                        alert('✓ ' + response.message);
+                        loadEnrollmentFields();
+                    } else {
+                        alert('✗ ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('✗ Error deleting field. Please try again.');
+                }
+            });
+        }
+
+        function navigateToEnrollment() {
+            window.location.href = '@Url.Action("Enrollment", "EnrollmentAdmin")';
+        }
+
+        function navigateBack() {
+            window.location.href = '@Url.Action("Enrollment", "EnrollmentAdmin")';
+        }
+    </script>
+}
+                                                                                              

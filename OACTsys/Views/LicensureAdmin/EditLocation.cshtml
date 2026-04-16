@@ -1,0 +1,260 @@
+﻿@{
+    ViewBag.Title = "Edit Examination Location";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - OACT Admin</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy-blue: #001f3f;
+            --light-navy: #0a2463;
+            --text-dark: #2c3e50;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: var(--navy-blue);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: white;
+            border: 2px solid var(--navy-blue);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+            .page-header h1 {
+                color: var(--navy-blue);
+                font-weight: 700;
+                margin: 0;
+                font-size: 2rem;
+            }
+
+                .page-header h1 i {
+                    margin-right: 15px;
+                }
+
+            .page-header p {
+                color: var(--text-dark);
+                margin: 10px 0 0 0;
+                font-size: 1rem;
+            }
+
+        .content-card {
+            background: white;
+            border: 2px solid var(--navy-blue);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 15px;
+            color: var(--navy-blue);
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: var(--navy-blue);
+                box-shadow: 0 0 0 0.2rem rgba(0, 31, 63, 0.25);
+            }
+
+        .form-label {
+            color: var(--navy-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .btn-navy {
+            background: var(--navy-blue);
+            color: white;
+            border: 2px solid var(--navy-blue);
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+            .btn-navy:hover {
+                background: white;
+                color: var(--navy-blue);
+            }
+
+        .btn-outline-navy {
+            background: white;
+            color: var(--navy-blue);
+            border: 2px solid var(--navy-blue);
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+            .btn-outline-navy:hover {
+                background: var(--navy-blue);
+                color: white;
+            }
+
+        .image-preview-container {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+
+            .image-preview-container img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .image-preview-container .placeholder-text {
+                text-align: center;
+                color: var(--navy-blue);
+            }
+
+                .image-preview-container .placeholder-text i {
+                    font-size: 2.5rem;
+                    margin-bottom: 10px;
+                    display: block;
+                }
+
+        @@media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+                .d-flex.justify-content-between .btn {
+                    width: 100%;
+                }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <h1><i class="fas fa-map-marker-alt"></i>Edit Examination Location</h1>
+            <p>Update examination center information</p>
+        </div>
+
+        <div class="content-card">
+            <form method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label">Location Name</label>
+                    <input type="text" class="form-control" value="Main Office - Navotas" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea class="form-control" rows="2">Orson Aerospace College, Navotas City, NCR</textarea>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Capacity</label>
+                        <input type="number" class="form-control" value="150" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Type</label>
+                        <select class="form-select">
+                            <option selected>Main Office</option>
+                            <option>Regional Center</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select">
+                            <option selected>Active</option>
+                            <option>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Operating Hours</label>
+                    <textarea class="form-control" rows="2">Mon-Thu: 8:00 AM - 4:00 PM
+Fri: 8:00 AM - 11:00 AM</textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Current Location Image</label>
+                    <div class="image-preview-container" id="imagePreview">
+                        <img src="~/img/oact-main.jpg" alt="Current Location" id="currentImage" />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Change Location Image</label>
+                    <input type="file" class="form-control" id="locationImageInput" accept="image/*" onchange="previewNewImage(this)" />
+                    <small class="text-muted">Upload a new image to replace the current location image</small>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="@Url.Action("Licensure", "Admin")" class="btn btn-outline-navy">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                    <button type="submit" class="btn btn-navy">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function previewNewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const currentImage = document.getElementById('currentImage');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    currentImage.src = e.target.result;
+                    preview.style.borderColor = 'var(--navy-blue)';
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+</body>
+</html>

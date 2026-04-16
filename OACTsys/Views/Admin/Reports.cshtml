@@ -1,0 +1,222 @@
+﻿@{
+    ViewBag.Title = "Reports";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .report-card {
+        border-left: 6px solid #051094;
+    }
+
+    .year-card .card-header {
+        font-weight: 600;
+    }
+
+    .year-card table th {
+        font-size: 0.8rem;
+        background: #f1f3f5;
+        text-transform: uppercase;
+    }
+
+    .filter-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 style="color:#051094;">
+            <i class="bi bi-clipboard-data-fill"></i> Reports
+        </h3>
+
+        <button class="btn btn-success" onclick="navigateToLicensure()">
+            <i class="bi bi-award"></i> View Licensure Tab
+        </button>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="reportTabs">
+        <li class="nav-item">
+            <button class="nav-link active" id="enrollment-tab" data-bs-toggle="tab" data-bs-target="#enrollmentTab">
+                <i class="bi bi-person-check"></i> Enrollment Reports
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="licensure-tab" data-bs-toggle="tab" data-bs-target="#licensureTab">
+                <i class="bi bi-mortarboard-fill"></i> Licensure Reports
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <div class="tab-pane fade show active" id="enrollmentTab">
+
+            <div class="filter-box">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="small fw-bold">Program</label>
+                        <select class="form-select form-select-sm">
+                            <option>All Programs</option>
+                            <option>BSIT</option>
+                            <option>BSED</option>
+                            <option>BSBA</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="small fw-bold">Semester</label>
+                        <select class="form-select form-select-sm">
+                            <option>All Semesters</option>
+                            <option>1st Semester</option>
+                            <option>2nd Semester</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Search Student</label>
+                        <input class="form-control form-control-sm" placeholder="Enter student name">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm year-card">
+                        <div class="card-header bg-primary text-white">1st Year Enrollees</div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Program</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Juan Dela Cruz</td>
+                                        <td>BSIT</td>
+                                        <td><span class="badge bg-success">Done</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer text-end">
+                            <button class="btn btn-sm btn-outline-primary">View Full List</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card shadow-sm year-card">
+                        <div class="card-header bg-success text-white">2nd Year Enrollees</div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Program</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Maria Santos</td>
+                                        <td>BSED</td>
+                                        <td><span class="badge bg-warning text-dark">Pending</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer text-end">
+                            <button class="btn btn-sm btn-outline-success">View Full List</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="licensureTab">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm year-card border-success">
+                        <div class="card-header bg-success text-white">1st Year Licensure</div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Exam</th>
+                                        <th>Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Ana Reyes</td>
+                                        <td>LET</td>
+                                        <td><span class="badge bg-success">Passed</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card shadow-sm year-card border-primary">
+                        <div class="card-header bg-primary text-white">2nd Year Licensure</div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Exam</th>
+                                        <th>Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>John Paul Lim</td>
+                                        <td>BLEPP</td>
+                                        <td><span class="badge bg-danger">Failed</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function navigateToLicensure() {
+            // 1. Find the tab trigger element
+            var triggerEl = document.querySelector('#licensure-tab');
+            // 2. Use Bootstrap's Tab constructor to show it
+            var tab = new bootstrap.Tab(triggerEl);
+            tab.show();
+
+            // Optional: Scroll to top of tabs if page is long
+            document.getElementById('reportTabs').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+}

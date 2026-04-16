@@ -1,0 +1,580 @@
+@{
+    ViewData["Title"] = "Payment Confirmation";
+    Layout = null;
+    int paymentId = ViewBag.PaymentId ?? 0;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Payment Confirmation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blue: #007AFF;
+            --blue-pale: #EBF4FF;
+            --green: #16A34A;
+            --green-bg: #F0FDF4;
+            --yellow: #D97706;
+            --yellow-bg: #FFFBEB;
+            --red: #DC2626;
+            --red-bg: #FEF2F2;
+            --text: #0F172A;
+            --mid: #475569;
+            --light: #94A3B8;
+            --border: #E2E8F0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans',sans-serif;
+            background: #F1F5F9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            background: linear-gradient(135deg,#0050A0,#0090FF);
+            padding: 1.4rem 1rem 5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .header::before {
+                content: '';
+                position: absolute;
+                top: -60px;
+                right: -60px;
+                width: 200px;
+                height: 200px;
+                background: rgba(255,255,255,.07);
+                border-radius: 50%;
+            }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            width: calc(100% - 2rem);
+            max-width: 460px;
+            margin: -3rem auto 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,.1);
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Progress steps */
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem 1.4rem .6rem;
+        }
+
+        .prog-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .25rem;
+            flex: 1;
+        }
+
+        .prog-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .65rem;
+            font-weight: 800;
+        }
+
+            .prog-dot.done {
+                background: var(--green);
+                color: #fff;
+            }
+
+            .prog-dot.active {
+                background: var(--blue);
+                color: #fff;
+            }
+
+            .prog-dot.idle {
+                background: #E2E8F0;
+                color: var(--light);
+            }
+
+        .prog-label {
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--light);
+            text-align: center;
+        }
+
+            .prog-label.active {
+                color: var(--blue);
+            }
+
+            .prog-label.done {
+                color: var(--green);
+            }
+
+        .prog-line {
+            height: 2px;
+            flex: 1;
+            background: #E2E8F0;
+            margin-bottom: 1.1rem;
+        }
+
+            .prog-line.done {
+                background: var(--green);
+            }
+
+        .body {
+            padding: 1.5rem 1.4rem;
+            text-align: center;
+        }
+
+        /* Status widget */
+        .status-widget {
+            border-radius: 16px;
+            padding: 1.75rem 1.25rem;
+            margin-bottom: 1.25rem;
+            transition: all .4s ease;
+        }
+
+            .status-widget.pending {
+                background: var(--yellow-bg);
+                border: 1.5px solid #FDE68A;
+            }
+
+            .status-widget.approved {
+                background: var(--green-bg);
+                border: 1.5px solid #BBF7D0;
+            }
+
+            .status-widget.rejected {
+                background: var(--red-bg);
+                border: 1.5px solid #FECACA;
+            }
+
+        .status-icon-wrap {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .status-widget.pending .status-icon-wrap {
+            background: rgba(217,119,6,.12);
+        }
+
+        .status-widget.approved .status-icon-wrap {
+            background: rgba(22,163,74,.12);
+        }
+
+        .status-widget.rejected .status-icon-wrap {
+            background: rgba(220,38,38,.12);
+        }
+
+        .status-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: .35rem;
+        }
+
+        .status-widget.pending .status-title {
+            color: var(--yellow);
+        }
+
+        .status-widget.approved .status-title {
+            color: var(--green);
+        }
+
+        .status-widget.rejected .status-title {
+            color: var(--red);
+        }
+
+        .status-sub {
+            font-size: .82rem;
+            line-height: 1.6;
+        }
+
+        .status-widget.pending .status-sub {
+            color: #92400E;
+        }
+
+        .status-widget.approved .status-sub {
+            color: #166534;
+        }
+
+        .status-widget.rejected .status-sub {
+            color: #991B1B;
+        }
+
+        /* Pulse animation for pending */
+        .pulse-ring {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .pulse-ring::before, .pulse-ring::after {
+                content: '';
+                position: absolute;
+                border-radius: 50%;
+                animation: pulse-out 2s ease-out infinite;
+            }
+
+            .pulse-ring::before {
+                width: 68px;
+                height: 68px;
+                background: rgba(217,119,6,.2);
+                animation-delay: 0s;
+            }
+
+            .pulse-ring::after {
+                width: 68px;
+                height: 68px;
+                background: rgba(217,119,6,.12);
+                animation-delay: .6s;
+            }
+
+        @@keyframes pulse-out {
+            0% {
+                transform: scale(1);
+                opacity: .7;
+            }
+
+            100% {
+                transform: scale(1.7);
+                opacity: 0;
+            }
+        }
+
+        /* Ref info */
+        .ref-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .6rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .ref-cell {
+            background: #F8FAFC;
+            border-radius: 10px;
+            padding: .7rem .9rem;
+            text-align: left;
+        }
+
+            .ref-cell label {
+                display: block;
+                font-size: .65rem;
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                color: var(--light);
+                margin-bottom: .2rem;
+            }
+
+            .ref-cell .rv {
+                font-size: .85rem;
+                font-weight: 700;
+                color: var(--text);
+            }
+
+        /* Auto-check bar */
+        .check-bar {
+            background: var(--blue-pale);
+            border-radius: 10px;
+            padding: .65rem 1rem;
+            font-size: .78rem;
+            color: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .dot-spin {
+            display: inline-flex;
+            gap: 3px;
+        }
+
+            .dot-spin span {
+                width: 5px;
+                height: 5px;
+                background: var(--blue);
+                border-radius: 50%;
+                animation: dot-bounce .9s infinite;
+            }
+
+                .dot-spin span:nth-child(2) {
+                    animation-delay: .15s;
+                }
+
+                .dot-spin span:nth-child(3) {
+                    animation-delay: .3s;
+                }
+
+        @@keyframes dot-bounce {
+            0%, 80%, 100% {
+                transform: scale(.6)
+            }
+
+            40% {
+                transform: scale(1)
+            }
+        }
+
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: .85rem;
+            background: linear-gradient(135deg,#0060C0,#0090FF);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: .9rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: .4px;
+        }
+
+        .btn-secondary {
+            display: block;
+            width: 100%;
+            padding: .8rem;
+            background: #F1F5F9;
+            color: var(--mid);
+            border: none;
+            border-radius: 50px;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: .75rem;
+        }
+
+        .footer {
+            font-size: .68rem;
+            color: var(--light);
+            text-align: center;
+            padding: .75rem 1rem 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 4.5c2.071 0 3.9.948 5.12 2.438H13v1.5h5.82c.117.5.18 1.022.18 1.562H13v1.5h6c0 3.314-2.686 6-6 6s-6-2.686-6-6 2.686-6 6-6z" fill="#007AFF" /></svg>
+            </div>
+            GCash Payment
+        </div>
+    </div>
+
+    <div class="card">
+        <!-- Progress -->
+        <div class="progress-steps">
+            <div class="prog-step"><div class="prog-dot done">✓</div><div class="prog-label done">Details</div></div>
+            <div class="prog-line done"></div>
+            <div class="prog-step"><div class="prog-dot done">✓</div><div class="prog-label done">Sent</div></div>
+            <div class="prog-line done"></div>
+            <div class="prog-step"><div class="prog-dot done">✓</div><div class="prog-label done">Proof</div></div>
+            <div class="prog-line done"></div>
+            <div class="prog-step"><div class="prog-dot active" id="verifyDot">4</div><div class="prog-label active" id="verifyLabel">Verify</div></div>
+        </div>
+
+        <div class="body">
+
+            <!-- Status Widget -->
+            <div class="status-widget pending" id="statusWidget">
+                <div class="pulse-ring" id="pulseRing">
+                    <div class="status-icon-wrap" id="statusIconWrap">
+                        <svg id="statusIcon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="#D97706" stroke-width="2" />
+                            <path d="M12 7v5l3 3" stroke="#D97706" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="status-title" id="statusTitle">Awaiting Admin Verification</div>
+                <div class="status-sub" id="statusSub">
+                    Your payment proof has been submitted. The admin is reviewing your transaction.
+                    This usually takes a few minutes.
+                </div>
+            </div>
+
+            <!-- Ref grid (populated via JS) -->
+            <div class="ref-grid" id="refGrid">
+                <div class="ref-cell"><label>Payment ID</label><div class="rv">#@paymentId</div></div>
+                <div class="ref-cell"><label>Status</label><div class="rv" id="refStatus" style="color:var(--yellow);">Pending</div></div>
+                <div class="ref-cell"><label>Reference No.</label><div class="rv" id="refNo">—</div></div>
+                <div class="ref-cell"><label>Amount</label><div class="rv" id="refAmount">—</div></div>
+            </div>
+
+            <!-- Auto-check -->
+            <div class="check-bar" id="checkBar">
+                <div class="dot-spin"><span></span><span></span><span></span></div>
+                Checking status… <span id="nextCheckIn">30s</span>
+            </div>
+
+            <div id="actionArea" style="display:none;">
+                <button class="btn-primary" id="successBtn" onclick="goSuccess()" style="display:none;">🎉 VIEW SUCCESS — DONE</button>
+                <button class="btn-secondary" id="retryBtn" onclick="goRetry()" style="display:none;">🔄 Re-upload Proof</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">Secured GCash Payment · OACT Registrar Office</div>
+
+    <script>
+        const PAYMENT_ID = @paymentId;
+        let pollInterval = null;
+        let countdown    = 30;
+        let countdownTmr = null;
+
+        async function checkStatus() {
+            try {
+                const res  = await fetch(`/Payment/CheckPaymentStatus?paymentId=${PAYMENT_ID}`);
+                const data = await res.json();
+                if (!data.success) return;
+
+                // Fill ref info
+                document.getElementById('refNo').textContent     = data.referenceNo || '—';
+                document.getElementById('refAmount').textContent = data.amount ? `PHP ${parseFloat(data.amount).toFixed(2)}` : '—';
+
+                if (data.status === 'Verified') {   // admin sets "Verified" not "Approved"
+                    setApproved();
+                } else if (data.status === 'Rejected') {
+                    setRejected(data.remarks);
+                }
+                // else still Pending — keep polling
+            } catch(e) { console.warn('Poll error:', e); }
+        }
+
+        function setApproved() {
+            clearInterval(pollInterval);
+            clearInterval(countdownTmr);
+
+            // Update progress dot
+            const dot = document.getElementById('verifyDot');
+            dot.textContent = '✓'; dot.className = 'prog-dot done';
+            document.getElementById('verifyLabel').className = 'prog-label done';
+
+            // Update status widget
+            const widget = document.getElementById('statusWidget');
+            widget.className = 'status-widget approved';
+            document.getElementById('pulseRing').style.cssText = '';
+
+            document.getElementById('statusIconWrap').innerHTML = `
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" fill="#16A34A" opacity=".15"/>
+                    <path d="M8 12.5l3 3 5-5.5" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>`;
+            document.getElementById('statusTitle').textContent = 'Payment Approved! 🎉';
+            document.getElementById('statusSub').textContent   = 'Your payment has been verified by the admin. Your enrollment record has been updated.';
+            document.getElementById('refStatus').textContent   = 'Approved';
+            document.getElementById('refStatus').style.color   = 'var(--green)';
+
+            // Hide check bar, show button
+            document.getElementById('checkBar').style.display = 'none';
+            document.getElementById('actionArea').style.display = 'block';
+            document.getElementById('successBtn').style.display = 'block';
+        }
+
+        function setRejected(remarks) {
+            clearInterval(pollInterval);
+            clearInterval(countdownTmr);
+
+            const widget = document.getElementById('statusWidget');
+            widget.className = 'status-widget rejected';
+            document.getElementById('pulseRing').style.cssText = '';
+
+            document.getElementById('statusIconWrap').innerHTML = `
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" fill="#DC2626" opacity=".15"/>
+                    <path d="M15 9l-6 6M9 9l6 6" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>`;
+            document.getElementById('statusTitle').textContent = 'Payment Rejected';
+            document.getElementById('statusSub').innerHTML = `The admin rejected your proof.<br><em style="font-size:.78rem;">${remarks || 'Please re-upload a clear screenshot.'}</em>`;
+            document.getElementById('refStatus').textContent = 'Rejected';
+            document.getElementById('refStatus').style.color = 'var(--red)';
+
+            document.getElementById('checkBar').style.display = 'none';
+            document.getElementById('actionArea').style.display = 'block';
+            document.getElementById('retryBtn').style.display = 'block';
+        }
+
+        function startCountdown() {
+            countdown = 30;
+            document.getElementById('nextCheckIn').textContent = `${countdown}s`;
+            countdownTmr = setInterval(() => {
+                countdown--;
+                document.getElementById('nextCheckIn').textContent = `${countdown}s`;
+                if (countdown <= 0) {
+                    countdown = 30;
+                    document.getElementById('nextCheckIn').textContent = `${countdown}s`;
+                }
+            }, 1000);
+        }
+
+        function goSuccess() {
+            window.location.href = `/Payment/GcashSuccess?paymentId=${PAYMENT_ID}`;
+        }
+
+        function goRetry() {
+            history.back();
+        }
+
+        // Start polling every 30 seconds
+        document.addEventListener('DOMContentLoaded', () => {
+            checkStatus(); // immediate check
+            startCountdown();
+            pollInterval = setInterval(() => {
+                checkStatus();
+                countdown = 30; // reset countdown after each check
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

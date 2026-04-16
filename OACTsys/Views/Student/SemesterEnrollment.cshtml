@@ -1,0 +1,49 @@
+﻿@{
+    Layout = "_StudentLayout";
+    ViewData["Title"] = "Semester Enrollment";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0 card-oact-form">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-shield-lock text-admiral display-4"></i>
+                        <h4 class="fw-bold text-admiral mt-3">ENROLLMENT VERIFICATION</h4>
+                        <p class="text-muted small">Please verify your identity to proceed with enrollment.</p>
+                    </div>
+
+                    @if (TempData["EnrollError"] != null)
+                    {
+                        <div class="alert alert-danger small">
+                            <i class="bi bi-x-circle me-2"></i> @TempData["EnrollError"]
+                        </div>
+                    }
+
+                    <form asp-action="VerifyEnrollmentAccess" method="post">
+                        <div class="mb-3">
+                            <label class="small fw-bold text-admiral">STUDENT ID NUMBER</label>
+                            <input type="text" name="StudentID" class="form-control border-admiral"
+                                   placeholder="e.g. 2024-0001" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small fw-bold text-admiral">BIRTHDATE</label>
+                            <input type="date" name="Birthdate" class="form-control border-admiral" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-admiral w-100 py-2 shadow-sm">
+                            VERIFY & PROCEED
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-admiral { border: 1px solid #051094; }
+    .card-oact-form { border-top: 5px solid #051094; border-radius: 12px; }
+</style>

@@ -1,0 +1,822 @@
+﻿@{
+    ViewData["Title"] = "Old Student Re-enrollment";
+}
+
+<style>
+    /* ── CSS Variables ─────────────────────────────────────────── */
+    :root {
+        --admiral: #051094;
+        --admiral-dark: #030a6e;
+        --admiral-light: #e8ebff;
+        --accent: #669bbc;
+        --white: #ffffff;
+        --off-white: #f4f6ff;
+        --text-dark: #0d1b4b;
+        --text-muted: #5a6a8a;
+        --gray: #d2d2d2;
+        --success: #198754;
+        --border: rgba(5,16,148,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* ── Banner ────────────────────────────────────────────────── */
+    .form-banner {
+        position: relative;
+        background-image: url("@Url.Content("~/css/assets/images/bg-banner.jpg")");
+        background-size: cover; background-position: center;
+        min-height: 180px; display: flex; align-items: center; overflow: hidden;
+    }
+    .form-banner__overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(to right, rgba(5,16,148,0.88) 0%, rgba(5,16,148,0.62) 55%, rgba(102,155,188,0.25) 100%);
+        z-index: 1;
+    }
+    .form-banner__content { position: relative; z-index: 2; padding: 2rem 1rem; width: 100%; }
+    .form-banner__eyebrow { font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 0.2rem; }
+    .form-banner__title   { font-size: clamp(1.5rem,4vw,2.4rem); font-weight: 800; color: var(--white); letter-spacing: -0.5px; margin-bottom: 0.25rem; line-height: 1.2; }
+    .form-banner__sub     { font-size: 0.85rem; color: rgba(255,255,255,0.72); margin: 0; }
+
+    /* ── Section ───────────────────────────────────────────────── */
+    .form-section {
+        padding: 2.5rem 0 5rem;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(244,246,255,0.94) 40%, rgba(102,155,188,0.12) 75%, rgba(5,16,148,0.06) 100%);
+        min-height: 60vh;
+    }
+
+    /* ── Auth card ─────────────────────────────────────────────── */
+    .auth-card {
+        background: var(--white);
+        border-top: 4px solid var(--admiral);
+        border-radius: 14px;
+        padding: 2.25rem 2rem;
+        box-shadow: 0 4px 24px rgba(5,16,148,0.09);
+    }
+    .auth-icon {
+        width: 68px; height: 68px; border-radius: 16px;
+        background: var(--admiral-light); color: var(--admiral);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.9rem; margin: 0 auto 1rem;
+    }
+
+    /* ── Student info bar ──────────────────────────────────────── */
+    .student-bar {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--admiral);
+        border-radius: 10px;
+        padding: 0.85rem 1.1rem;
+        box-shadow: 0 2px 8px rgba(5,16,148,0.06);
+        display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+        justify-content: space-between;
+    }
+    .student-bar__chip {
+        display: flex; flex-direction: column; gap: 1px;
+    }
+    .student-bar__lbl {
+        font-size: 0.6rem; font-weight: 700; letter-spacing: 2px;
+        text-transform: uppercase; color: var(--text-muted);
+    }
+    .student-bar__val {
+        font-size: 0.88rem; font-weight: 700; color: var(--admiral);
+    }
+
+    /* ── Step Wizard ───────────────────────────────────────────── */
+    .step-wizard-list {
+        display: flex; padding: 1rem 0.5rem; list-style: none; justify-content: center;
+        background: var(--white); border-radius: 12px;
+        border: 1px solid rgba(5,16,148,0.08); box-shadow: 0 2px 8px rgba(5,16,148,0.05);
+        margin: 0 0 1.25rem 0; overflow-x: auto; gap: 0;
+    }
+    .step-wizard-item { flex: 1; min-width: 60px; position: relative; display: flex; flex-direction: column; align-items: center; }
+    .progress-count   { width: 32px; height: 32px; border-radius: 50%; background: var(--gray); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.8rem; z-index: 2; transition: background .3s; flex-shrink: 0; }
+    .step-wizard-item.current .progress-count, .step-wizard-item.completed .progress-count { background: var(--admiral); }
+    .step-wizard-item::after { content: ""; position: absolute; width: 100%; height: 2px; background: var(--gray); top: 15px; left: 50%; z-index: 1; }
+    .step-wizard-item:last-child::after { display: none; }
+    .progress-label { font-size: 0.62rem; margin-top: 4px; font-weight: 700; color: #999; text-align: center; white-space: nowrap; }
+    .step-wizard-item.current .progress-label, .step-wizard-item.completed .progress-label { color: var(--admiral); }
+
+    /* ── Card Form ─────────────────────────────────────────────── */
+    .card-oact-form { border-top: 4px solid var(--admiral) !important; border-radius: 14px !important; }
+
+    /* ── Step heading ──────────────────────────────────────────── */
+    .step-heading { color: var(--admiral); font-weight: 800; font-size: 0.95rem; letter-spacing: 0.4px; border-bottom: 2px solid var(--off-white); padding-bottom: 0.65rem; margin-bottom: 1.25rem; }
+
+    /* ── Category section ──────────────────────────────────────── */
+    .info-section { background: var(--off-white); border-left: 4px solid var(--admiral); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+    .info-section__title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--admiral); margin-bottom: 0.7rem; }
+
+    /* ── Subject rows ──────────────────────────────────────────── */
+    .subject-row { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 0.9rem; margin-bottom: 6px; background: var(--white); transition: border-color .2s, background .2s; }
+    .subject-row:hover { border-color: var(--admiral); background: var(--off-white); }
+    .subject-row:has(.subject-item:checked) { border-color: var(--admiral); background: #e7f0ff; }
+    .badge-units { font-size: 0.68rem; font-weight: 700; background: var(--admiral); color: white; padding: 0.2rem 0.55rem; border-radius: 50px; white-space: nowrap; flex-shrink: 0; }
+    .units-total { background: var(--off-white); border: 1px solid var(--border); border-left: 4px solid var(--admiral); border-radius: 8px; padding: 0.65rem 1.1rem; font-size: 0.88rem; color: var(--text-dark); }
+
+    /* ── Year group headings in subject list ───────────────────── */
+    .year-group-heading {
+        background: var(--admiral); color: white;
+        font-size: 0.72rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+        padding: 0.45rem 0.9rem; border-radius: 7px;
+        margin: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    /* ── Buttons ───────────────────────────────────────────────── */
+    .btn-admiral { background: var(--admiral); color: white; border: none; }
+    .btn-admiral:hover { background: var(--admiral-dark); color: white; }
+    .border-admiral { border: 1px solid var(--admiral) !important; }
+    input:focus, select:focus { border-color: var(--admiral) !important; box-shadow: 0 0 0 0.18rem rgba(5,16,148,0.12) !important; }
+
+    /* ── Nav ───────────────────────────────────────────────────── */
+    .wizard-nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--off-white); }
+    .wizard-nav .btn { min-width: 110px; }
+
+    /* ── Review doc ────────────────────────────────────────────── */
+    #reviewContent { background: #fff; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
+    .doc-paper { padding: 28px 32px 32px; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #111; line-height: 1.4; }
+    .doc-header { text-align: center; margin-bottom: 14px; }
+    .doc-logo { height: 54px; width: auto; margin-bottom: 6px; }
+    .doc-school-name { font-size: 12pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin: 0 0 2px; }
+    .doc-school-address { font-size: 7.5pt; color: #444; margin: 0; }
+    .doc-blue-bar { background: #4a86b8; color: white; text-align: center; font-size: 10pt; font-weight: 700; letter-spacing: 1px; padding: 6px 8px; margin: 12px 0; text-transform: uppercase; }
+    .doc-body { display: flex; gap: 18px; align-items: flex-start; }
+    .doc-info-col { flex: 1; min-width: 0; }
+    .doc-subjects-col { width: 230px; flex-shrink: 0; }
+    .doc-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .doc-field { display: flex; align-items: flex-end; flex: 1; min-width: 140px; gap: 3px; }
+    .doc-field.full { flex: 0 0 100%; }
+    .doc-label { font-size: 7.5pt; font-weight: 700; white-space: nowrap; color: #111; flex-shrink: 0; }
+    .doc-value { border-bottom: 1px solid #111; flex: 1; padding: 0 3px 1px; min-height: 16px; font-size: 9pt; word-break: break-word; }
+    .doc-section-title { font-size: 8.5pt; font-weight: 700; text-transform: uppercase; margin: 14px 0 6px; color: #111; }
+    .doc-sig-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+    .doc-sig-box { text-align: right; min-width: 180px; }
+    .doc-sig-line { border-bottom: 1px solid #111; padding-bottom: 2px; font-size: 8.5pt; min-width: 180px; display: inline-block; }
+    .doc-sig-caption { font-size: 7pt; text-align: center; margin-top: 2px; color: #444; }
+    .doc-subjects-box { border: 1px solid #111; padding: 10px; min-height: 180px; font-size: 8.5pt; }
+    .doc-subjects-title { font-weight: 700; font-size: 8.5pt; text-align: center; border-bottom: 1px solid #111; padding-bottom: 6px; margin-bottom: 8px; text-transform: uppercase; line-height: 1.3; }
+    .doc-subject-item { border-bottom: 1px dotted #bbb; padding: 3px 0 4px; margin-bottom: 2px; }
+    .doc-subject-code { font-weight: 700; font-size: 8pt; }
+    .doc-subject-name { font-size: 7.5pt; color: #333; }
+    .doc-subject-units { text-align: right; font-size: 8pt; font-weight: 600; margin-top: 1px; }
+    .doc-subjects-total { border-top: 1.5px solid #111; padding-top: 6px; margin-top: 6px; font-weight: 700; text-align: right; font-size: 8.5pt; }
+    .review-note { font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 8px; background: var(--off-white); border-top: 1px solid var(--border); }
+
+    /* ── Terms scroll ──────────────────────────────────────────── */
+    .terms-scroll { height: 180px; overflow-y: auto; font-size: 0.82rem; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; background: white; margin-bottom: 1rem; }
+
+    /* ── Loading spinner overlay ───────────────────────────────── */
+    #verifySpinner { display: none; }
+
+    /* ── Mobile ────────────────────────────────────────────────── */
+    @@media (max-width: 767px) {
+        .doc-paper { padding: 16px 14px 20px; font-size: 8.5pt; }
+        .doc-body  { flex-direction: column; gap: 14px; }
+        .doc-subjects-col { width: 100%; }
+        .student-bar { flex-direction: column; gap: 0.5rem; }
+        .wizard-nav .btn { min-width: auto; flex: 1; }
+        .card-oact-form .card-body { padding: 1.25rem !important; }
+    }
+</style>
+
+<!-- ─── BANNER ──────────────────────────────────────────────── -->
+<div class="form-banner">
+    <div class="form-banner__overlay"></div>
+    <div class="container form-banner__content">
+        <p class="form-banner__eyebrow">Enrollment · Old Student</p>
+        <h1 class="form-banner__title">Re-enrollment</h1>
+        <p class="form-banner__sub">Returning students — verify your identity to begin re-enrollment.</p>
+    </div>
+</div>
+
+<!-- ─── FORM SECTION ─────────────────────────────────────────── -->
+<section class="form-section">
+    <div class="container">
+
+        <!-- ── AUTH PANEL ──────────────────────────────────────── -->
+        <div id="idVerification">
+            <div class="row justify-content-center">
+                <div class="col-sm-10 col-md-6 col-lg-5">
+                    <div class="auth-card text-center">
+                        <div class="auth-icon">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                        <h5 class="fw-800 mb-1" style="color:var(--text-dark);font-weight:800">Student Authentication</h5>
+                        <p class="text-muted mb-3" style="font-size:.82rem">
+                            Enter your student credentials to access your academic record and begin re-enrollment.
+                        </p>
+
+                        <div id="authError" class="alert alert-danger d-none mb-3" style="font-size:.82rem"></div>
+
+                        <div class="text-start mb-3">
+                            <label class="field-label" style="font-size:.72rem;font-weight:700;color:var(--text-dark);letter-spacing:.3px;display:block;margin-bottom:4px;text-transform:uppercase">
+                                Student ID Number <span style="color:#dc3545">*</span>
+                            </label>
+                            <input type="text" id="verifyID" class="form-control border-admiral"
+                                   placeholder="e.g. 2023-0001"
+                                   onkeydown="if(event.key==='Enter') verifyAndStart()" />
+                        </div>
+                        <div class="text-start mb-4">
+                            <label class="field-label" style="font-size:.72rem;font-weight:700;color:var(--text-dark);letter-spacing:.3px;display:block;margin-bottom:4px;text-transform:uppercase">
+                                Date of Birth <span style="color:#dc3545">*</span>
+                            </label>
+                            <input type="date" id="verifyBirth" class="form-control border-admiral"
+                                   onkeydown="if(event.key==='Enter') verifyAndStart()" />
+                        </div>
+
+                        <button type="button" class="btn btn-admiral w-100 py-2" onclick="verifyAndStart()">
+                            <span id="verifySpinner" class="spinner-border spinner-border-sm me-2"></span>
+                            <i class="bi bi-shield-check me-2"></i> Verify Identity
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── WIZARD ──────────────────────────────────────────── -->
+        <div id="wizardContainer" class="d-none">
+
+            <!-- Student info bar -->
+            <div class="student-bar mb-3">
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="student-bar__chip">
+                        <span class="student-bar__lbl">Student Name</span>
+                        <span class="student-bar__val" id="studentNameDisplay">—</span>
+                    </div>
+                    <div class="student-bar__chip">
+                        <span class="student-bar__lbl">Student No.</span>
+                        <span class="student-bar__val" id="studentNoDisplay">—</span>
+                    </div>
+                    <div class="student-bar__chip">
+                        <span class="student-bar__lbl">Program</span>
+                        <span class="student-bar__val" id="programDisplay">—</span>
+                    </div>
+                    <div class="student-bar__chip">
+                        <span class="student-bar__lbl">Year Level</span>
+                        <span class="student-bar__val" id="yearLevelDisplay">—</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                    <i class="bi bi-arrow-left-right me-1"></i> Change Student
+                </button>
+            </div>
+
+            <!-- Step tracker -->
+            <ul class="step-wizard-list">
+                <li class="step-wizard-item current"><span class="progress-count">1</span><span class="progress-label">Term</span></li>
+                <li class="step-wizard-item"><span class="progress-count">2</span><span class="progress-label">Subjects</span></li>
+                <li class="step-wizard-item"><span class="progress-count">3</span><span class="progress-label">Review</span></li>
+                <li class="step-wizard-item"><span class="progress-count">4</span><span class="progress-label">Terms</span></li>
+                <li class="step-wizard-item"><span class="progress-count">5</span><span class="progress-label">Finish</span></li>
+            </ul>
+
+            <!-- Wizard card -->
+            <div class="card shadow border-0 card-oact-form">
+                <div class="card-body p-3 p-md-4 p-lg-5">
+                    <form id="oldStudentForm"
+                          asp-action="SubmitOldStudentEnrollment"
+                          asp-controller="Enrollment"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="StudentDbId"    id="hiddenStudentDbId" />
+                        <input type="hidden" name="StudentNumber"  id="hiddenStudentNo" />
+                        <input type="hidden" name="SelectedYearLevel"   id="hiddenYear" />
+                        <input type="hidden" name="SelectedSemester"    id="hiddenSemester" />
+                        <!-- Subject checkboxes injected here dynamically -->
+                        <div id="hiddenSubjectsContainer"></div>
+
+                        <!-- ══ STEP 1: Term Selection ════════════════════ -->
+                        <div class="wizard-step" data-step="1">
+                            <h4 class="step-heading">Step 1 &mdash; Select Enrollment Term</h4>
+
+                            <div class="alert" style="background:#e8f4fd;border-left:4px solid var(--accent);border-radius:8px;padding:.85rem 1rem;font-size:.82rem;color:var(--text-dark);margin-bottom:1rem">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Select the <strong>Year Level</strong> and <strong>Semester</strong> you are enrolling for.
+                                Subjects from the official curriculum will load in the next step.
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="field-label" style="font-size:.72rem;font-weight:700;color:var(--text-dark);letter-spacing:.3px;display:block;margin-bottom:4px;text-transform:uppercase">
+                                        Year Level <span style="color:#dc3545">*</span>
+                                    </label>
+                                    <select id="selectYear" class="form-select border-admiral" onchange="onTermChange()">
+                                        <option value="">-- Select Year Level --</option>
+                                        <option value="1">1st Year</option>
+                                        <option value="2">2nd Year</option>
+                                        <option value="3">3rd Year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="field-label" style="font-size:.72rem;font-weight:700;color:var(--text-dark);letter-spacing:.3px;display:block;margin-bottom:4px;text-transform:uppercase">
+                                        Semester <span style="color:#dc3545">*</span>
+                                    </label>
+                                    <select id="selectSemester" class="form-select border-admiral" onchange="onTermChange()">
+                                        <option value="">-- Select Semester --</option>
+                                        <option value="1">1st Semester</option>
+                                        <option value="2">2nd Semester</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Preview of unit count -->
+                            <div id="termPreview" class="units-total mt-3 d-none">
+                                <i class="bi bi-calendar3 me-2"></i>
+                                Subjects found for selected term: <strong><span id="termSubjectCount">0</span></strong>
+                            </div>
+                        </div>
+
+                        <!-- ══ STEP 2: Subject Selection ═════════════════ -->
+                        <div class="wizard-step" data-step="2" style="display:none">
+                            <h4 class="step-heading">Step 2 &mdash; Select Your Subjects</h4>
+                            <p class="text-muted" style="font-size:.82rem">
+                                Showing subjects for <strong><span id="termLabel">—</span></strong>.
+                                Please check the subjects you want to enroll in.
+                            </p>
+
+                            <div id="subjectsList">
+                                <div class="text-center text-muted py-4" style="font-size:.85rem">
+                                    <i class="bi bi-hourglass-split me-2"></i> Loading subjects…
+                                </div>
+                            </div>
+                            <div class="units-total mt-3">
+                                Total Units Selected: <strong><span id="totalUnits">0</span></strong>
+                            </div>
+                        </div>
+
+                        <!-- ══ STEP 3: Review ════════════════════════════ -->
+                        <div class="wizard-step" data-step="3" style="display:none">
+                            <h4 class="step-heading">Step 3 &mdash; Review Your Enrollment</h4>
+                            <p class="text-muted mb-3" style="font-size:.8rem">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Verify all details before proceeding.
+                            </p>
+                            <div id="reviewContent"></div>
+                        </div>
+
+                        <!-- ══ STEP 4: Terms ═════════════════════════════ -->
+                        <div class="wizard-step" data-step="4" style="display:none">
+                            <h4 class="step-heading">Step 4 &mdash; Terms &amp; Conditions</h4>
+                            <div class="terms-scroll">
+                                <h6 class="fw-bold mb-2" style="font-size:.85rem">RE-ENROLLMENT TERMS AND CONDITIONS</h6>
+                                <p style="font-size:.82rem">By submitting this re-enrollment form, you confirm that:</p>
+                                <ul style="font-size:.82rem;padding-left:1.2rem">
+                                    <li>You have no outstanding balance from the previous semester</li>
+                                    <li>All provided information is accurate and truthful</li>
+                                    <li>You will comply with all school policies and regulations</li>
+                                    <li>You will pay all required fees on time</li>
+                                    <li>You will maintain the academic standards required by the institution</li>
+                                    <li>You understand that falsification of records is grounds for dismissal</li>
+                                </ul>
+                                <div class="alert alert-warning mt-2" style="font-size:.8rem;padding:.65rem .85rem">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <strong>Important:</strong> Students with outstanding balances may not be allowed to enroll until cleared by the Finance Office.
+                                </div>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="agreeTerms" class="form-check-input border-admiral" required />
+                                <label for="agreeTerms" class="fw-bold" style="font-size:.88rem">
+                                    I confirm my re-enrollment and agree to the Terms and Conditions
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ══ STEP 5: Finish ════════════════════════════ -->
+                        <div class="wizard-step" data-step="5" style="display:none">
+                            <h4 class="step-heading">Step 5 &mdash; Submit Re-enrollment</h4>
+                            <div class="alert alert-success d-flex align-items-start gap-3">
+                                <i class="bi bi-check-circle-fill fs-4 flex-shrink-0 mt-1"></i>
+                                <div>
+                                    <strong>You are almost done!</strong><br>
+                                    <span style="font-size:.88rem">
+                                        Click <strong>Submit Re-enrollment</strong> to finalize.
+                                        An acknowledgment e-mail will be sent to your registered address.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation -->
+                        <div class="wizard-nav">
+                            <button type="button" id="prevBtn" class="btn btn-secondary px-3" onclick="changeStep(-1)" style="display:none">
+                                <i class="bi bi-arrow-left me-1"></i> Previous
+                            </button>
+                            <div class="d-flex gap-2 ms-auto">
+                                <button type="button" id="nextBtn" class="btn btn-admiral px-4" onclick="changeStep(1)">
+                                    Next <i class="bi bi-arrow-right ms-1"></i>
+                                </button>
+                                <button type="submit" id="submitBtn" class="btn btn-success px-4 d-none">
+                                    <i class="bi bi-check-circle me-1"></i> Submit Re-enrollment
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div><!-- /wizardContainer -->
+
+    </div><!-- /container -->
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        /* ════════════════════════════════════════════════════════════
+           State
+        ════════════════════════════════════════════════════════════ */
+        let currentStep = 1;
+        const totalSteps = 5;
+        const MONTHS = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+
+        // Student data loaded from server after verification
+        let _student = null;
+        // Subjects loaded from server for selected term
+        let _subjects = [];
+
+        /* ════════════════════════════════════════════════════════════
+           Step 1 — Identity Verification (AJAX call to backend)
+        ════════════════════════════════════════════════════════════ */
+        async function verifyAndStart() {
+            const idVal    = document.getElementById('verifyID').value.trim();
+            const birthVal = document.getElementById('verifyBirth').value.trim();
+            const errBox   = document.getElementById('authError');
+            const spinner  = document.getElementById('verifySpinner');
+
+            errBox.classList.add('d-none');
+
+            if (!idVal)    { showAuthError('Please enter your Student ID Number.'); return; }
+            if (!birthVal) { showAuthError('Please enter your Date of Birth.');     return; }
+
+            spinner.style.display = 'inline-block';
+
+            try {
+                const resp = await fetch('/Enrollment/VerifyOldStudent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify({ studentNumber: idVal, birthDate: birthVal })
+                });
+
+                const data = await resp.json();
+
+                if (!data.success) {
+                    showAuthError(data.message || 'Student not found. Please check your credentials.');
+                    return;
+                }
+
+                // Store student data
+                _student = data.student;
+
+                // Populate info bar
+                document.getElementById('studentNameDisplay').textContent = _student.fullName   || _student.studentNumber;
+                document.getElementById('studentNoDisplay').textContent   = _student.studentNumber;
+                document.getElementById('programDisplay').textContent     = _student.program;
+                document.getElementById('yearLevelDisplay').textContent   = ordinal(_student.currentYearLevel) + ' Year';
+
+                // Set hidden fields
+                document.getElementById('hiddenStudentDbId').value = _student.studentId;
+                document.getElementById('hiddenStudentNo').value   = _student.studentNumber;
+
+                // Pre-select next logical year/semester
+                preSelectTerm(_student.currentYearLevel, _student.currentSemester);
+
+                // Show wizard
+                document.getElementById('idVerification').classList.add('d-none');
+                document.getElementById('wizardContainer').classList.remove('d-none');
+                goToStep(1);
+
+            } catch (err) {
+                showAuthError('A network error occurred. Please try again.');
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        function showAuthError(msg) {
+            const box = document.getElementById('authError');
+            box.textContent = msg;
+            box.classList.remove('d-none');
+        }
+
+        /* Pre-select the NEXT semester after the student's current one */
+        function preSelectTerm(year, sem) {
+            let nextYear = year, nextSem = sem + 1;
+            if (nextSem > 2) { nextSem = 1; nextYear = year + 1; }
+            if (nextYear > 3) nextYear = 3; // cap at max year
+
+            const ySel = document.getElementById('selectYear');
+            const sSel = document.getElementById('selectSemester');
+            if ([...ySel.options].some(o => o.value == nextYear)) ySel.value = nextYear;
+            if ([...sSel.options].some(o => o.value == nextSem))  sSel.value = nextSem;
+            onTermChange();
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           Term change — fetch subjects for year/semester from server
+        ════════════════════════════════════════════════════════════ */
+        async function onTermChange() {
+            const year = document.getElementById('selectYear').value;
+            const sem  = document.getElementById('selectSemester').value;
+            const prev = document.getElementById('termPreview');
+
+            if (!year || !sem || !_student) return;
+
+            try {
+                const resp = await fetch(
+                    `/Enrollment/GetSubjectsForTerm?program=${encodeURIComponent(_student.program)}&yearLevel=${year}&semester=${sem}`
+                );
+                const data = await resp.json();
+                _subjects = data.subjects || [];
+
+                prev.classList.remove('d-none');
+                document.getElementById('termSubjectCount').textContent = _subjects.length;
+
+                renderSubjects();
+            } catch {
+                _subjects = [];
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           Render subjects in Step 2
+        ════════════════════════════════════════════════════════════ */
+        function renderSubjects() {
+            const year = document.getElementById('selectYear').value;
+            const sem  = document.getElementById('selectSemester').value;
+
+            document.getElementById('termLabel').textContent =
+                `${ordinal(parseInt(year))} Year — ${ordinal(parseInt(sem))} Semester`;
+
+            const list = document.getElementById('subjectsList');
+
+            if (!_subjects.length) {
+                list.innerHTML = `<div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    No subjects found for this term. Please contact the Registrar.
+                </div>`;
+                calcUnits();
+                return;
+            }
+
+            let html = '';
+            _subjects.forEach(s => {
+                html += `
+                <div class="subject-row">
+                    <div class="form-check d-flex align-items-start gap-2">
+                        <input class="form-check-input subject-item mt-1 flex-shrink-0"
+                               type="checkbox"
+                               value="${s.subjectId}"
+                               id="sub_${s.subjectId}"
+                               data-units="${s.units}"
+                               data-code="${escJs(s.courseCode)}"
+                               data-title="${escJs(s.descriptiveTitle)}" />
+                        <label class="form-check-label w-100" for="sub_${s.subjectId}">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div style="min-width:0">
+                                    <strong style="font-size:.85rem">${escHtml(s.courseCode)}</strong>
+                                    <span style="font-size:.85rem"> &ndash; ${escHtml(s.descriptiveTitle)}</span>
+                                    <br/>
+                                    <small class="text-muted" style="font-size:.72rem">
+                                        ${escHtml(s.program)} &nbsp;|&nbsp; Lec: ${s.lectureHours}h &nbsp;|&nbsp; Lab: ${s.laboratoryHours}h
+                                    </small>
+                                </div>
+                                <span class="badge-units">${parseFloat(s.units).toFixed(1)} units</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>`;
+            });
+
+            list.innerHTML = html;
+
+            // Attach change listeners
+            list.querySelectorAll('.subject-item')
+                .forEach(cb => cb.addEventListener('change', calcUnits));
+
+            calcUnits();
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           Unit counter
+        ════════════════════════════════════════════════════════════ */
+        function calcUnits() {
+            let total = 0;
+            document.querySelectorAll('.subject-item:checked')
+                .forEach(cb => { total += parseFloat(cb.dataset.units) || 0; });
+            const el = document.getElementById('totalUnits');
+            if (el) el.textContent = total.toFixed(1);
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           Wizard navigation
+        ════════════════════════════════════════════════════════════ */
+        function changeStep(dir) {
+            if (dir === 1 && !validateCurrentStep()) return;
+
+            // Before moving to step 2, render subjects
+            if (dir === 1 && currentStep === 1) renderSubjects();
+
+            goToStep(currentStep + dir);
+        }
+
+        function goToStep(step) {
+            step = Math.max(1, Math.min(totalSteps, step));
+            currentStep = step;
+
+            document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
+            const active = document.querySelector(`.wizard-step[data-step="${step}"]`);
+            if (active) active.style.display = 'block';
+
+            document.querySelectorAll('.step-wizard-item').forEach((item, i) => {
+                item.classList.remove('current', 'completed');
+                if      (i + 1 < step)  item.classList.add('completed');
+                else if (i + 1 === step) item.classList.add('current');
+            });
+
+            const prev   = document.getElementById('prevBtn');
+            const next   = document.getElementById('nextBtn');
+            const submit = document.getElementById('submitBtn');
+
+            prev.style.display = step > 1 ? 'inline-flex' : 'none';
+            if (step === totalSteps) {
+                next.style.display = 'none';
+                submit.classList.remove('d-none');
+            } else {
+                next.style.display = 'inline-flex';
+                submit.classList.add('d-none');
+            }
+
+            if (step === 3) buildReview();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                const year = document.getElementById('selectYear').value;
+                const sem  = document.getElementById('selectSemester').value;
+                if (!year || !sem) {
+                    alert('Please select both Year Level and Semester before proceeding.');
+                    return false;
+                }
+                return true;
+            }
+            if (currentStep === 2) {
+                if (!document.querySelector('.subject-item:checked')) {
+                    alert('Please select at least one subject.');
+                    return false;
+                }
+                // Sync hidden fields before moving forward
+                document.getElementById('hiddenYear').value     = document.getElementById('selectYear').value;
+                document.getElementById('hiddenSemester').value = document.getElementById('selectSemester').value;
+                syncHiddenSubjects();
+                return true;
+            }
+            return true;
+        }
+
+        /* Inject checked subject IDs as hidden inputs for form submission */
+        function syncHiddenSubjects() {
+            const container = document.getElementById('hiddenSubjectsContainer');
+            container.innerHTML = '';
+            document.querySelectorAll('.subject-item:checked').forEach(cb => {
+                const inp = document.createElement('input');
+                inp.type  = 'hidden';
+                inp.name  = 'SelectedSubjects';
+                inp.value = cb.value;
+                container.appendChild(inp);
+            });
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           Build Review Document (Step 3)
+        ════════════════════════════════════════════════════════════ */
+        function buildReview() {
+            const now    = new Date();
+            const month  = now.getMonth();
+            const year   = now.getFullYear();
+            const acYear = month >= 5 ? `${year}-${year+1}` : `${year-1}-${year}`;
+            const today  = `${MONTHS[month]} ${now.getDate()}, ${year}`;
+
+            const selYear = document.getElementById('selectYear').value;
+            const selSem  = document.getElementById('selectSemester').value;
+            const semLabel = selSem === '1' ? '1st Semester' : '2nd Semester';
+
+            let subjectsHtml = '';
+            let totalUnits   = 0;
+            document.querySelectorAll('.subject-item:checked').forEach(cb => {
+                const u = parseFloat(cb.dataset.units);
+                totalUnits += u;
+                subjectsHtml += `
+                <div class="doc-subject-item">
+                    <div class="doc-subject-code">${escHtml(cb.dataset.code)}</div>
+                    <div class="doc-subject-name">${escHtml(cb.dataset.title)}</div>
+                    <div class="doc-subject-units">${u.toFixed(1)} units</div>
+                </div>`;
+            });
+            if (!subjectsHtml)
+                subjectsHtml = '<div style="color:#888;font-size:8pt;font-style:italic">No subjects selected</div>';
+
+            const prog      = _student?.program || '—';
+            const fullName  = _student?.fullName || _student?.studentNumber || '—';
+            const studentNo = _student?.studentNumber || '—';
+            const email     = _student?.email || '—';
+
+            document.getElementById('reviewContent').innerHTML = `
+            <div>
+                <div class="doc-paper">
+                    <div class="doc-header">
+                        <img src="/images/MainLogo.png" alt="OACT Logo" class="doc-logo">
+                        <div class="doc-school-name">Orson Aerospace College and Technology, Inc.</div>
+                        <p class="doc-school-address">RLW Building, MV Patalinghug Avenue, Barangay Basak, Lapu-Lapu City, Cebu 6015</p>
+                        <p class="doc-school-address">oactech1953@gmail.com &nbsp;|&nbsp; (032) 326-4409 &nbsp;|&nbsp; (63) 977 381 0089</p>
+                    </div>
+                    <div class="doc-blue-bar">Old Student Re-enrollment Form</div>
+                    <div class="doc-body">
+                        <div class="doc-info-col">
+                            <div class="doc-row">
+                                <div class="doc-field"><span class="doc-label">ACADEMIC YEAR:</span><span class="doc-value">${acYear}</span></div>
+                                <div class="doc-field"><span class="doc-label">SEMESTER:</span><span class="doc-value">${escHtml(semLabel)}</span></div>
+                            </div>
+                            <div class="doc-row">
+                                <div class="doc-field"><span class="doc-label">COURSE &amp; YEAR:</span><span class="doc-value">${escHtml(prog)} – ${ordinal(parseInt(selYear))} Year</span></div>
+                                <div class="doc-field"><span class="doc-label">APPLICANT TYPE:</span><span class="doc-value">Old Student</span></div>
+                            </div>
+
+                            <div class="doc-section-title">Student Information</div>
+                            <div class="doc-row">
+                                <div class="doc-field"><span class="doc-label">STUDENT NO.:</span><span class="doc-value">${escHtml(studentNo)}</span></div>
+                                <div class="doc-field"><span class="doc-label">FULL NAME:</span><span class="doc-value">${escHtml(fullName)}</span></div>
+                            </div>
+                            <div class="doc-row">
+                                <div class="doc-field"><span class="doc-label">PROGRAM:</span><span class="doc-value">${escHtml(prog)}</span></div>
+                                <div class="doc-field"><span class="doc-label">EMAIL:</span><span class="doc-value">${escHtml(email)}</span></div>
+                            </div>
+
+                            <div class="doc-sig-row">
+                                <div class="doc-sig-box">
+                                    <span class="doc-label" style="font-size:7pt;margin-right:6px">DATE:</span>
+                                    <span class="doc-sig-line">${today}</span>
+                                    <div class="doc-sig-caption">Date Signed</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="doc-subjects-col">
+                            <div class="doc-subjects-box">
+                                <div class="doc-subjects-title">Selected Subjects<br>(${ordinal(parseInt(selYear))} Year – ${escHtml(semLabel)})</div>
+                                ${subjectsHtml}
+                                <div class="doc-subjects-total">Total Units: ${totalUnits.toFixed(1)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-note">
+                    <i class="bi bi-eye me-1"></i>
+                    This is a preview of your re-enrollment form. Verify all details before proceeding.
+                </div>
+            </div>`;
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           Helpers
+        ════════════════════════════════════════════════════════════ */
+        function ordinal(n) {
+            if (n === 1) return '1st';
+            if (n === 2) return '2nd';
+            if (n === 3) return '3rd';
+            return `${n}th`;
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function escJs(str) {
+            if (!str) return '';
+            return String(str).replace(/'/g,"\\'").replace(/"/g,'\\"');
+        }
+
+        /* ─── Submit guard ──────────────────────────────────────── */
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('oldStudentForm').addEventListener('submit', function(e) {
+                if (!document.getElementById('agreeTerms').checked) {
+                    e.preventDefault();
+                    alert('Please confirm your re-enrollment by checking the terms and conditions.');
+                    return;
+                }
+                syncHiddenSubjects(); // ensure latest state
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting…';
+            });
+        });
+    </script>
+}

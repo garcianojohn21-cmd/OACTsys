@@ -1,0 +1,235 @@
+@{
+    ViewData["Title"] = "Payment Successful";
+    Layout = null;
+    decimal amount = ViewBag.Amount ?? 0m;
+    int studentId = ViewBag.StudentId ?? 0;
+    string payType = ViewBag.PaymentType ?? "Payment";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Payment Successful</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0faf4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.10);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .success-header {
+            background: linear-gradient(135deg, #28a745, #20c45a);
+            padding: 2.5rem 1.5rem 2rem;
+        }
+
+        .checkmark-circle {
+            width: 72px;
+            height: 72px;
+            background: rgba(255,255,255,.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            animation: popIn .4s cubic-bezier(.175,.885,.32,1.275);
+        }
+
+        @@keyframes popIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .checkmark-circle svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .success-title {
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: .35rem;
+        }
+
+        .success-sub {
+            color: rgba(255,255,255,.85);
+            font-size: .88rem;
+        }
+
+        .details {
+            padding: 1.75rem 1.5rem;
+        }
+
+        .amount-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #28a745;
+            margin-bottom: .25rem;
+        }
+
+        .amount-label {
+            font-size: .78rem;
+            color: #888;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: .55rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: .88rem;
+        }
+
+            .info-row:last-of-type {
+                border-bottom: none;
+            }
+
+        .info-label {
+            color: #888;
+        }
+
+        .info-val {
+            font-weight: 600;
+            color: #222;
+        }
+
+            .info-val.green {
+                color: #28a745;
+            }
+
+        .actions {
+            padding: 0 1.5rem 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+        }
+
+        .btn-primary {
+            display: block;
+            padding: .9rem;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: .95rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background .2s;
+        }
+
+            .btn-primary:hover {
+                background: #218838;
+                color: #fff;
+            }
+
+        .btn-secondary {
+            display: block;
+            padding: .75rem;
+            background: #f5f5f5;
+            color: #555;
+            border: none;
+            border-radius: 50px;
+            font-size: .88rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background .2s;
+        }
+
+            .btn-secondary:hover {
+                background: #e8e8e8;
+                color: #333;
+            }
+
+        .powered {
+            font-size: .7rem;
+            color: #bbb;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="success-header">
+            <div class="checkmark-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+            </div>
+            <p class="success-title">Payment Successful!</p>
+            <p class="success-sub">Your QR Ph payment has been received and verified.</p>
+        </div>
+
+        <div class="details">
+            <div class="amount-display">PHP @amount.ToString("N2")</div>
+            <div class="amount-label">Amount Paid</div>
+
+            <div class="info-row">
+                <span class="info-label">Payment For</span>
+                <span class="info-val">@payType</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Method</span>
+                <span class="info-val">QR Ph via PayMongo</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date & Time</span>
+                <span class="info-val">@DateTime.Now.ToString("MMM dd, yyyy h:mm tt")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-val green">✅ Verified</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a href="/Student/Dashboard?studentId=@studentId" class="btn-primary">
+                Back to Dashboard
+            </a>
+            <a href="/Student/PaymentHistory?studentId=@studentId" class="btn-secondary">
+                View Payment History
+            </a>
+        </div>
+    </div>
+
+    <p class="powered">Powered by PayMongo × QR Ph &middot; Secure Payment</p>
+
+</body>
+</html>

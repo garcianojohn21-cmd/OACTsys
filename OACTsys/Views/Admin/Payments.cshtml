@@ -1,0 +1,1040 @@
+﻿@{
+    ViewBag.Title = "Payment Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --navy:        #051094;
+        --navy-deep:   #030b72;
+        --navy-soft:   #1a3fd4;
+        --navy-tint:   #e8ebff;
+        --navy-pale:   #f0f3ff;
+        --accent-glow: rgba(59,130,246,.18);
+        --green:       #16a34a;
+        --green-bg:    #dcfce7;
+        --amber:       #d97706;
+        --amber-bg:    #fef3c7;
+        --red:         #dc2626;
+        --red-bg:      #fee2e2;
+        --sky:         #0284c7;
+        --sky-bg:      #e0f2fe;
+        --orange:      #ea580c;
+        --orange-bg:   #fff7ed;
+        --white:       #ffffff;
+        --surface:     #f5f7ff;
+        --border:      #e2e7ff;
+        --text-1:      #0d1b4b;
+        --text-2:      #4a5b8a;
+        --text-3:      #8a97c0;
+        --shadow-sm:   0 1px 3px rgba(5,16,148,.08);
+        --shadow-md:   0 4px 16px rgba(5,16,148,.10);
+        --shadow-lg:   0 12px 40px rgba(5,16,148,.14);
+        --radius:      14px;
+        --radius-sm:   9px;
+        --radius-xs:   6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface); }
+
+    .pm-hero {
+        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-soft) 100%);
+        padding: 2rem 2rem 3.8rem; position: relative; overflow: hidden;
+    }
+    .pm-hero::before {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background:
+            radial-gradient(ellipse 55% 70% at 85% -5%, rgba(59,130,246,.25) 0%, transparent 55%),
+            radial-gradient(ellipse 35% 55% at -5% 105%, rgba(255,255,255,.07) 0%, transparent 50%);
+    }
+    .pm-hero::after {
+        content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 44px;
+        background: var(--surface); clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .pm-hero-inner { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
+    .pm-hero-title { font-size: clamp(1.55rem, 3vw, 2.2rem); font-weight: 800; color: #fff; letter-spacing: -.5px; margin: 0 0 .3rem; line-height: 1.15; }
+    .pm-hero-sub { font-size: .81rem; color: rgba(255,255,255,.62); margin: 0; font-weight: 500; line-height: 1.55; max-width: 480px; }
+    .pm-hero-sub strong { color: rgba(255,255,255,.9); }
+    .pm-stats-row { display: flex; gap: .65rem; flex-wrap: wrap; margin-top: 1.35rem; }
+    .pm-stat-pill { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px); border-radius: 50px; padding: .33rem .9rem; display: flex; align-items: center; gap: .45rem; font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.88); white-space: nowrap; user-select: none; }
+    .pm-stat-pill .pill-count { background: rgba(255,255,255,.22); border-radius: 50px; padding: .08rem .48rem; font-size: .68rem; font-weight: 800; min-width: 20px; text-align: center; }
+    .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .btn-refresh { background: rgba(255,255,255,.13); color: #fff; border: 1.5px solid rgba(255,255,255,.28); border-radius: var(--radius-sm); padding: .62rem 1rem; font-size: .81rem; font-weight: 700; font-family: inherit; display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; white-space: nowrap; transition: background .2s; }
+    .btn-refresh:hover { background: rgba(255,255,255,.23); }
+    .btn-gcash-setup-hero { background: #fff; color: var(--navy); border: none; border-radius: var(--radius-sm); padding: .62rem 1.2rem; font-size: .81rem; font-weight: 800; font-family: inherit; display: inline-flex; align-items: center; gap: .45rem; text-decoration: none; white-space: nowrap; cursor: pointer; box-shadow: 0 4px 18px rgba(0,0,0,.22); transition: transform .2s, box-shadow .2s; }
+    .btn-gcash-setup-hero:hover { color: var(--navy-deep); transform: translateY(-2px); box-shadow: 0 8px 26px rgba(0,0,0,.28); }
+
+    .gcash-banner { background: linear-gradient(135deg, var(--navy-deep), #1a3a5c); margin: 0 1.5rem; border-radius: var(--radius); padding: 1.1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: var(--shadow-md); position: relative; z-index: 5; margin-top: -1.6rem; }
+    .gcash-banner-info { display: flex; align-items: center; gap: .9rem; }
+    .gcash-icon-box { width: 42px; height: 42px; background: rgba(255,255,255,.1); border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .gcash-name   { color: #fff; font-size: .88rem; font-weight: 800; margin: 0 0 1px; }
+    .gcash-number { color: #00d4aa; font-size: .85rem; font-weight: 700; font-family: monospace; }
+    .gcash-desc   { color: rgba(255,255,255,.45); font-size: .71rem; margin: 0; }
+
+    .pm-toolbar { background: var(--white); border-bottom: 1px solid var(--border); padding: .65rem 1.5rem; display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm); margin-top: 1.4rem; }
+    .toolbar-div { width: 1px; height: 26px; background: var(--border); flex-shrink: 0; }
+    .tab-pills { display: flex; gap: .4rem; }
+    .tab-pill { background: var(--surface); border: 1.5px solid var(--border); border-radius: 50px; padding: .38rem 1rem; font-size: .77rem; font-weight: 700; color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: .45rem; transition: all .18s; white-space: nowrap; user-select: none; }
+    .tab-pill:hover { border-color: var(--navy); color: var(--navy); }
+    .tab-pill.active { background: var(--navy); color: #fff; border-color: var(--navy); box-shadow: 0 2px 10px rgba(5,16,148,.28); }
+    .tab-pill .tc { background: rgba(255,255,255,.25); border-radius: 50px; padding: .06rem .42rem; font-size: .66rem; font-weight: 800; min-width: 18px; text-align: center; }
+    .tab-pill:not(.active) .tc { background: var(--border); color: var(--text-2); }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 280px; }
+    .search-wrap i { position: absolute; left: .82rem; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: .85rem; pointer-events: none; }
+    .search-input { width: 100%; padding: .55rem .9rem .55rem 2.35rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: .82rem; color: var(--text-1); background: var(--surface); outline: none; transition: border-color .2s, box-shadow .2s; }
+    .search-input:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px var(--accent-glow); }
+    .search-input::placeholder { color: var(--text-3); }
+    .result-badge { font-size: .74rem; font-weight: 700; color: var(--text-2); background: var(--navy-pale); border: 1px solid var(--border); border-radius: 50px; padding: .22rem .72rem; white-space: nowrap; }
+
+    .pm-content { padding: 1rem 1.5rem 3rem; }
+    .table-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+
+    .section-divider { display: flex; align-items: center; gap: .75rem; padding: .6rem 1.25rem; border-top: 1.5px solid var(--border); border-bottom: 1.5px solid var(--border); background: var(--surface); }
+    .section-divider-label { font-size: .68rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+    .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+    .section-divider-count { font-size: .65rem; font-weight: 700; border-radius: 50px; padding: .1rem .55rem; }
+    .section-divider.onsite-divider { background: var(--orange-bg); border-color: #fdba74; }
+    .section-divider.onsite-divider .section-divider-label { color: var(--orange); }
+    .section-divider.onsite-divider .section-divider-count { background: #fff7ed; color: var(--orange); border: 1px solid #fdba74; }
+    .section-divider.onsite-divider .section-divider-line  { background: #fdba74; }
+
+    .pm-table tbody tr.is-onsite { background: #fffbf7; border-left: 3px solid var(--orange); }
+    .pm-table tbody tr.is-onsite:hover { background: var(--orange-bg); }
+
+    .pending-notice { display: flex; align-items: center; gap: .65rem; background: var(--amber-bg); border-bottom: 1.5px solid #fcd34d; padding: .65rem 1.25rem; font-size: .78rem; font-weight: 600; color: var(--amber); }
+    .pending-notice i { flex-shrink: 0; }
+    .proof-badge { margin-left: auto; background: #fbbf24; color: #fff; border-radius: 50px; padding: .1rem .6rem; font-size: .68rem; font-weight: 800; }
+
+    .pm-table { width: 100%; border-collapse: collapse; table-layout: auto; }
+    .pm-table thead th { background: var(--navy); color: #fff; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: .6rem .75rem; border: none; white-space: nowrap; }
+    .pm-table thead th:first-child { padding-left: 1.1rem; }
+    .pm-table tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    .pm-table tbody tr:last-child { border-bottom: none; }
+    .pm-table tbody tr:hover { background: var(--navy-pale); }
+    .pm-table tbody tr.has-proof { border-left: 3px solid var(--amber); }
+    .pm-table td { padding: .6rem .75rem; font-size: .78rem; color: var(--text-1); vertical-align: middle; }
+    .pm-table td:first-child { padding-left: 1.1rem; }
+
+    .student-name { font-weight: 700; color: var(--text-1); line-height: 1.2; font-size: .78rem; }
+    .student-snum { font-size: .67rem; color: var(--text-3); }
+    .type-badge   { font-size: .62rem; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; padding: .16rem .5rem; border-radius: 50px; background: var(--sky-bg); color: var(--sky); white-space: nowrap; }
+    .method-badge { font-size: .62rem; font-weight: 800; padding: .16rem .5rem; border-radius: 50px; background: var(--green-bg); color: var(--green); white-space: nowrap; }
+    .method-badge-onsite { font-size: .62rem; font-weight: 800; padding: .16rem .5rem; border-radius: 50px; background: var(--orange-bg); color: var(--orange); white-space: nowrap; border: 1px solid #fdba74; }
+    .amount-val { font-weight: 800; color: var(--text-1); font-size: .78rem; }
+    .amount-red { color: var(--red); }
+    .verified-by { font-size: .72rem; font-weight: 700; color: var(--navy); }
+
+    .ref-chip { display: inline-flex; align-items: center; gap: .28rem; background: var(--navy-pale); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: .18rem .5rem; font-family: monospace; font-size: .72rem; font-weight: 700; color: var(--navy); cursor: pointer; transition: background .15s; user-select: none; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ref-chip:hover { background: var(--navy-tint); }
+    .ref-chip i { color: var(--text-3); font-size: .62rem; flex-shrink: 0; }
+    .reason-badge { display: inline-block; background: var(--red-bg); color: var(--red); border-radius: var(--radius-xs); padding: .2rem .6rem; font-size: .7rem; font-weight: 700; max-width: 170px; white-space: normal; line-height: 1.4; }
+
+    .btn-preview, .btn-view-proof { display: inline-flex; align-items: center; justify-content: center; gap: .28rem; width: 100px; padding: .32rem .4rem; border-radius: var(--radius-xs); font-size: .7rem; font-weight: 700; font-family: inherit; white-space: nowrap; transition: all .18s; text-decoration: none; box-sizing: border-box; }
+    .btn-preview { background: var(--navy); color: #fff; border: none; cursor: pointer; }
+    .btn-preview:hover { background: var(--navy-deep); }
+    .btn-preview.awaiting { background: var(--surface); color: var(--text-3); border: 1.5px solid var(--border); cursor: default; pointer-events: none; }
+    .btn-view-proof { background: transparent; color: var(--sky); border: 1.5px solid var(--sky); }
+    .btn-view-proof:hover { background: var(--sky); color: #fff; }
+    .proof-cell { display: flex; flex-direction: column; gap: .3rem; align-items: flex-start; }
+
+    .btn-convert { display: inline-flex; align-items: center; gap: .28rem; padding: .32rem .7rem; border-radius: var(--radius-xs); font-size: .7rem; font-weight: 700; font-family: inherit; background: var(--green); color: #fff; border: none; cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .btn-convert:hover { background: #15803d; }
+    .btn-archive { display: inline-flex; align-items: center; gap: .28rem; padding: .28rem .6rem; border-radius: var(--radius-xs); font-size: .7rem; font-weight: 700; font-family: inherit; background: transparent; color: var(--text-3); border: 1.5px solid var(--border); cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-archive:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+    .btn-restore { display: inline-flex; align-items: center; gap: .28rem; padding: .28rem .6rem; border-radius: var(--radius-xs); font-size: .7rem; font-weight: 700; font-family: inherit; background: transparent; color: var(--green); border: 1.5px solid var(--green); cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-restore:hover { background: var(--green); color: #fff; }
+
+    .empty-row td { text-align: center; padding: 3.5rem 2rem; color: var(--text-3); font-size: .85rem; }
+    .empty-icon-wrap { width: 56px; height: 56px; border-radius: 50%; background: var(--navy-pale); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--text-3); margin: 0 auto .75rem; }
+
+    @@keyframes flash-green { 0%,100%{background:transparent} 50%{background:#dcfce7} }
+    @@keyframes flash-red   { 0%,100%{background:transparent} 50%{background:#fee2e2} }
+    .flash-green { animation: flash-green .7s ease; }
+    .flash-red   { animation: flash-red .7s ease; }
+
+    #proofViewModal .modal-content { background: #0f172a; border: none; border-radius: var(--radius); overflow: hidden; }
+    #proofViewModal .modal-header  { background: rgba(255,255,255,.05); border-bottom: 1px solid rgba(255,255,255,.1); padding: 1rem 1.25rem; }
+    #proofViewModal .modal-body    { background: #0f172a; padding: 1.25rem; }
+    #proofViewModal .modal-footer  { background: rgba(255,255,255,.04); border-top: 1px solid rgba(255,255,255,.1); padding: .75rem 1.25rem; gap: .5rem; }
+    .proof-meta { background: rgba(255,255,255,.06); border-radius: 10px; padding: .85rem 1rem; margin-top: 1rem; }
+    .proof-meta-row { display: flex; justify-content: space-between; font-size: .8rem; padding: .28rem 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .proof-meta-row:last-child { border-bottom: none; }
+    .proof-meta-row label { color: #64748b; }
+    .proof-meta-row .pv { color: #f1f5f9; font-weight: 600; text-align: right; max-width: 65%; word-break: break-all; }
+    .proof-meta-row .pv.teal { color: #00d4aa; font-family: monospace; }
+    @@keyframes spin { to{transform:rotate(360deg)} }
+    .spinner-ring { width: 38px; height: 38px; border: 3px solid #1e3a5f; border-top-color: #7dd3fc; border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 1rem; }
+    .btn-modal-approve { display: inline-flex; align-items: center; gap: .35rem; background: var(--green); color: #fff; border: none; border-radius: var(--radius-xs); padding: .42rem 1rem; font-size: .8rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .15s; }
+    .btn-modal-approve:hover { background: #15803d; }
+    .btn-modal-decline { display: inline-flex; align-items: center; gap: .35rem; background: transparent; color: #ef4444; border: 1.5px solid #ef4444; border-radius: var(--radius-xs); padding: .4rem .95rem; font-size: .8rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .15s; }
+    .btn-modal-decline:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+    #declineModal .modal-content { border-radius: var(--radius); border: none; }
+    #declineModal .modal-header  { background: var(--red-bg); border-bottom: 1px solid #fecaca; }
+    .reject-reason-btn { width: 100%; text-align: left; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: .55rem .9rem; font-size: .84rem; background: #fff; cursor: pointer; transition: all .15s; margin-bottom: .4rem; font-family: inherit; }
+    .reject-reason-btn:hover, .reject-reason-btn.active { border-color: var(--red); background: var(--red-bg); color: var(--red); font-weight: 600; }
+
+    #convertModal .modal-content { border-radius: var(--radius); border: none; }
+    #convertModal .modal-header  { background: var(--green-bg); border-bottom: 1px solid #a7f3d0; }
+
+    .btn-manual { background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); padding: .52rem 1rem; font-size: .78rem; font-weight: 800; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; transition: background .2s, transform .18s; box-shadow: 0 2px 10px rgba(22,163,74,.28); }
+    .btn-manual:hover { background: #15803d; transform: translateY(-1px); }
+    .mp-overlay { display: none; position: fixed; inset: 0; background: rgba(5,16,148,.18); backdrop-filter: blur(4px); z-index: 1050; align-items: center; justify-content: center; }
+    .mp-overlay.open { display: flex; }
+    .mp-box { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; box-shadow: var(--shadow-lg); animation: mpIn .22s ease; }
+    @@keyframes mpIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+    .mp-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.35rem; border-bottom: 1.5px solid var(--border); background: var(--navy-pale); }
+    .mp-head-left { display: flex; align-items: center; gap: .55rem; }
+    .mp-head-icon { width: 30px; height: 30px; border-radius: var(--radius-xs); background: var(--green); color: #fff; font-size: .78rem; display: flex; align-items: center; justify-content: center; }
+    .mp-head-title { font-size: .88rem; font-weight: 800; color: var(--text-1); margin: 0; }
+    .mp-close { background: none; border: none; color: var(--text-3); font-size: 1.1rem; cursor: pointer; line-height: 1; }
+    .mp-close:hover { color: var(--red); }
+    .mp-body { padding: 1.35rem; }
+    .mp-field { margin-bottom: 1rem; }
+    .mp-label { display: block; font-size: .75rem; font-weight: 700; color: var(--text-2); margin-bottom: .32rem; }
+    .mp-label-hint { font-size: .68rem; font-weight: 500; color: var(--text-3); }
+    .mp-input { width: 100%; padding: .58rem .9rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: .82rem; color: var(--text-1); background: var(--surface); outline: none; transition: border-color .2s, box-shadow .2s; }
+    .mp-input:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px var(--accent-glow); }
+    .mp-input::placeholder { color: var(--text-3); }
+    .mp-input[readonly] { background: #f1f5f9; color: var(--text-2); cursor: default; }
+    .mp-input.auto-filled { background: #f0fdf4; border-color: #86efac; color: var(--green); font-weight: 700; }
+    .mp-msg { display: none; font-size: .77rem; font-weight: 700; padding: .42rem .7rem; border-radius: var(--radius-xs); margin-bottom: .75rem; }
+    .mp-foot { padding: .85rem 1.35rem; border-top: 1.5px solid var(--border); background: var(--navy-pale); display: flex; gap: .55rem; justify-content: flex-end; }
+    .btn-mp-cancel { background: var(--white); color: var(--text-2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: .55rem 1.1rem; font-size: .8rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; }
+    .btn-mp-cancel:hover { border-color: var(--text-2); color: var(--text-1); }
+    .btn-mp-submit { background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); padding: .58rem 1.3rem; font-size: .8rem; font-weight: 800; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; box-shadow: 0 3px 10px rgba(22,163,74,.28); transition: background .18s, transform .15s; }
+    .btn-mp-submit:hover { background: #15803d; transform: translateY(-1px); }
+
+    .lookup-wrap { position: relative; }
+    .lookup-spinner { position: absolute; right: .7rem; top: 50%; transform: translateY(-50%); }
+
+    #toast-rack { position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 9999; display: flex; flex-direction: column; gap: .45rem; }
+    .toast-item { background: var(--white); border-radius: var(--radius-sm); padding: .72rem 1rem; font-size: .81rem; font-weight: 600; box-shadow: var(--shadow-lg); border-left: 4px solid var(--navy); display: flex; align-items: center; gap: .55rem; min-width: 235px; color: var(--text-1); animation: toastIn .22s ease; transition: opacity .35s; }
+    .toast-item.success { border-color: var(--green); }
+    .toast-item.danger  { border-color: var(--red); }
+    .toast-item.warning { border-color: var(--amber); }
+    .toast-item i { font-size: .9rem; flex-shrink: 0; }
+    .toast-item.success i { color: var(--green); }
+    .toast-item.danger  i { color: var(--red); }
+    .toast-item.warning i { color: var(--amber); }
+    .toast-item.info    i { color: var(--navy); }
+    @@keyframes toastIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+
+    @@media (max-width: 768px) {
+        .pm-hero { padding: 1.5rem 1.25rem 3.5rem; }
+        .pm-toolbar, .pm-content { padding-left: 1.25rem; padding-right: 1.25rem; }
+        .gcash-banner { margin-left: 1rem; margin-right: 1rem; }
+        .pm-hero-inner { flex-direction: column; }
+        .tab-pills { overflow-x: auto; }
+    }
+</style>
+
+<!-- ── HERO ── -->
+<div class="pm-hero">
+    <div class="pm-hero-inner">
+        <div>
+            <h1 class="pm-hero-title"><i class="bi bi-cash-stack me-2" style="font-size:.8em;opacity:.75"></i>Payment Management</h1>
+            <p class="pm-hero-sub">Enrollment &amp; Licensure Fee Monitoring &bull; Verify <strong>GCash proofs</strong> &bull; Process <strong>On-Site</strong> collections</p>
+            <div class="pm-stats-row">
+                <div class="pm-stat-pill"><span class="stat-dot" style="background:#4ade80"></span>Verified <span class="pill-count" id="statVerifiedCount">—</span></div>
+                <div class="pm-stat-pill"><span class="stat-dot" style="background:#4ade80"></span>Total Paid <span class="pill-count" id="statVerifiedAmt">—</span></div>
+                <div class="pm-stat-pill"><span class="stat-dot" style="background:#fbbf24"></span>GCash Pending <span class="pill-count" id="statPendingCount">—</span></div>
+                <div class="pm-stat-pill"><span class="stat-dot" style="background:#fb923c"></span>On-Site Pending <span class="pill-count" id="statOnsiteCount">—</span></div>
+                <div class="pm-stat-pill"><span class="stat-dot" style="background:#f87171"></span>Archived <span class="pill-count" id="statArchivedCount">—</span></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:.65rem;align-items:flex-start;flex-wrap:wrap;">
+            <button class="btn-refresh" onclick="loadAll()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            <a href="/PaymentAdmin/Index" class="btn-gcash-setup-hero"><i class="bi bi-qr-code"></i> GCash Setup</a>
+        </div>
+    </div>
+</div>
+
+<!-- ── GCASH BANNER ── -->
+<div class="gcash-banner">
+    <div class="gcash-banner-info">
+        <div class="gcash-icon-box">💳</div>
+        <div>
+            <p class="gcash-name" id="gcashBannerName">Loading…</p>
+            <div class="gcash-number" id="gcashBannerNumber">—</div>
+            <p class="gcash-desc" id="gcashBannerDesc">—</p>
+        </div>
+    </div>
+</div>
+
+<!-- ── TOOLBAR ── -->
+<div class="pm-toolbar">
+    <div class="tab-pills">
+        <button class="tab-pill active" data-tab="tab-verified" onclick="switchTab(this)">
+            <i class="bi bi-check-circle-fill" style="color:#4ade80;font-size:.72rem"></i>
+            Paid <span class="tc" id="tc-verified">0</span>
+        </button>
+        <button class="tab-pill" data-tab="tab-pending" onclick="switchTab(this)">
+            <i class="bi bi-clock-fill" style="color:#fbbf24;font-size:.72rem"></i>
+            Pending <span class="tc" id="tc-pending">0</span>
+        </button>
+        <button class="tab-pill" data-tab="tab-archived" onclick="switchTab(this)">
+            <i class="bi bi-archive-fill" style="color:#8a97c0;font-size:.72rem"></i>
+            Archived <span class="tc" id="tc-archived">0</span>
+        </button>
+    </div>
+    <div class="toolbar-div"></div>
+    <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="paySearch" class="search-input" placeholder="Search student, reference…">
+    </div>
+    <span class="result-badge"><i class="bi bi-receipt" style="margin-right:3px"></i><span id="resultCount">0</span> record(s)</span>
+    <div class="toolbar-div"></div>
+    <button class="btn-manual" onclick="openManualModal()"><i class="bi bi-plus-circle-fill"></i> Manual Payment</button>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="pm-content">
+
+    <!-- PAID -->
+    <div id="tab-verified" class="tab-section">
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="pm-table">
+                    <thead><tr><th>Student</th><th>Purpose</th><th>Method</th><th>Amount</th><th>Reference #</th><th>Date</th><th>Verified By</th><th>Proof</th><th>Action</th></tr></thead>
+                    <tbody id="bodyVerified"><tr><td colspan="9" style="text-align:center;padding:2.5rem;color:var(--text-3);"><span class="spinner-border spinner-border-sm me-2"></span>Loading…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING -->
+    <div id="tab-pending" class="tab-section" style="display:none;">
+        <div class="table-card">
+            <div class="pending-notice">
+                <i class="bi bi-phone-fill"></i>
+                Verify the <strong>&nbsp;GCash reference number</strong> and <strong>&nbsp;proof screenshot</strong> before approving.
+                <span class="proof-badge" id="proofCount"></span>
+            </div>
+            <div class="table-responsive">
+                <table class="pm-table">
+                    <thead><tr><th>Student</th><th>Purpose</th><th>Amount</th><th>Ref / Method</th><th>Submitted</th><th>Proof / Action</th></tr></thead>
+                    <tbody id="bodyGcash"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-3);"><span class="spinner-border spinner-border-sm me-2"></span>Loading…</td></tr></tbody>
+                    <tbody id="onsiteDividerBody">
+                        <tr><td colspan="6" style="padding:0;">
+                            <div class="section-divider onsite-divider">
+                                <i class="bi bi-building-fill" style="color:var(--orange);font-size:.8rem;flex-shrink:0;"></i>
+                                <span class="section-divider-label">On-Site Payments — Cashier's Office, Second Floor</span>
+                                <div class="section-divider-line"></div>
+                                <span class="section-divider-count" id="onsiteDividerCount">0</span>
+                            </div>
+                        </td></tr>
+                    </tbody>
+                    <tbody id="bodyOnsite"><tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-3);"><span class="spinner-border spinner-border-sm me-2"></span>Loading…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ARCHIVED -->
+    <div id="tab-archived" class="tab-section" style="display:none;">
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="pm-table">
+                    <thead><tr><th>Student</th><th>Purpose</th><th>Amount</th><th>Method</th><th>Reference #</th><th>Date</th><th>Reason</th><th>Action</th></tr></thead>
+                    <tbody id="bodyArchived"><tr><td colspan="8" style="text-align:center;padding:2.5rem;color:var(--text-3);"><span class="spinner-border spinner-border-sm me-2"></span>Loading…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="toast-rack"></div>
+
+<!-- CONVERT ON-SITE → VERIFIED MODAL -->
+<div class="modal fade" id="convertModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color:var(--green);font-size:.95rem;">
+                    <i class="bi bi-check-circle-fill me-2"></i>Mark On-Site Payment as Paid
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">
+                    Confirming payment for <strong id="convertStudentName">—</strong>.<br>
+                    Enter the OR number issued at the cashier.
+                    A confirmation e-mail will be sent to the student automatically.
+                </p>
+                <div class="mb-3">
+                    <label class="mp-label">Official Receipt (OR) Number <span style="color:var(--red)">*</span></label>
+                    <input type="text" class="mp-input" id="convertOR" placeholder="OR-XXXXX">
+                </div>
+                <div class="mb-3">
+                    <label class="mp-label">Remarks <span class="mp-label-hint">(optional)</span></label>
+                    <input type="text" class="mp-input" id="convertRemarks" placeholder="e.g. Cash received in full">
+                </div>
+                <!-- Email status after save -->
+                <div id="convertEmailStatus" style="display:none;" class="alert border-0 py-2 small mt-2"></div>
+                <div id="convertAlert" class="alert mt-2" style="display:none;font-size:.82rem;padding:.6rem .9rem;"></div>
+            </div>
+            <div class="modal-footer" style="gap:.5rem;">
+                <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" id="convertCancelBtn">Cancel</button>
+                <button class="btn btn-sm" id="convertSubmitBtn" onclick="submitConvert()"
+                        style="background:var(--green);color:#fff;border:none;border-radius:7px;padding:.4rem 1.2rem;font-weight:800;">
+                    <i class="bi bi-check-lg me-1"></i>Confirm &amp; Mark Paid
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MANUAL OFFICE PAYMENT MODAL -->
+<div class="mp-overlay" id="manualPayOverlay">
+    <div class="mp-box">
+        <div class="mp-head">
+            <div class="mp-head-left">
+                <div class="mp-head-icon"><i class="bi bi-receipt"></i></div>
+                <p class="mp-head-title">Manual / Office Payment</p>
+            </div>
+            <button class="mp-close" onclick="closeManualModal()">✕</button>
+        </div>
+        <div class="mp-body">
+            <div class="mp-field">
+                <label class="mp-label">Student Number <span style="color:var(--red)">*</span></label>
+                <input type="text" class="mp-input" id="mpStudentId"
+                       placeholder="Enter student number (e.g. 2024-00001)" oninput="lookupStudent(this.value)">
+            </div>
+            <div class="mp-field">
+                <label class="mp-label">Student Name</label>
+                <div class="lookup-wrap">
+                    <input type="text" class="mp-input" id="mpStudentName" readonly placeholder="Auto-filled after entering number">
+                    <span class="lookup-spinner" id="lookupSpinner" style="display:none;">
+                        <span class="spinner-border spinner-border-sm" style="width:.9rem;height:.9rem;border-width:2px;color:var(--navy);"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="mp-field">
+                <label class="mp-label">Payment Purpose <span style="color:var(--red)">*</span></label>
+                <select class="mp-input" id="mpPurpose">
+                    <option value="">-- Select Purpose --</option>
+                    <option value="Down Payment">Down Payment</option>
+                    <option value="Enrollment Fee">Enrollment Fee</option>
+                    <option value="Prelim">Prelim</option>
+                    <option value="Midterm">Midterm</option>
+                    <option value="Semi-Final">Semi-Final</option>
+                    <option value="Final">Final</option>
+                    <option value="Licensure Fee">Licensure Fee</option>
+                    <option value="Miscellaneous">Miscellaneous</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="mp-field">
+                <label class="mp-label">Amount (₱) <span style="color:var(--red)">*</span></label>
+                <input type="number" class="mp-input" id="mpAmount" placeholder="0.00" min="1" step="0.01">
+            </div>
+            <div class="mp-field">
+                <label class="mp-label">Official Receipt (OR) Number <span style="color:var(--red)">*</span></label>
+                <input type="text" class="mp-input" id="mpOR" placeholder="OR-XXXXX">
+            </div>
+            <div class="mp-field">
+                <label class="mp-label">Payment Office / Location <span style="color:var(--red)">*</span></label>
+                <select class="mp-input" id="mpLocation">
+                    <option value="">-- Select Office --</option>
+                    <option value="Cashier's Office, Second Floor" selected>Cashier's Office, Second Floor</option>
+                    <option value="Main Accounting Office">Main Accounting Office</option>
+                    <option value="Annex Registrar Window">Annex Registrar Window</option>
+                    <option value="Finance Satellite Branch">Finance Satellite Branch</option>
+                </select>
+            </div>
+            <div class="mp-msg" id="mpMsg"></div>
+        </div>
+        <div class="mp-foot">
+            <button class="btn-mp-cancel" onclick="closeManualModal()"><i class="bi bi-x-lg"></i> Cancel</button>
+            <button class="btn-mp-submit" onclick="submitManualPayment()"><i class="bi bi-plus-circle-fill"></i> Record Payment</button>
+        </div>
+    </div>
+</div>
+
+<!-- PROOF VIEWER MODAL -->
+<div class="modal fade" id="proofViewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title text-white mb-0"><i class="bi bi-image me-2" style="color:#7dd3fc;"></i>Payment Proof</h5>
+                    <small id="proofModalSub" style="color:#64748b;font-size:.75rem;"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="proofStateLoading" style="text-align:center;padding:3rem 1rem;"><div class="spinner-ring"></div><div style="color:#64748b;font-size:.85rem;">Loading image…</div></div>
+                <div id="proofStateError" style="display:none;background:#151f2e;border:1px solid #2d3f57;border-radius:12px;padding:2rem;text-align:center;">
+                    <div style="font-size:2.5rem;margin-bottom:.6rem;">🖼️</div>
+                    <div style="color:#f87171;font-weight:700;font-size:.95rem;margin-bottom:.4rem;">Image could not be loaded</div>
+                    <div id="proofErrPath" style="font-family:monospace;font-size:.72rem;color:#475569;word-break:break-all;margin-bottom:1rem;"></div>
+                    <a id="proofErrLink" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:.4rem;background:#1e3a5f;color:#7dd3fc;padding:.45rem 1rem;border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;"><i class="bi bi-box-arrow-up-right"></i> Open file directly</a>
+                </div>
+                <div id="proofStateImage" style="display:none;text-align:center;">
+                    <img id="proofImg" src="" alt="Payment Proof" style="max-width:100%;max-height:520px;border-radius:12px;box-shadow:0 6px 32px rgba(0,0,0,.7);object-fit:contain;cursor:zoom-in;" onclick="window.open(this.src,'_blank')" />
+                    <p style="color:#475569;font-size:.72rem;margin-top:.5rem;"><i class="bi bi-zoom-in me-1"></i>Click image to open full size</p>
+                </div>
+                <div class="proof-meta">
+                    <div class="proof-meta-row"><label>Student</label><span class="pv" id="pmStudent">—</span></div>
+                    <div class="proof-meta-row"><label>GCash Ref #</label><span class="pv teal" id="pmRef">—</span></div>
+                    <div class="proof-meta-row"><label>Amount</label><span class="pv" id="pmAmount">—</span></div>
+                    <div class="proof-meta-row"><label>Purpose</label><span class="pv" id="pmPurpose">—</span></div>
+                    <div class="proof-meta-row"><label>Submitted</label><span class="pv" id="pmDate">—</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="proofOpenFull" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:.35rem;background:rgba(255,255,255,.1);color:#fff;padding:.38rem .9rem;border-radius:7px;font-size:.82rem;font-weight:600;text-decoration:none;"><i class="bi bi-box-arrow-up-right"></i> Open Full Size</a>
+                <a id="proofPageLink" href="#" style="display:inline-flex;align-items:center;gap:.35rem;background:#0369a1;color:#fff;padding:.38rem .9rem;border-radius:7px;font-size:.82rem;font-weight:600;text-decoration:none;"><i class="bi bi-file-earmark-text"></i> Full Proof Page</a>
+                <button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:#fff;border:none;" data-bs-dismiss="modal">Close</button>
+                <button class="btn-modal-approve" id="modalApproveBtn" onclick="approveFromModal()" style="display:none;"><i class="bi bi-check-lg"></i> Approve</button>
+                <button class="btn-modal-decline" id="modalDeclineBtn" onclick="declineFromModal()" style="display:none;"><i class="bi bi-x-lg"></i> Decline</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DECLINE REASON MODAL -->
+<div class="modal fade" id="declineModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color:var(--red);font-size:.95rem;"><i class="bi bi-x-circle-fill me-2"></i>Decline Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p style="font-size:.85rem;color:#475569;margin-bottom:.9rem;">Declining payment for <strong id="declineStudentName">—</strong>. Select a reason:</p>
+                <button class="reject-reason-btn" onclick="pickReason(this,'Screenshot unclear or unreadable')">📷 Screenshot unclear or unreadable</button>
+                <button class="reject-reason-btn" onclick="pickReason(this,'Reference number does not match')">🔢 Reference number does not match</button>
+                <button class="reject-reason-btn" onclick="pickReason(this,'Amount sent does not match')">💰 Amount sent does not match</button>
+                <button class="reject-reason-btn" onclick="pickReason(this,'Duplicate submission')">🔁 Duplicate submission</button>
+                <button class="reject-reason-btn" onclick="pickReason(this,'Other')">✏️ Other (specify below)</button>
+                <div id="customReasonBox" style="display:none;margin-top:.5rem;">
+                    <textarea id="customReason" class="form-control form-control-sm" rows="2" placeholder="Type reason…"></textarea>
+                </div>
+                <div id="declineAlert" class="alert mt-3" style="display:none;font-size:.82rem;padding:.6rem .9rem;"></div>
+            </div>
+            <div class="modal-footer" style="gap:.5rem;">
+                <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-sm" onclick="submitDecline()" style="background:var(--red);color:#fff;border:none;border-radius:7px;padding:.4rem 1.1rem;font-weight:700;">
+                    <i class="bi bi-x-lg me-1"></i>Confirm Decline
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let _pid = null, _name = '', _reason = '';
+    let allVerified = [], allPending = [], allArchived = [];
+    let currentTab = 'tab-verified';
+
+    // ── Tab switching ────────────────────────────────────────────────
+    function switchTab(el) {
+        document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-section').forEach(s => s.style.display = 'none');
+        el.classList.add('active');
+        currentTab = el.dataset.tab;
+        document.getElementById(currentTab).style.display = 'block';
+        applySearch();
+    }
+
+    // ── Search ───────────────────────────────────────────────────────
+    let searchTimer;
+    document.getElementById('paySearch').addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applySearch, 250);
+    });
+    function applySearch() {
+        const q = document.getElementById('paySearch').value.toLowerCase().trim();
+        if (currentTab === 'tab-verified') filterAndRender(allVerified, q, renderVerifiedRows);
+        if (currentTab === 'tab-pending')  filterAndRenderPending(allPending, q);
+        if (currentTab === 'tab-archived') filterAndRender(allArchived, q, renderArchivedRows);
+    }
+    function filterAndRender(data, q, renderFn) {
+        const filtered = q ? data.filter(r => searchMatch(r, q)) : data;
+        document.getElementById('resultCount').textContent = filtered.length;
+        renderFn(filtered);
+    }
+    function filterAndRenderPending(data, q) {
+        const filtered = q ? data.filter(r => searchMatch(r, q)) : data;
+        const gcash   = filtered.filter(r => (r.paymentMethod||'').toLowerCase() !== 'on-site');
+        const onsite  = filtered.filter(r => (r.paymentMethod||'').toLowerCase() === 'on-site');
+        document.getElementById('resultCount').textContent = filtered.length;
+        renderGcashRows(gcash);
+        renderOnsiteRows(onsite);
+    }
+    function searchMatch(r, q) {
+        return (r.studentName||'').toLowerCase().includes(q) ||
+               (r.studentNumber||'').toLowerCase().includes(q) ||
+               (r.referenceNumber||'').toLowerCase().includes(q) ||
+               (r.paymentType||'').toLowerCase().includes(q);
+    }
+
+    // ── Load all — runs 3 fetch calls in parallel ─────────────────────
+    async function loadAll() {
+        // Show per-tab spinners while loading
+        ['bodyVerified','bodyGcash','bodyOnsite','bodyArchived'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:1.5rem;color:var(--text-3);"><span class="spinner-border spinner-border-sm me-2"></span>Loading…</td></tr>`;
+        });
+
+        const [verified, pending, archived] = await Promise.all([
+            fetchPayments('Verified'),
+            fetchPayments('Pending'),
+            fetchPayments('Rejected')
+        ]);
+
+        allVerified = verified;
+        allPending  = pending;
+        allArchived = archived;
+
+        const gcash  = pending.filter(r => (r.paymentMethod||'').toLowerCase() !== 'on-site');
+        const onsite = pending.filter(r => (r.paymentMethod||'').toLowerCase() === 'on-site');
+
+        renderVerifiedRows(allVerified);
+        renderGcashRows(gcash);
+        renderOnsiteRows(onsite);
+        renderArchivedRows(allArchived);
+
+        // Tab counts
+        document.getElementById('tc-verified').textContent  = allVerified.length;
+        document.getElementById('tc-pending').textContent   = allPending.length;
+        document.getElementById('tc-archived').textContent  = allArchived.length;
+
+        // Hero stats
+        const total = allVerified.reduce((s, r) => s + (r.amount || 0), 0);
+        document.getElementById('statVerifiedCount').textContent = allVerified.length;
+        document.getElementById('statVerifiedAmt').textContent   = '₱' + total.toLocaleString('en-PH');
+        document.getElementById('statPendingCount').textContent  = gcash.length;
+        document.getElementById('statOnsiteCount').textContent   = onsite.length;
+        document.getElementById('statArchivedCount').textContent = allArchived.length;
+
+        const wp = gcash.filter(r => r.proofOfPaymentPath).length;
+        document.getElementById('proofCount').textContent = wp ? `${wp} with proof` : '';
+        document.getElementById('resultCount').textContent = allVerified.length;
+    }
+
+    async function fetchPayments(status) {
+        try {
+            const r = await fetch(`/PaymentAdmin/GetPayments?status=${status}`);
+            const d = await r.json();
+            return d.success ? d.data : [];
+        } catch { return []; }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+    function proofCell(r, canAct) {
+        const fn = `openProof(${r.paymentId},'${jse(r.proofOfPaymentPath)}','${jse(r.studentName)}','${jse(r.referenceNumber||'')}',${r.amount},'${jse(r.paymentType)}','${jse(r.paymentDate)}',${canAct})`;
+        if (!r.proofOfPaymentPath)
+            return `<button class="btn-preview awaiting" disabled><i class="bi bi-hourglass-split"></i> ${canAct ? 'Awaiting' : 'N/A'}</button>`;
+        return `<div class="proof-cell">
+            <button class="btn-preview" onclick="${fn}"><i class="bi bi-image"></i> Preview</button>
+            <a class="btn-view-proof" href="/PaymentAdmin/PaymentProof?id=${r.paymentId}" target="_blank"><i class="bi bi-file-earmark-text"></i> View Proof</a>
+        </div>`;
+    }
+    function refChip(ref, copy = true) {
+        if (!ref) return '<span style="font-size:.75rem;color:var(--text-3);">—</span>';
+        const click = copy ? `onclick="copyRef('${jse(ref)}',this)" title="Click to copy"` : '';
+        return `<span class="ref-chip" ${click}><i class="bi bi-hash"></i>${esc(ref)}${copy ? '<i class="bi bi-clipboard"></i>' : ''}</span>`;
+    }
+    function emptyState(cols, icon, msg) {
+        return `<tr class="empty-row"><td colspan="${cols}"><div class="empty-icon-wrap"><i class="bi bi-${icon}"></i></div>${msg}</td></tr>`;
+    }
+    function methodBadge(m) {
+        return m === 'On-Site'
+            ? `<span class="method-badge-onsite">${esc(m)}</span>`
+            : `<span class="method-badge">${esc(m)}</span>`;
+    }
+
+    // ── Render: Verified ─────────────────────────────────────────────
+    function renderVerifiedRows(rows) {
+        const tb = document.getElementById('bodyVerified');
+        if (!rows.length) { tb.innerHTML = emptyState(9, 'check-circle', 'No verified payments yet.'); return; }
+        tb.innerHTML = rows.map(r => `
+            <tr id="vr-${r.paymentId}">
+                <td><div class="student-name">${esc(r.studentName)}</div><div class="student-snum">${esc(r.studentNumber||'')}</div></td>
+                <td><span class="type-badge">${esc(r.paymentType)}</span></td>
+                <td>${methodBadge(r.paymentMethod)}</td>
+                <td><span class="amount-val">₱${Number(r.amount).toLocaleString()}</span></td>
+                <td>${refChip(r.referenceNumber)}</td>
+                <td style="font-size:.75rem;color:var(--text-2);">${r.paymentDate}</td>
+                <td><span class="verified-by">${esc(r.verifiedBy||'—')}</span></td>
+                <td>${proofCell(r, false)}</td>
+                <td><button class="btn-archive" onclick="archivePayment(${r.paymentId},'${jse(r.studentName)}')"><i class="bi bi-archive"></i> Archive</button></td>
+            </tr>`).join('');
+    }
+
+    // ── Render: GCash Pending ────────────────────────────────────────
+    function renderGcashRows(rows) {
+        const tb = document.getElementById('bodyGcash');
+        if (!rows.length) {
+            tb.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:1.5rem 2rem;color:var(--text-3);font-size:.82rem;"><i class="bi bi-phone" style="margin-right:.4rem;"></i>No pending GCash payments.</td></tr>`;
+            return;
+        }
+        tb.innerHTML = rows.map(r => `
+            <tr id="pr-${r.paymentId}" class="${r.proofOfPaymentPath ? 'has-proof' : ''}">
+                <td><div class="student-name">${esc(r.studentName)}</div><div class="student-snum">${esc(r.studentNumber||'')}</div></td>
+                <td><span class="type-badge">${esc(r.paymentType)}</span></td>
+                <td><span class="amount-val">₱${Number(r.amount).toLocaleString()}</span></td>
+                <td>${refChip(r.referenceNumber)}</td>
+                <td style="font-size:.75rem;color:var(--text-2);">${r.paymentDate}</td>
+                <td>${proofCell(r, true)}</td>
+            </tr>`).join('');
+    }
+
+    // ── Render: On-Site Pending ──────────────────────────────────────
+    function renderOnsiteRows(rows) {
+        const tb    = document.getElementById('bodyOnsite');
+        const count = document.getElementById('onsiteDividerCount');
+        count.textContent = rows.length;
+        if (!rows.length) {
+            tb.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:1.5rem 2rem;color:var(--orange);font-size:.82rem;background:#fffbf7;"><i class="bi bi-building" style="margin-right:.4rem;"></i>No on-site payments pending.</td></tr>`;
+            return;
+        }
+        tb.innerHTML = rows.map(r => `
+            <tr id="os-${r.paymentId}" class="is-onsite">
+                <td><div class="student-name">${esc(r.studentName)}</div><div class="student-snum">${esc(r.studentNumber||'')}</div></td>
+                <td><span class="type-badge">${esc(r.paymentType)}</span></td>
+                <td><span class="amount-val">₱${Number(r.amount).toLocaleString()}</span></td>
+                <td>${refChip(r.referenceNumber)}</td>
+                <td style="font-size:.75rem;color:var(--text-2);">${r.paymentDate}</td>
+                <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+                    <button class="btn-convert" onclick="openConvertModal(${r.paymentId},'${jse(r.studentName)}')">
+                        <i class="bi bi-check-circle-fill"></i> Mark as Paid
+                    </button>
+                    <button class="btn-archive" onclick="archivePayment(${r.paymentId},'${jse(r.studentName)}')">
+                        <i class="bi bi-archive"></i>
+                    </button>
+                </td>
+            </tr>`).join('');
+    }
+
+    // ── Render: Archived ─────────────────────────────────────────────
+    function renderArchivedRows(rows) {
+        const tb = document.getElementById('bodyArchived');
+        if (!rows.length) { tb.innerHTML = emptyState(8, 'archive', 'No archived records.'); return; }
+        tb.innerHTML = rows.map(r => `
+            <tr>
+                <td><div class="student-name">${esc(r.studentName)}</div><div class="student-snum">${esc(r.studentNumber||'')}</div></td>
+                <td><span class="type-badge">${esc(r.paymentType)}</span></td>
+                <td><span class="amount-val amount-red">₱${Number(r.amount).toLocaleString()}</span></td>
+                <td>${methodBadge(r.paymentMethod)}</td>
+                <td>${refChip(r.referenceNumber, false)}</td>
+                <td style="font-size:.75rem;color:var(--text-2);">${r.paymentDate}</td>
+                <td><span class="reason-badge">${esc(r.remarks||'Declined')}</span></td>
+                <td><button class="btn-restore" onclick="restorePayment(${r.paymentId},'${jse(r.studentName)}')"><i class="bi bi-arrow-counterclockwise"></i> Restore</button></td>
+            </tr>`).join('');
+    }
+
+    // ── Convert On-Site → Verified (calls VerifyOnsitePayment) ───────
+    function openConvertModal(paymentId, studentName) {
+        _pid = paymentId; _name = studentName;
+        document.getElementById('convertStudentName').textContent = studentName;
+        document.getElementById('convertOR').value = '';
+        document.getElementById('convertRemarks').value = '';
+        document.getElementById('convertAlert').style.display = 'none';
+        document.getElementById('convertEmailStatus').style.display = 'none';
+        document.getElementById('convertSubmitBtn').disabled = false;
+        document.getElementById('convertCancelBtn').disabled = false;
+        new bootstrap.Modal(document.getElementById('convertModal')).show();
+    }
+
+    async function submitConvert() {
+        const or      = document.getElementById('convertOR').value.trim();
+        const remarks = document.getElementById('convertRemarks').value.trim();
+
+        if (!or) { showConvertAlert('Please enter the OR number.', 'warning'); return; }
+
+        // Lock buttons while saving
+        document.getElementById('convertSubmitBtn').disabled = true;
+        document.getElementById('convertCancelBtn').disabled = true;
+        document.getElementById('convertSubmitBtn').innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+
+        const row = document.getElementById(`os-${_pid}`);
+        if (row) row.classList.add('flash-green');
+
+        try {
+            // ── Call the dedicated VerifyOnsitePayment endpoint ────────
+            // This saves the OR number, marks Verified, updates student
+            // PaymentStatus to "Paid", and sends the confirmation email.
+            const r = await fetch('/PaymentAdmin/VerifyOnsitePayment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    paymentId:             _pid,
+                    officialReceiptNumber: or,
+                    remarks:               remarks
+                })
+            });
+            const d = await r.json();
+
+            document.getElementById('convertSubmitBtn').disabled = false;
+            document.getElementById('convertCancelBtn').disabled = false;
+            document.getElementById('convertSubmitBtn').innerHTML =
+                '<i class="bi bi-check-lg me-1"></i>Confirm &amp; Mark Paid';
+
+            if (d.success) {
+                // Show email status inside the modal before closing
+                const emailEl = document.getElementById('convertEmailStatus');
+                if (d.emailSent) {
+                    emailEl.className = 'alert border-0 py-2 small mt-2';
+                    emailEl.style.cssText = 'display:block;background:#dcfce7;color:#15803d;';
+                    emailEl.innerHTML = '<i class="bi bi-envelope-check-fill me-1"></i>' + esc(d.message);
+                } else {
+                    emailEl.className = 'alert border-0 py-2 small mt-2';
+                    emailEl.style.cssText = 'display:block;background:#fef3c7;color:#92400e;';
+                    emailEl.innerHTML = '<i class="bi bi-envelope-exclamation me-1"></i>' + esc(d.message);
+                }
+
+                toast(`On-site payment verified — ${_name}`, 'success');
+
+                // Close after a brief moment so admin can see the email status
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('convertModal'));
+                    if (modal) modal.hide();
+                    loadAll();
+                }, 1800);
+            } else {
+                showConvertAlert(d.message || 'Error.', 'danger');
+            }
+        } catch (e) {
+            document.getElementById('convertSubmitBtn').disabled = false;
+            document.getElementById('convertCancelBtn').disabled = false;
+            document.getElementById('convertSubmitBtn').innerHTML =
+                '<i class="bi bi-check-lg me-1"></i>Confirm &amp; Mark Paid';
+            showConvertAlert('Network error: ' + e.message, 'danger');
+        }
+    }
+
+    function showConvertAlert(msg, type) {
+        const el = document.getElementById('convertAlert');
+        el.className = `alert alert-${type} mt-2`; el.textContent = msg; el.style.display = 'block';
+    }
+
+    // ── Proof modal ──────────────────────────────────────────────────
+    function openProof(paymentId, path, student, ref, amount, purpose, date, canAct) {
+        _pid = paymentId; _name = student;
+        document.getElementById('proofModalSub').textContent = student;
+        document.getElementById('pmStudent').textContent     = student;
+        document.getElementById('pmRef').textContent         = ref || '—';
+        document.getElementById('pmAmount').textContent      = '₱' + Number(amount).toLocaleString();
+        document.getElementById('pmPurpose').textContent     = purpose;
+        document.getElementById('pmDate').textContent        = date;
+        document.getElementById('modalApproveBtn').style.display = canAct ? 'inline-flex' : 'none';
+        document.getElementById('modalDeclineBtn').style.display = canAct ? 'inline-flex' : 'none';
+        document.getElementById('proofPageLink').href = `/PaymentAdmin/PaymentProof?id=${paymentId}`;
+        const imgSrc = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
+        document.getElementById('proofOpenFull').href = imgSrc;
+        document.getElementById('proofStateLoading').style.display = 'block';
+        document.getElementById('proofStateError').style.display   = 'none';
+        document.getElementById('proofStateImage').style.display   = 'none';
+        const img = document.getElementById('proofImg');
+        img.onload  = () => { document.getElementById('proofStateLoading').style.display = 'none'; document.getElementById('proofStateImage').style.display = 'block'; };
+        img.onerror = () => { document.getElementById('proofStateLoading').style.display = 'none'; document.getElementById('proofStateError').style.display = 'block'; document.getElementById('proofErrPath').textContent = imgSrc; document.getElementById('proofErrLink').href = imgSrc; };
+        img.src = ''; img.src = imgSrc;
+        new bootstrap.Modal(document.getElementById('proofViewModal')).show();
+    }
+    function approveFromModal() { bootstrap.Modal.getInstance(document.getElementById('proofViewModal')).hide(); setTimeout(() => approvePayment(_pid, _name), 300); }
+    function declineFromModal()  { bootstrap.Modal.getInstance(document.getElementById('proofViewModal')).hide(); setTimeout(() => openDeclineModal(_pid, _name), 300); }
+
+    async function approvePayment(paymentId, studentName) {
+        if (!confirm(`Approve payment for ${studentName}?`)) return;
+        const row = document.getElementById(`pr-${paymentId}`);
+        if (row) row.classList.add('flash-green');
+        try {
+            const r = await fetch('/PaymentAdmin/UpdatePaymentStatus', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId, status:'Verified', remarks:''}) });
+            const d = await r.json();
+            if (d.success) { toast(`Payment approved — ${studentName}`, 'success'); setTimeout(loadAll, 700); }
+            else toast(d.message || 'Error.', 'danger');
+        } catch { toast('Network error.', 'danger'); }
+    }
+    async function archivePayment(paymentId, studentName) {
+        if (!confirm(`Archive payment for ${studentName}?`)) return;
+        const row = document.getElementById(`vr-${paymentId}`) || document.getElementById(`os-${paymentId}`);
+        if (row) row.classList.add('flash-red');
+        try {
+            const r = await fetch('/PaymentAdmin/UpdatePaymentStatus', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId, status:'Rejected', remarks:'Archived by admin'}) });
+            const d = await r.json();
+            if (d.success) { toast(`Archived — ${studentName}`, 'warning'); setTimeout(loadAll, 700); }
+            else toast(d.message || 'Error.', 'danger');
+        } catch { toast('Network error.', 'danger'); }
+    }
+    function openDeclineModal(paymentId, studentName) {
+        _pid = paymentId; _name = studentName; _reason = '';
+        document.getElementById('declineStudentName').textContent = studentName;
+        document.querySelectorAll('.reject-reason-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('customReasonBox').style.display = 'none';
+        document.getElementById('customReason').value = '';
+        document.getElementById('declineAlert').style.display = 'none';
+        new bootstrap.Modal(document.getElementById('declineModal')).show();
+    }
+    function pickReason(btn, reason) {
+        document.querySelectorAll('.reject-reason-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); _reason = reason;
+        document.getElementById('customReasonBox').style.display = reason === 'Other' ? 'block' : 'none';
+    }
+    async function submitDecline() {
+        const reason = _reason === 'Other' ? document.getElementById('customReason').value.trim() : _reason;
+        if (!reason) { showDeclineAlert('Please select or enter a reason.', 'warning'); return; }
+        const row = document.getElementById(`pr-${_pid}`);
+        if (row) row.classList.add('flash-red');
+        try {
+            const r = await fetch('/PaymentAdmin/UpdatePaymentStatus', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId:_pid, status:'Rejected', remarks:reason}) });
+            const d = await r.json();
+            if (d.success) { bootstrap.Modal.getInstance(document.getElementById('declineModal')).hide(); toast(`Payment declined — ${_name}`, 'warning'); setTimeout(loadAll, 700); }
+            else showDeclineAlert(d.message || 'Error.', 'danger');
+        } catch { showDeclineAlert('Network error.', 'danger'); }
+    }
+    function showDeclineAlert(msg, type) {
+        const el = document.getElementById('declineAlert');
+        el.className = `alert alert-${type} mt-3`; el.textContent = msg; el.style.display = 'block';
+    }
+    async function restorePayment(paymentId, studentName) {
+        if (!confirm(`Restore payment for ${studentName} back to Pending?`)) return;
+        try {
+            const r = await fetch('/PaymentAdmin/UpdatePaymentStatus', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paymentId, status:'Pending', remarks:''}) });
+            const d = await r.json();
+            if (d.success) { toast(`Restored — ${studentName}`, 'success'); setTimeout(loadAll, 700); }
+            else toast(d.message || 'Error.', 'danger');
+        } catch { toast('Network error.', 'danger'); }
+    }
+
+    // ── GCash Banner ─────────────────────────────────────────────────
+    async function loadGCashBanner() {
+        try {
+            const r = await fetch('/PaymentAdmin/GetGCashConfig');
+            const d = await r.json();
+            if (d.success) {
+                document.getElementById('gcashBannerName').textContent   = d.accountName;
+                document.getElementById('gcashBannerNumber').textContent = fmtPhone(d.gcashNumber);
+                document.getElementById('gcashBannerDesc').textContent   = d.paymentDescription || '';
+            } else {
+                document.getElementById('gcashBannerName').textContent = 'GCash not configured yet';
+                document.getElementById('gcashBannerNumber').textContent = '';
+                document.getElementById('gcashBannerDesc').textContent = 'Configure via GCash Setup';
+            }
+        } catch {}
+    }
+    function fmtPhone(n) { n = (n||'').replace(/\D/g,''); return n.replace(/(\d{4})(\d{3})(\d{4})/, '$1-$2-$3'); }
+    function copyRef(ref, el) {
+        navigator.clipboard.writeText(ref).then(() => {
+            const orig = el.innerHTML;
+            el.innerHTML = `<i class="bi bi-check-lg" style="color:var(--green)"></i>&nbsp;Copied!`;
+            setTimeout(() => el.innerHTML = orig, 1600);
+        });
+    }
+    function toast(msg, type = 'info') {
+        const rack  = document.getElementById('toast-rack');
+        const icons = { success:'bi-check-circle-fill', danger:'bi-x-circle-fill', warning:'bi-exclamation-circle-fill', info:'bi-info-circle-fill' };
+        const el    = document.createElement('div');
+        el.className = `toast-item ${type}`;
+        el.innerHTML = `<i class="bi ${icons[type]||icons.info}"></i>${esc(msg)}`;
+        rack.appendChild(el);
+        setTimeout(() => el.style.opacity = '0', 3200);
+        setTimeout(() => el.remove(), 3600);
+    }
+    function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function jse(s) { return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+    // ══════════════════════════════════════════════════════════════════
+    // MANUAL PAYMENT
+    // ══════════════════════════════════════════════════════════════════
+    function openManualModal() {
+        ['mpStudentId','mpStudentName','mpAmount','mpOR'].forEach(id => {
+            const el = document.getElementById(id);
+            el.value = '';
+            if (el.dataset) el.dataset.resolvedId = '';
+        });
+        document.getElementById('mpPurpose').value  = '';
+        document.getElementById('mpLocation').value = "Cashier's Office, Second Floor";
+        hideMpMsg();
+        document.getElementById('manualPayOverlay').classList.add('open');
+    }
+    function closeManualModal() {
+        document.getElementById('manualPayOverlay').classList.remove('open');
+    }
+    document.getElementById('manualPayOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeManualModal();
+    });
+
+    let lookupTimer;
+    function lookupStudent(val) {
+        clearTimeout(lookupTimer);
+        const nameEl  = document.getElementById('mpStudentName');
+        const spinner = document.getElementById('lookupSpinner');
+        nameEl.value  = '';
+        nameEl.classList.remove('auto-filled');
+        document.getElementById('mpStudentId').dataset.resolvedId = '';
+
+        if (!val || val.trim().length < 2) { spinner.style.display = 'none'; return; }
+        spinner.style.display = 'block';
+
+        lookupTimer = setTimeout(async () => {
+            try {
+                const r = await fetch(`/Admin/GetStudentByNumber?studentNumber=${encodeURIComponent(val.trim())}`);
+                const d = await r.json();
+                spinner.style.display = 'none';
+                if (d.success) {
+                    nameEl.value = d.fullName || `Student ${val}`;
+                    nameEl.classList.add('auto-filled');
+                    document.getElementById('mpStudentId').dataset.resolvedId = d.studentId;
+                } else {
+                    nameEl.value = 'Student not found';
+                    nameEl.classList.remove('auto-filled');
+                }
+            } catch {
+                spinner.style.display = 'none';
+                nameEl.value = 'Lookup failed — check connection';
+            }
+        }, 500);
+    }
+
+    function showMpMsg(msg, type) {
+        const el = document.getElementById('mpMsg');
+        const styles = { success:'background:var(--green-bg);color:var(--green)', danger:'background:var(--red-bg);color:var(--red)', info:'background:var(--navy-pale);color:var(--text-2)' };
+        el.style.cssText = `display:block;font-size:.77rem;font-weight:700;padding:.42rem .7rem;border-radius:var(--radius-xs);margin-bottom:.75rem;${styles[type]||styles.info}`;
+        el.textContent = msg;
+    }
+    function hideMpMsg() { document.getElementById('mpMsg').style.display = 'none'; }
+
+    async function submitManualPayment() {
+        const studentNumber = document.getElementById('mpStudentId').value.trim();
+        const sid    = parseInt(document.getElementById('mpStudentId').dataset.resolvedId || '0') || 0;
+        const type   = document.getElementById('mpPurpose').value;
+        const amount = parseFloat(document.getElementById('mpAmount').value);
+        const or     = document.getElementById('mpOR').value.trim();
+        const loc    = document.getElementById('mpLocation').value;
+        const name   = document.getElementById('mpStudentName').value;
+
+        if (!studentNumber)     { showMpMsg('Enter a student number.', 'danger'); return; }
+        if (!sid)               { showMpMsg('Student not found. Please check the number.', 'danger'); return; }
+        if (name === 'Student not found' || name === 'Lookup failed — check connection')
+                                { showMpMsg('Student not found. Please check the number.', 'danger'); return; }
+        if (!type)              { showMpMsg('Select a payment purpose.', 'danger'); return; }
+        if (!amount||amount<=0) { showMpMsg('Enter a valid amount.', 'danger'); return; }
+        if (!or)                { showMpMsg('Enter the OR number.', 'danger'); return; }
+        if (!loc)               { showMpMsg('Select a payment office.', 'danger'); return; }
+
+        showMpMsg('Recording payment…', 'info');
+        try {
+            const r = await fetch('/PaymentAdmin/RecordManualPayment', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ studentId: sid, paymentType: type, amount, receiptNumber: or, paymentLocation: loc })
+            });
+            const d = await r.json();
+            if (d.success) { toast('Manual payment recorded successfully.', 'success'); closeManualModal(); loadAll(); }
+            else showMpMsg(d.message || 'Failed to record payment.', 'danger');
+        } catch { showMpMsg('Network error. Please try again.', 'danger'); }
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => { loadGCashBanner(); loadAll(); });
+</script>
+}

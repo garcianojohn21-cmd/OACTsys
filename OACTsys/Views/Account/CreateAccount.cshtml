@@ -1,0 +1,1261 @@
+﻿@{
+    ViewData["Title"] = "Create Account";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+<style>
+    /* ── Variables ── */
+    :root {
+        --navy:         #051094;
+        --navy-deep:    #020b5c;
+        --navy-mid:     #0d2f6e;
+        --navy-dark:    #040d4a;
+        --teal:         #00b4a2;
+        --success:      #16a34a;
+        --danger:       #dc2626;
+        --white:        #ffffff;
+        --off-white:    #e8edf8;
+        --muted:        rgba(255,255,255,0.55);
+        --border-dim:   rgba(255,255,255,0.15);
+        --light-border: #dde3ef;
+        --navy-light:   #eef2fb;
+        --text:         #1e293b;
+        --text-mid:     #4a5575;
+        --border:       #c9d9f0;
+    }
+
+    /* ══════════════════════════════════════════════════
+           PAGE LAYOUT
+           Full-height, side-by-side two columns
+       ══════════════════════════════════════════════════ */
+    .auth-layout {
+        display: flex;
+        min-height: calc(100vh - 72px); /* subtract _Layout header height */
+    }
+
+    /* ══════════════════════════════════════════════════
+           LEFT PANEL  —  bg-banner.jpg + navy overlay
+           (same banner technique as Login / SignIn)
+       ══════════════════════════════════════════════════ */
+    .brand-panel {
+        width: 400px;
+        flex-shrink: 0;
+        position: relative;
+        background-image: url('/css/assets/images/bg-banner.jpg');
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 40px;
+        position: sticky;
+        top: 72px;
+        height: calc(100vh - 72px);
+        overflow: hidden;
+    }
+
+    /* Navy overlay — opaque left, fades right */
+    .brand-panel__overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(
+            to right,
+            rgba(4,  13,  74,  0.96)  0%,
+            rgba(5,  16,  148, 0.90) 40%,
+            rgba(13, 47,  110, 0.82) 100%
+        );
+        z-index: 0;
+    }
+
+    /* Aerospace grid on top of overlay */
+    .brand-panel__grid {
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 60px 60px;
+        z-index: 1; pointer-events: none;
+    }
+
+    /* All brand content sits above the overlays */
+    .brand-content {
+        position: relative; z-index: 2;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .brand-logo {
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 20px;
+        background: none;
+        border: none;
+        box-shadow: none;
+    }
+
+    .brand-logo img {
+        width: 130px; height: 130px;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
+    }
+
+    .brand-name {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.85rem; font-weight: 700;
+        letter-spacing: 2px; color: var(--white);
+        text-align: center; line-height: 1.45;
+        margin-bottom: 8px;
+    }
+
+    .brand-tagline {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.65rem; letter-spacing: 1px;
+        color: var(--muted); text-align: center;
+        line-height: 1.7; margin-bottom: 36px;
+        text-transform: uppercase;
+    }
+
+    /* Shimmer divider */
+    .brand-divider {
+        width: 100%; height: 1px; margin-bottom: 28px;
+        background: linear-gradient(90deg,
+            transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    }
+
+    .brand-steps {
+        width: 100%;
+        display: flex; flex-direction: column; gap: 12px;
+    }
+
+    .brand-step {
+        display: flex; align-items: flex-start; gap: 12px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-left: 3px solid rgba(255,255,255,0.25);
+        border-radius: 8px;
+        padding: 12px 14px;
+        transition: background 0.2s;
+    }
+
+    .brand-step:hover { background: rgba(255,255,255,0.10); }
+
+    .brand-step-num {
+        width: 24px; height: 24px; border-radius: 50%;
+        background: var(--teal); color: white;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.65rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; margin-top: 1px;
+    }
+
+    .brand-step-text {
+        font-size: 0.78rem; color: rgba(255,255,255,0.70); line-height: 1.55;
+    }
+
+    .brand-step-text strong {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.68rem; letter-spacing: 1px;
+        color: white; display: block;
+        font-weight: 700; margin-bottom: 2px;
+        text-transform: uppercase;
+    }
+
+    .brand-footer {
+        position: absolute; bottom: 20px; left: 0; right: 0;
+        text-align: center; z-index: 2;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.6rem; letter-spacing: 0.8px;
+        color: rgba(255,255,255,0.20); text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════════════════════════
+           RIGHT PANEL  —  white-left → navy-right gradient
+       ══════════════════════════════════════════════════ */
+    .form-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 40px 24px 80px;
+        overflow-y: auto;
+
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.97)   0%,
+            rgba(244, 246, 255, 0.92)  40%,
+            rgba(102, 155, 188, 0.18)  70%,
+            rgba(5,   16,  148, 0.10) 100%
+        );
+    }
+
+    .form-inner {
+        width: 100%; max-width: 500px;
+    }
+
+    /* ── Mobile-only banner header ──
+       Full-width photo banner, same style as Login/SignIn,
+       shown only when the left brand panel is hidden (<660px)  */
+    .mobile-header {
+        display: none;
+        position: relative;
+        background-image: url('/css/assets/images/bg-banner.jpg');
+        background-size: cover;
+        background-position: center;
+        min-height: 200px;
+        overflow: hidden;
+        /* bleed past form-panel padding */
+        margin: -40px -24px 0;
+        margin-bottom: 0;
+    }
+
+    /* Navy overlay — dense left, fades right (matches Login banner) */
+    .mobile-header__overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(
+            to right,
+            rgba(4,  13,  74,  0.93)  0%,
+            rgba(5,  16,  148, 0.85) 35%,
+            rgba(13, 47,  110, 0.65) 65%,
+            rgba(13, 47,  110, 0.30) 100%
+        );
+        z-index: 1;
+    }
+
+    /* Aerospace grid */
+    .mobile-header__grid {
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 60px 60px;
+        z-index: 2; pointer-events: none;
+    }
+
+    /* Content inside the mobile banner */
+    .mobile-header__content {
+        position: relative; z-index: 3;
+        padding: 36px 28px 72px;   /* extra bottom — card overlaps */
+        text-align: left;
+    }
+
+    /* Logo — no circle, just the image */
+    .mobile-header .m-logo {
+        width: auto; height: auto;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 0 18px;
+        background: none;
+        border: none;
+        box-shadow: none;
+    }
+
+    .mobile-header .m-logo img {
+        width: 110px; height: 110px;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
+    }
+
+    .mobile-header h1 {
+        font-family: 'Orbitron', monospace;
+        font-weight: 700; font-size: clamp(1.2rem, 4vw, 1.6rem);
+        letter-spacing: 1.5px; color: var(--white);
+        margin-bottom: 6px; line-height: 1.2;
+    }
+
+    .mobile-header p {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.68rem; letter-spacing: 1.5px;
+        color: rgba(255,255,255,0.60);
+        text-transform: uppercase; margin: 0;
+    }
+
+    /* Card floats up into the banner on mobile */
+    .mobile-card-wrap {
+        margin-top: -60px;
+        position: relative; z-index: 2;
+    }
+
+    /* ══════════════════════════════════════════════════
+           CARD  —  white, navy accents, glow shadow
+       ══════════════════════════════════════════════════ */
+    .ca-card {
+        background: var(--white);
+        border-radius: 14px;
+        border-top:  4px solid var(--navy);
+        border-left: 5px solid var(--navy);
+        box-shadow:
+            0 0 0 1px rgba(5,16,148,0.10),
+            0 0 36px rgba(5,16,148,0.16),
+            0 20px 56px rgba(4,13,74,0.20),
+            inset 4px 0 14px rgba(5,16,148,0.04);
+        overflow: hidden;
+        width: 100%;
+        animation: slideUp 0.55s cubic-bezier(0.4,0,0.2,1) both;
+        animation-delay: 0.06s;
+        transition: box-shadow 0.3s, transform 0.3s;
+    }
+
+    .ca-card:hover {
+        box-shadow:
+            0 0 0 1px rgba(5,16,148,0.18),
+            0 0 48px rgba(5,16,148,0.22),
+            0 28px 68px rgba(4,13,74,0.26),
+            inset 4px 0 20px rgba(5,16,148,0.06);
+        transform: translateY(-2px);
+    }
+
+    @@keyframes slideUp {
+        from { opacity:0; transform:translateY(28px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* Shimmer top line — matches _Layout header */
+    .ca-shimmer {
+        height: 2px;
+        background: linear-gradient(90deg,
+            transparent 0%, var(--navy-mid) 20%,
+            var(--navy) 50%, var(--navy-mid) 80%, transparent 100%);
+    }
+
+    /* ── Step bar ── */
+    .step-bar {
+        background: linear-gradient(135deg,
+            var(--navy-dark) 0%, var(--navy) 55%, var(--navy-mid) 100%);
+        padding: 14px 24px;
+        display: flex; align-items: center;
+    }
+
+    .step-item {
+        display: flex; align-items: center; gap: 8px; flex: 1;
+    }
+
+    .step-circle {
+        width: 28px; height: 28px; border-radius: 50%;
+        border: 1.5px solid rgba(255,255,255,0.25);
+        color: rgba(255,255,255,0.35);
+        font-family: 'Orbitron', monospace;
+        font-size: 0.65rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; transition: all 0.3s;
+    }
+
+    .step-circle.active { background: var(--teal); border-color: var(--teal); color: white; }
+    .step-circle.done   { background: var(--success); border-color: var(--success); color: white; }
+
+    .step-label {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.62rem; font-weight: 700;
+        color: rgba(255,255,255,0.35); text-transform: uppercase;
+        letter-spacing: 0.8px; transition: color 0.3s; white-space: nowrap;
+    }
+
+    .step-label.active { color: rgba(255,255,255,0.95); }
+    .step-label.done   { color: rgba(255,255,255,0.55); }
+
+    .step-connector {
+        flex: 1; height: 1px;
+        background: rgba(255,255,255,0.12); margin: 0 6px;
+    }
+
+    /* ── Card body ── */
+    .ca-card-body { padding: 28px 32px 24px; background: var(--white); }
+
+    /* ── Step panels ── */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* ── Section title ── */
+    .section-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.9rem; font-weight: 700;
+        letter-spacing: 2px; color: var(--navy);
+        margin-bottom: 5px; text-transform: uppercase;
+    }
+
+    .section-sub {
+        font-size: 0.83rem; color: var(--text-mid);
+        line-height: 1.6; margin-bottom: 24px;
+    }
+
+    .section-sub strong { color: var(--navy); }
+
+    /* ── Section divider ── */
+    .form-section-label {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.6rem; letter-spacing: 2px;
+        text-transform: uppercase; color: rgba(5,16,148,0.35);
+        margin-bottom: 16px; margin-top: 6px;
+        display: flex; align-items: center; gap: 10px;
+    }
+
+    .form-section-label::before {
+        content: ''; flex: 1; height: 1px;
+        background: linear-gradient(to left, rgba(5,16,148,0.15), transparent);
+    }
+
+    .form-section-label::after {
+        content: ''; flex: 1; height: 1px;
+        background: linear-gradient(to right, rgba(5,16,148,0.15), transparent);
+    }
+
+    /* ── PIN digits ── */
+    .pin-row {
+        display: flex; gap: 8px;
+        justify-content: center; margin-bottom: 20px;
+    }
+
+    .pin-digit {
+        width: 0; flex: 1; max-width: 58px; height: 60px;
+        border: 1.5px solid var(--light-border);
+        border-radius: 8px;
+        font-family: 'Orbitron', monospace;
+        font-size: 1.4rem; color: var(--navy);
+        text-align: center; outline: none;
+        background: #f8fafc;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .pin-digit:focus {
+        border-color: var(--navy);
+        box-shadow: 0 0 0 3px rgba(5,16,148,0.09);
+        background: white;
+    }
+
+    .pin-digit.filled { border-color: var(--navy); background: white; }
+
+    .pin-digit.error {
+        border-color: var(--danger); background: #fef2f2;
+        animation: ca-shake 0.35s ease;
+    }
+
+    @@keyframes ca-shake {
+        0%,100% { transform: translateX(0); }
+        25%      { transform: translateX(-4px); }
+        75%      { transform: translateX(4px); }
+    }
+
+    /* ── Buttons ── */
+    .ca-btn-primary {
+        width: 100%; padding: 13px;
+        background: linear-gradient(135deg,
+            var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%);
+        color: white; border: none; border-radius: 6px;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 2px; cursor: pointer;
+        transition: opacity 0.25s, transform 0.2s, box-shadow 0.25s;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        box-shadow: 0 4px 18px rgba(5,16,148,0.28);
+    }
+
+    .ca-btn-primary:hover {
+        opacity: 0.9; transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(5,16,148,0.38);
+    }
+
+    .ca-btn-primary:active  { transform: translateY(0); }
+    .ca-btn-primary:disabled {
+        background: #94a3b8; cursor: not-allowed;
+        box-shadow: none; transform: none;
+    }
+
+    /* ── Alerts ── */
+    .ca-alert {
+        padding: 10px 12px; border-radius: 6px;
+        border-left: 3px solid; font-size: 0.82rem;
+        margin-bottom: 16px; display: none;
+        align-items: flex-start; gap: 8px; line-height: 1.5;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity:0; transform:translateY(-4px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .ca-alert.show  { display: flex; }
+    .ca-alert.danger  { background:#fef2f2; border-color:#ef4444; color:#991b1b; }
+    .ca-alert.success { background:#f0fdf4; border-color:#22c55e; color:#166534; }
+
+    /* ── Server error ── */
+    .ca-server-error {
+        background: #fef2f2; border: 1px solid #fecaca;
+        border-left: 3px solid #ef4444;
+        border-radius: 6px; padding: 11px 13px;
+        font-size: 0.82rem; color: #991b1b;
+        margin-bottom: 16px;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── Verified badge ── */
+    .verified-badge {
+        background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 55%, var(--navy-mid) 100%);
+        border-radius: 10px; padding: 16px 18px;
+        margin-bottom: 20px;
+        display: flex; align-items: center; gap: 13px;
+    }
+
+    .vb-icon {
+        width: 42px; height: 42px;
+        background: rgba(255,255,255,0.12); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; flex-shrink: 0;
+    }
+
+    .vb-info { flex: 1; min-width: 0; }
+
+    .vb-name {
+        font-family: 'Orbitron', monospace;
+        font-weight: 700; font-size: 0.82rem;
+        letter-spacing: 1px; color: white;
+        margin-bottom: 3px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .vb-sub {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.68rem; color: rgba(255,255,255,0.60);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .vb-check {
+        width: 28px; height: 28px; background: var(--success);
+        border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; color: white; font-size: 0.85rem; flex-shrink: 0;
+    }
+
+    /* ── Info section / grid ── */
+    .info-section {
+        background: var(--navy-light);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--navy);
+        border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;
+    }
+
+    .info-section-title {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.65rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1.5px;
+        color: var(--navy); margin-bottom: 10px;
+        display: flex; align-items: center; gap: 5px;
+    }
+
+    .info-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 7px;
+    }
+
+    .info-card {
+        background: white; border-radius: 6px;
+        padding: 8px 10px;
+        border: 1px solid var(--border); min-width: 0;
+    }
+
+    .info-card .ic-label {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.6rem; color: var(--text-mid);
+        font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.5px; margin-bottom: 2px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .info-card .ic-value {
+        font-size: 0.82rem; color: var(--text);
+        font-weight: 600; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .info-card.span2 { grid-column: 1 / -1; }
+
+    /* ── Form fields ── */
+    .ca-form-group { margin-bottom: 16px; }
+
+    .ca-form-label {
+        display: block;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.65rem; font-weight: 700;
+        color: var(--text-mid); text-transform: uppercase;
+        letter-spacing: 1.5px; margin-bottom: 6px;
+    }
+
+    .input-row { display: flex; }
+
+    .ca-form-control {
+        width: 100%; padding: 11px 14px;
+        border: 1.5px solid var(--light-border); border-radius: 6px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; color: var(--text);
+        background: #f8fafc; outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .input-row .ca-form-control { border-radius: 6px 0 0 6px; }
+
+    .ca-form-control:focus {
+        background: white; border-color: var(--navy);
+        box-shadow: 0 0 0 3px rgba(5,16,148,0.09),
+                    0 2px 6px rgba(5,16,148,0.06);
+    }
+
+    .ca-form-control::placeholder { color: #b0bac8; }
+
+    .ca-form-control.readonly-f {
+        background: var(--navy-light); color: var(--text-mid); cursor: not-allowed;
+    }
+
+    .ca-form-hint {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.62rem; letter-spacing: 0.5px;
+        color: var(--text-mid); margin-top: 4px;
+        display: flex; align-items: center; gap: 4px;
+    }
+
+    .toggle-pw {
+        padding: 0 13px;
+        border: 1.5px solid var(--light-border); border-left: none;
+        border-radius: 0 6px 6px 0;
+        background: #f8fafc; color: #94a3b8;
+        cursor: pointer; font-size: 0.95rem;
+        transition: background 0.15s, color 0.15s; flex-shrink: 0;
+    }
+
+    .toggle-pw:hover { background: #f0f4ff; color: var(--navy); }
+
+    .forgot-row { display: flex; justify-content: flex-end; margin-top: 5px; }
+
+    .forgot-link {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.63rem; letter-spacing: 1px;
+        color: var(--navy); font-weight: 600; text-decoration: none;
+        text-transform: uppercase; transition: color 0.2s;
+    }
+
+    .forgot-link:hover { color: var(--navy-deep); text-decoration: underline; }
+
+    /* ── Password strength ── */
+    .pw-bar-wrap {
+        height: 4px; background: #e2e8f0;
+        border-radius: 2px; margin-top: 5px; overflow: hidden;
+    }
+
+    .pw-bar-fill { height: 100%; border-radius: 2px; width: 0; transition: width 0.3s, background 0.3s; }
+
+    .pw-bar-label {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.62rem; letter-spacing: 1px;
+        font-weight: 700; margin-top: 3px; text-transform: uppercase;
+    }
+
+    /* ── Terms row ── */
+    .terms-row {
+        display: flex; align-items: flex-start; gap: 9px;
+        padding: 12px;
+        background: var(--navy-light);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--navy);
+        border-radius: 8px; margin-bottom: 18px;
+    }
+
+    .terms-row input[type="checkbox"] {
+        width: 17px; height: 17px; accent-color: var(--navy);
+        flex-shrink: 0; margin-top: 1px; cursor: pointer;
+    }
+
+    .terms-row label {
+        font-size: 0.8rem; color: var(--text);
+        line-height: 1.55; cursor: pointer;
+    }
+
+    .terms-row label a {
+        color: var(--navy); font-weight: 700; text-decoration: none;
+    }
+
+    .terms-row label a:hover { text-decoration: underline; }
+
+    /* ── Back btn ── */
+    .btn-back {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.65rem; letter-spacing: 1px;
+        color: var(--text-mid); background: none; border: none;
+        cursor: pointer; padding: 6px 10px; border-radius: 6px;
+        margin-bottom: 18px; text-transform: uppercase;
+        transition: color 0.15s, background 0.15s;
+    }
+
+    .btn-back:hover { color: var(--navy); background: var(--navy-light); }
+
+    /* ── Spinner ── */
+    .ca-spinner {
+        width: 16px; height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white; border-radius: 50%;
+        animation: ca-spin 0.6s linear infinite; display: none;
+    }
+
+    @@keyframes ca-spin { to { transform: rotate(360deg); } }
+
+    /* ── Card footer ── */
+    .ca-card-foot {
+        padding: 14px 32px 20px;
+        border-top: 1px solid var(--light-border);
+        background: #fafbfd; text-align: center;
+    }
+
+    .ca-card-foot p {
+        font-size: 0.82rem; color: var(--text-mid);
+    }
+
+    .ca-card-foot a {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.7rem; letter-spacing: 1px;
+        color: var(--navy); font-weight: 700;
+        text-decoration: none; text-transform: uppercase;
+    }
+
+    .ca-card-foot a:hover { color: var(--navy-deep); text-decoration: underline; }
+
+    /* ══ RESPONSIVE ══ */
+    @@media (max-width: 900px) {
+        .brand-panel { width: 320px; padding: 40px 28px; }
+        .brand-name  { font-size: 0.75rem; }
+    }
+
+    @@media (max-width: 660px) {
+        .brand-panel   { display: none; }
+        .mobile-header { display: block; }
+
+        /* Remove top padding — banner fills that space */
+        .form-panel {
+            padding: 0 0 60px;
+            justify-content: flex-start;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0.98)   0%,
+                rgba(244,246,255,0.94)  55%,
+                rgba(102,155,188,0.14)  80%,
+                rgba(5,16,148,0.08)    100%
+            );
+        }
+
+        .form-inner    { max-width: 100%; padding: 0 16px; }
+        .ca-card-body  { padding: 22px 18px 18px; }
+        .ca-card-foot  { padding: 12px 18px 18px; }
+        .step-label    { display: none; }
+        .step-bar      { padding: 12px 18px; }
+        .info-grid     { grid-template-columns: 1fr; }
+        .pin-digit     { max-width: 48px; height: 54px; font-size: 1.2rem; }
+    }
+
+    @@media (max-width: 380px) {
+        .pin-digit { max-width: 42px; height: 50px; font-size: 1.1rem; }
+        .pin-row   { gap: 6px; }
+    }
+</style>
+
+<div class="auth-layout">
+
+    <!-- ══ LEFT BRAND PANEL ══ -->
+    <div class="brand-panel">
+        <div class="brand-panel__overlay"></div>
+        <div class="brand-panel__grid"></div>
+
+        <div class="brand-content">
+            <div class="brand-logo">
+                <img src="~/images/logo.png" alt="OACT Logo" />
+            </div>
+            <h1 class="brand-name">Orson Aerospace College<br>and Technology, Inc.</h1>
+            <p class="brand-tagline">
+                Create your account to access<br>
+                enrollment, grades &amp; schedules.
+            </p>
+
+            <div class="brand-divider"></div>
+
+            <div class="brand-steps">
+                <div class="brand-step">
+                    <div class="brand-step-num">1</div>
+                    <div class="brand-step-text">
+                        <strong>Enter Your PIN</strong>
+                        The 6-digit PIN was sent to your email after payment verification.
+                    </div>
+                </div>
+                <div class="brand-step">
+                    <div class="brand-step-num">2</div>
+                    <div class="brand-step-text">
+                        <strong>Verify Identity</strong>
+                        Your enrollment info is automatically loaded from our records.
+                    </div>
+                </div>
+                <div class="brand-step">
+                    <div class="brand-step-num">3</div>
+                    <div class="brand-step-text">
+                        <strong>Set Credentials</strong>
+                        Choose a username and password to complete registration.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="brand-footer">
+            &copy; @DateTime.Now.Year Orson Aerospace College and Technology, Inc.
+        </div>
+    </div>
+
+    <!-- ══ RIGHT FORM PANEL ══ -->
+    <div class="form-panel">
+        <!-- Mobile-only banner header (outside form-inner so it bleeds full-width) -->
+            <div class="mobile-header">
+                <div class="mobile-header__overlay"></div>
+                <div class="mobile-header__grid"></div>
+                <div class="mobile-header__content">
+                    <div class="m-logo">
+                        <img src="~/images/logo.png" alt="OACT Logo" />
+                    </div>
+                    <h1>OACT Student Portal</h1>
+                    <p>Create your account to get started</p>
+                </div>
+            </div>
+
+            <div class="form-inner">
+
+            <!-- Card -->
+            <div class="ca-card">
+
+                <div class="ca-shimmer"></div>
+
+                <!-- Step bar -->
+                <div class="step-bar">
+                    <div class="step-item">
+                        <div class="step-circle active" id="sc1">1</div>
+                        <span class="step-label active" id="sl1">Verify PIN</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item">
+                        <div class="step-circle" id="sc2">2</div>
+                        <span class="step-label" id="sl2">Set Credentials</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item">
+                        <div class="step-circle" id="sc3">3</div>
+                        <span class="step-label" id="sl3">Confirm</span>
+                    </div>
+                </div>
+
+                <div class="ca-card-body">
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="ca-server-error">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            @TempData["Error"]
+                        </div>
+                    }
+
+                    <!-- ════ STEP 1 — PIN ════ -->
+                    <div class="step-panel active" id="step1">
+
+                        <div class="form-section-label">Step 1 of 3</div>
+                        <h2 class="section-title">Enter Your PIN Code</h2>
+                        <p class="section-sub">
+                            A <strong>6-digit PIN</strong> was sent to your email after your
+                            payment was verified. Enter it below to unlock your registration.
+                        </p>
+
+                        <div id="pinAlert" class="ca-alert"></div>
+
+                        <div class="pin-row">
+                            <input class="pin-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p0" autocomplete="one-time-code" />
+                            <input class="pin-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p1" />
+                            <input class="pin-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p2" />
+                            <input class="pin-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p3" />
+                            <input class="pin-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p4" />
+                            <input class="pin-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p5" />
+                        </div>
+
+                        <button class="ca-btn-primary" id="verifyBtn" onclick="verifyPin()" disabled>
+                            <span id="verifyTxt">Verify PIN</span>
+                            <div class="ca-spinner" id="verifySpin"></div>
+                        </button>
+
+                        <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-mid);">
+                            Didn't receive a PIN?&nbsp;
+                            <a href="mailto:oactech1953@gmail.com" style="color:var(--navy);font-weight:700;font-family:'Share Tech Mono',monospace;font-size:0.68rem;letter-spacing:0.5px;">Contact the Registrar</a>
+                        </p>
+                    </div>
+
+                    <!-- ════ STEP 2 — CREDENTIALS ════ -->
+                    <div class="step-panel" id="step2">
+
+                        <button class="btn-back" onclick="goToStep(1)">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </button>
+
+                        <div class="form-section-label">Step 2 of 3</div>
+
+                        <!-- Verified banner -->
+                        <div class="verified-badge">
+                            <div class="vb-icon">&#127891;</div>
+                            <div class="vb-info">
+                                <div class="vb-name" id="bannerName">—</div>
+                                <div class="vb-sub" id="bannerSub">—</div>
+                            </div>
+                            <div class="vb-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+
+                        <!-- Enrollment info -->
+                        <div class="info-section">
+                            <div class="info-section-title">
+                                <i class="bi bi-person-lines-fill"></i>
+                                Your Enrollment Information
+                            </div>
+                            <div class="info-grid" id="prefillGrid">
+                                <!-- JS populated -->
+                            </div>
+                        </div>
+
+                        <!-- Form -->
+                        <form id="registerForm" method="post" asp-action="RegisterUser" onsubmit="return validateForm()">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Pin" id="hiddenPin" />
+                            <input type="hidden" name="StudentId" id="hiddenStudentId" />
+
+                            <div class="ca-form-group">
+                                <label class="ca-form-label">Username</label>
+                                <input type="text" name="Username" id="usernameField"
+                                       class="ca-form-control" placeholder="e.g. juandelacruz01"
+                                       required autocomplete="username" />
+                                <p class="ca-form-hint">Choose a unique username for your portal login.</p>
+                            </div>
+
+                            <div class="ca-form-group">
+                                <label class="ca-form-label">Email Address</label>
+                                <input type="email" name="Email" id="emailField"
+                                       class="ca-form-control readonly-f" readonly
+                                       placeholder="Auto-filled from your enrollment" />
+                                <p class="ca-form-hint"><i class="bi bi-lock-fill"></i> Pulled from your enrollment record.</p>
+                            </div>
+
+                            <div class="ca-form-group">
+                                <label class="ca-form-label">Password</label>
+                                <div class="input-row">
+                                    <input type="password" name="Password" id="passwordField"
+                                           class="ca-form-control" placeholder="Minimum 8 characters"
+                                           required autocomplete="new-password"
+                                           oninput="checkPw(this.value)" />
+                                    <button type="button" class="toggle-pw" onclick="togglePw('passwordField',this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="pw-bar-wrap"><div class="pw-bar-fill" id="pwBar"></div></div>
+                                <div class="pw-bar-label" id="pwLabel"></div>
+                            </div>
+
+                            <div class="ca-form-group">
+                                <label class="ca-form-label">Confirm Password</label>
+                                <div class="input-row">
+                                    <input type="password" name="ConfirmPassword" id="confirmField"
+                                           class="ca-form-control" placeholder="Re-enter password"
+                                           required autocomplete="new-password" />
+                                    <button type="button" class="toggle-pw" onclick="togglePw('confirmField',this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="terms-row">
+                                <input type="checkbox" id="agreeTerms" name="AgreeToTerms" value="true" required />
+                                <label for="agreeTerms">
+                                    I have read and agree to the
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a>
+                                    and
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>.
+                                </label>
+                            </div>
+
+                            <div id="formAlert" class="ca-alert"></div>
+
+                            <button type="submit" class="ca-btn-primary">
+                                <i class="bi bi-person-check-fill"></i>
+                                CREATE MY ACCOUNT
+                            </button>
+                        </form>
+                    </div>
+
+                </div><!-- /ca-card-body -->
+
+                <div class="ca-card-foot">
+                    <p>Already have an account? <a asp-action="SignIn">Sign In</a></p>
+                </div>
+
+            </div><!-- /ca-card -->
+        </div><!-- /form-inner -->
+    </div><!-- /form-panel -->
+</div><!-- /auth-layout -->
+
+<!-- ══ TERMS MODAL ══ -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="termsModalLabel" style="color:var(--navy)">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body small text-muted">
+                <p><strong>Effective Date:</strong> January 1, 2025</p>
+                <h6 class="fw-bold text-dark mt-3">1. Account Eligibility</h6>
+                <p>You must be a currently enrolled student with a verified payment to create an account. The PIN provided is personal and non-transferable.</p>
+                <h6 class="fw-bold text-dark mt-3">2. PIN / Activation Code</h6>
+                <p>Each PIN is valid for a single registration only. Sharing or misusing PINs is strictly prohibited.</p>
+                <h6 class="fw-bold text-dark mt-3">3. Account Security</h6>
+                <p>You are responsible for maintaining the confidentiality of your credentials.</p>
+                <h6 class="fw-bold text-dark mt-3">4. Data Accuracy</h6>
+                <p>You agree to provide accurate and complete information during registration.</p>
+                <h6 class="fw-bold text-dark mt-3">5. Prohibited Activities</h6>
+                <p>Users must not attempt unauthorized access to other accounts or use the portal unlawfully.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm fw-bold text-white"
+                        style="background:var(--navy);border:none;border-radius:6px;padding:7px 20px;"
+                        data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ PRIVACY MODAL ══ -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="privacyModalLabel" style="color:var(--navy)">Privacy Policy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body small text-muted">
+                <p><strong>Effective Date:</strong> January 1, 2025</p>
+                <p>The OACT Portal protects your personal information in accordance with RA 10173 (Data Privacy Act of 2012).</p>
+                <h6 class="fw-bold text-dark mt-3">1. Information We Collect</h6>
+                <p>We collect your name, email, username, and enrollment data provided during your application.</p>
+                <h6 class="fw-bold text-dark mt-3">2. How We Use Your Data</h6>
+                <p>Your data is used solely to manage your portal access and enrollment records. It will not be sold or shared with third parties.</p>
+                <h6 class="fw-bold text-dark mt-3">3. Your Rights</h6>
+                <p>You have the right to access, correct, or request deletion of your personal data. Contact the registrar's office for concerns.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm fw-bold text-white"
+                        style="background:var(--navy);border:none;border-radius:6px;padding:7px 20px;"
+                        data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ── Step navigation ──────────────────────────────────
+        function goToStep(n) {
+            document.querySelectorAll('.step-panel').forEach((p, i) =>
+                p.classList.toggle('active', i + 1 === n));
+
+            [1, 2, 3].forEach(i => {
+                const sc = document.getElementById('sc' + i);
+                const sl = document.getElementById('sl' + i);
+                sc.classList.remove('active', 'done');
+                sl.classList.remove('active', 'done');
+                if (i < n)  { sc.classList.add('done');   sl.classList.add('done');   sc.textContent = '✓'; }
+                if (i === n){ sc.classList.add('active');  sl.classList.add('active'); sc.textContent = i; }
+                if (i > n)  { sc.textContent = i; }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ── PIN input ────────────────────────────────────────
+        const pins = Array.from(document.querySelectorAll('.pin-digit'));
+
+        pins.forEach((el, idx) => {
+            el.addEventListener('input', e => {
+                const v = e.target.value.replace(/\D/g, '');
+                e.target.value = v;
+                e.target.classList.toggle('filled', !!v);
+                if (v && idx < 5) pins[idx + 1].focus();
+                syncVerifyBtn();
+            });
+
+            el.addEventListener('keydown', e => {
+                if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+                    pins[idx - 1].value = '';
+                    pins[idx - 1].classList.remove('filled');
+                    pins[idx - 1].focus();
+                    syncVerifyBtn();
+                }
+            });
+
+            el.addEventListener('paste', e => {
+                const txt = (e.clipboardData || window.clipboardData)
+                    .getData('text').replace(/\D/g, '').slice(0, 6);
+                if (txt.length === 6) {
+                    e.preventDefault();
+                    txt.split('').forEach((c, i) => { pins[i].value = c; pins[i].classList.add('filled'); });
+                    pins[5].focus();
+                    syncVerifyBtn();
+                }
+            });
+        });
+
+        function syncVerifyBtn() {
+            document.getElementById('verifyBtn').disabled =
+                pins.map(p => p.value).join('').length !== 6;
+        }
+
+        function getPin() { return pins.map(p => p.value).join(''); }
+
+        // ── Verify PIN ───────────────────────────────────────
+        async function verifyPin() {
+            const pin = getPin();
+            if (pin.length !== 6) return;
+
+            const btn  = document.getElementById('verifyBtn');
+            const txt  = document.getElementById('verifyTxt');
+            const spin = document.getElementById('verifySpin');
+
+            btn.disabled = true;
+            txt.textContent = 'Verifying…';
+            spin.style.display = 'inline-block';
+            hideAlert('pinAlert');
+
+            try {
+                const res  = await fetch('/Account/VerifyPin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('hiddenPin').value        = pin;
+                    document.getElementById('hiddenStudentId').value  = data.studentId;
+                    document.getElementById('bannerName').textContent = data.fullName || data.studentNumber;
+                    document.getElementById('bannerSub').textContent  =
+                        (data.studentNumber || '') + ' · ' + (data.program || '') + ' · ' +
+                        ({ 1:'1st Year', 2:'2nd Year', 3:'3rd Year', 4:'4th Year' }[data.yearLevel] || data.yearLevel + 'th Year');
+
+                    if (data.email) document.getElementById('emailField').value = data.email;
+
+                    const grid = document.getElementById('prefillGrid');
+                    grid.innerHTML = '';
+                    addCard(grid, 'Student No.',  data.studentNumber || '—');
+                    addCard(grid, 'Program',      data.program       || '—');
+                    addCard(grid, 'Year Level',   ({ 1:'1st Year', 2:'2nd Year', 3:'3rd Year', 4:'4th Year' }[data.yearLevel] || '—'));
+                    addCard(grid, 'Student Type', data.studentType   || '—');
+
+                    const skipKeys  = ['full_name','email_address','student_number','program',
+                                       'year_level','student_type','academic_year','semester',
+                                       'course_year','applicant_type','signature_date',
+                                       'signature_over_printed_name'];
+                    const skipTypes = ['email'];
+
+                    (data.personalFields || []).forEach(f => {
+                        if (skipKeys.includes((f.key  || '').toLowerCase())) return;
+                        if (skipTypes.includes((f.fieldType || '').toLowerCase())) return;
+                        addCard(grid, f.label, f.value || '—');
+                    });
+
+                    showAlert('pinAlert', 'success',
+                        '<i class="bi bi-check-circle-fill"></i>&nbsp;PIN verified! Setting up your credentials…');
+                    setTimeout(() => goToStep(2), 800);
+
+                } else {
+                    showAlert('pinAlert', 'danger',
+                        '<i class="bi bi-x-circle-fill"></i>&nbsp;' + (data.message || 'Invalid PIN.'));
+                    pins.forEach(p => { p.classList.add('error'); setTimeout(() => p.classList.remove('error'), 700); });
+                }
+
+            } catch {
+                showAlert('pinAlert', 'danger',
+                    '<i class="bi bi-x-circle-fill"></i>&nbsp;Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                txt.textContent = 'Verify PIN';
+                spin.style.display = 'none';
+            }
+        }
+
+        function formatDate(val) {
+            if (!val) return val;
+            const m = String(val).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!m) return val;
+            const months = ['January','February','March','April','May','June',
+                            'July','August','September','October','November','December'];
+            return months[parseInt(m[2],10)-1] + ' ' + parseInt(m[3],10) + ', ' + m[1];
+        }
+
+        function addCard(grid, label, value) {
+            const d = document.createElement('div');
+            d.className = 'info-card';
+            d.innerHTML = '<div class="ic-label">' + esc(label) + '</div><div class="ic-value">' + esc(formatDate(value)) + '</div>';
+            grid.appendChild(d);
+        }
+
+        function esc(s) {
+            return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // ── Password ─────────────────────────────────────────
+        function togglePw(id, btn) {
+            const f = document.getElementById(id);
+            const show = f.type === 'password';
+            f.type = show ? 'text' : 'password';
+            btn.innerHTML = show ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        }
+
+        function checkPw(v) {
+            let s = 0;
+            if (v.length >= 8)          s++;
+            if (/[A-Z]/.test(v))        s++;
+            if (/[0-9]/.test(v))        s++;
+            if (/[^A-Za-z0-9]/.test(v)) s++;
+            const m = [{p:0,c:'#e2e8f0',t:''},{p:25,c:'#dc2626',t:'Weak'},
+                       {p:50,c:'#f59e0b',t:'Fair'},{p:75,c:'#0ea5e9',t:'Good'},
+                       {p:100,c:'#16a34a',t:'Strong'}][s];
+            document.getElementById('pwBar').style.width      = m.p + '%';
+            document.getElementById('pwBar').style.background = m.c;
+            const lbl = document.getElementById('pwLabel');
+            lbl.textContent = m.t;
+            lbl.style.color = m.c;
+        }
+
+        // ── Validation ────────────────────────────────────────
+        function validateForm() {
+            const pw  = document.getElementById('passwordField').value;
+            const cpw = document.getElementById('confirmField').value;
+            if (pw.length < 8) {
+                showAlert('formAlert','danger','<i class="bi bi-x-circle-fill"></i>&nbsp;Password must be at least 8 characters.');
+                return false;
+            }
+            if (pw !== cpw) {
+                showAlert('formAlert','danger','<i class="bi bi-x-circle-fill"></i>&nbsp;Passwords do not match.');
+                return false;
+            }
+            if (!document.getElementById('agreeTerms').checked) {
+                showAlert('formAlert','danger','<i class="bi bi-x-circle-fill"></i>&nbsp;Please accept the terms and conditions.');
+                return false;
+            }
+            return true;
+        }
+
+        // ── Alert helpers ─────────────────────────────────────
+        function showAlert(id, type, html) {
+            const el = document.getElementById(id);
+            el.innerHTML = html;
+            el.className = 'ca-alert ' + type + ' show';
+        }
+
+        function hideAlert(id) {
+            document.getElementById(id).className = 'ca-alert';
+        }
+
+        // ── Auto-focus ────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => pins[0].focus());
+    </script>
+}

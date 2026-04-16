@@ -1,0 +1,105 @@
+﻿@{
+    ViewData["Title"] = "Account Type Selection";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="text-admiral fw-bold uppercase">Welcome to OACT Portal</h2>
+        <p class="text-muted">Please select the type of account you wish to access or create.</p>
+    </div>
+
+    <div class="row justify-content-center g-4">
+        <div class="col-md-5 col-lg-4">
+            <div class="card h-100 shadow border-0 card-oact text-center p-4">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-4">
+                        <i class="bi bi-mortarboard-fill text-admiral display-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-admiral mb-3">STUDENT PORTAL</h3>
+                    <p class="text-muted small mb-4">
+                        Select this if you are a Freshman, Transferee, or an Old Student
+                        enrolling for the upcoming semester.
+                    </p>
+                    <form asp-controller="Account" asp-action="FinalizeRole" method="post" class="mt-auto">
+                        <input type="hidden" name="selectedRole" value="Student" />
+                        <button type="submit" class="btn btn-admiral w-100 py-2 fw-bold">
+                            SELECT STUDENT
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5 col-lg-4">
+            <div class="card h-100 shadow border-0 card-oact text-center p-4">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-4">
+                        <i class="bi bi-file-earmark-person-fill text-admiral display-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-admiral mb-3">EXAMINEE PORTAL</h3>
+                    <p class="text-muted small mb-4">
+                        Select this if you are applying for the Licensure Examination
+                        (Theoretical or Practical components).
+                    </p>
+                    <form asp-controller="Account" asp-action="FinalizeRole" method="post" class="mt-auto">
+                        <input type="hidden" name="selectedRole" value="Examinee" />
+                        <button type="submit" class="btn btn-admiral w-100 py-2 fw-bold">
+                            SELECT EXAMINEE
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <p class="small text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            This selection determines which forms and records will be linked to your Gmail account.
+        </p>
+        <a asp-controller="Home" asp-action="Index" class="text-decoration-none text-admiral fw-bold small">
+            <i class="bi bi-arrow-left me-1"></i> Return to Homepage
+        </a>
+    </div>
+</div>
+
+<style>
+    /* These match your existing :root and layout styles exactly */
+    :root {
+        --oact-blue: #051094;
+        --oact-gray: #d2d2d2;
+    }
+
+    .text-admiral {
+        color: var(--oact-blue) !important;
+    }
+
+    .btn-admiral {
+        background-color: var(--oact-blue);
+        color: white;
+        border: none;
+        transition: 0.3s;
+    }
+
+        .btn-admiral:hover {
+            background-color: #030a6e;
+            color: white;
+            transform: scale(1.02);
+        }
+
+    .card-oact {
+        border-top: 6px solid var(--oact-blue) !important;
+        border-radius: 12px;
+        transition: 0.3s ease-in-out;
+    }
+
+        .card-oact:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+        }
+
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+</style>

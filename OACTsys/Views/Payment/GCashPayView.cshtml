@@ -1,0 +1,659 @@
+@{
+    ViewData["Title"] = "Upload Payment Proof";
+    Layout = null;
+    int paymentId = ViewBag.PaymentId ?? 0;
+    decimal amount = ViewBag.Amount ?? 0m;
+    string payType = ViewBag.PaymentType ?? "Payment";
+    string amountJs = amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Upload Payment Proof</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blue: #007AFF;
+            --blue-dark: #0055CC;
+            --blue-pale: #EBF4FF;
+            --green: #16A34A;
+            --green-bg: #F0FDF4;
+            --text: #0F172A;
+            --mid: #475569;
+            --light: #94A3B8;
+            --border: #E2E8F0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans',sans-serif;
+            background: #F1F5F9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            background: linear-gradient(135deg,#0050A0,#0090FF);
+            padding: 1.4rem 1rem 5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .header::before {
+                content: '';
+                position: absolute;
+                top: -60px;
+                right: -60px;
+                width: 200px;
+                height: 200px;
+                background: rgba(255,255,255,.07);
+                border-radius: 50%;
+            }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            width: calc(100% - 2rem);
+            max-width: 460px;
+            margin: -3rem auto 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,.1);
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        .txn-strip {
+            background: var(--blue-pale);
+            padding: .9rem 1.4rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .5rem;
+        }
+
+        .txn-item label {
+            display: block;
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--light);
+            margin-bottom: .15rem;
+        }
+
+        .txn-item .val {
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+            .txn-item .val.blue {
+                color: var(--blue);
+                font-size: 1rem;
+            }
+
+        .body {
+            padding: 1.5rem 1.4rem;
+        }
+
+        .page-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: .2rem;
+        }
+
+        .page-sub {
+            font-size: .8rem;
+            color: var(--mid);
+            margin-bottom: 1.4rem;
+            line-height: 1.55;
+        }
+
+        /* Reference number input */
+        .field-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .field-label {
+            display: block;
+            font-size: .73rem;
+            font-weight: 600;
+            color: var(--mid);
+            margin-bottom: .45rem;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: .6rem .9rem;
+            gap: .5rem;
+            transition: border-color .2s;
+        }
+
+            .field-row:focus-within {
+                border-color: var(--blue);
+            }
+
+            .field-row.err {
+                border-color: #EF4444;
+            }
+
+        .field-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: .92rem;
+            font-family: inherit;
+            color: var(--text);
+            background: transparent;
+        }
+
+            .field-input::placeholder {
+                color: var(--light);
+            }
+
+        .error-msg {
+            font-size: .72rem;
+            color: #EF4444;
+            margin-top: .3rem;
+            display: none;
+        }
+
+        /* Drop zone */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            background: #FAFBFC;
+            margin-bottom: 1.1rem;
+            position: relative;
+        }
+
+            .drop-zone:hover, .drop-zone.dragover {
+                border-color: var(--blue);
+                background: var(--blue-pale);
+            }
+
+            .drop-zone.has-file {
+                border-color: var(--green);
+                background: var(--green-bg);
+                border-style: solid;
+            }
+
+            .drop-zone input[type=file] {
+                position: absolute;
+                inset: 0;
+                opacity: 0;
+                cursor: pointer;
+                width: 100%;
+                height: 100%;
+            }
+
+        .drop-icon {
+            font-size: 2.5rem;
+            margin-bottom: .5rem;
+        }
+
+        .drop-title {
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: .25rem;
+        }
+
+        .drop-sub {
+            font-size: .75rem;
+            color: var(--mid);
+        }
+
+        .file-preview {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: .5rem;
+        }
+
+            .file-preview img {
+                max-width: 100%;
+                max-height: 200px;
+                border-radius: 10px;
+                object-fit: contain;
+                box-shadow: 0 2px 12px rgba(0,0,0,.1);
+            }
+
+        .file-name {
+            font-size: .75rem;
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .file-change {
+            font-size: .72rem;
+            color: var(--blue);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .tip-box {
+            background: var(--blue-pale);
+            border-radius: 10px;
+            padding: .8rem 1rem;
+            font-size: .78rem;
+            color: var(--blue-dark);
+            line-height: 1.55;
+            margin-bottom: 1.2rem;
+        }
+
+            .tip-box strong {
+                display: block;
+                margin-bottom: .3rem;
+            }
+
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: .85rem;
+            background: linear-gradient(135deg,#0060C0,#0090FF);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: .9rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: .4px;
+            transition: opacity .2s,transform .1s;
+        }
+
+            .btn-primary:active {
+                transform: scale(.98);
+            }
+
+            .btn-primary:disabled {
+                opacity: .5;
+                cursor: not-allowed;
+            }
+
+        .btn-secondary {
+            display: block;
+            width: 100%;
+            padding: .8rem;
+            background: #F1F5F9;
+            color: var(--mid);
+            border: none;
+            border-radius: 50px;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: .75rem;
+        }
+
+        /* Progress steps */
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            padding: 1rem 1.4rem .5rem;
+        }
+
+        .prog-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .25rem;
+            flex: 1;
+        }
+
+        .prog-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .65rem;
+            font-weight: 800;
+        }
+
+            .prog-dot.done {
+                background: var(--green);
+                color: #fff;
+            }
+
+            .prog-dot.active {
+                background: var(--blue);
+                color: #fff;
+            }
+
+            .prog-dot.idle {
+                background: #E2E8F0;
+                color: var(--light);
+            }
+
+        .prog-label {
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--light);
+            text-align: center;
+        }
+
+            .prog-label.active {
+                color: var(--blue);
+            }
+
+            .prog-label.done {
+                color: var(--green);
+            }
+
+        .prog-line {
+            height: 2px;
+            flex: 1;
+            background: #E2E8F0;
+            margin-bottom: 1.1rem;
+        }
+
+            .prog-line.done {
+                background: var(--green);
+            }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,.9);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: .9rem;
+        }
+
+            .loading-overlay.show {
+                display: flex;
+            }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid #E0EAFF;
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        .loading-txt {
+            font-size: .88rem;
+            font-weight: 600;
+            color: var(--mid);
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .footer {
+            font-size: .68rem;
+            color: var(--light);
+            text-align: center;
+            padding: .75rem 1rem 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-txt" id="loadingTxt">Uploading proof…</div>
+    </div>
+
+    <div class="header">
+        <div class="header-logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 4.5c2.071 0 3.9.948 5.12 2.438H13v1.5h5.82c.117.5.18 1.022.18 1.562H13v1.5h6c0 3.314-2.686 6-6 6s-6-2.686-6-6 2.686-6 6-6z" fill="#007AFF" /></svg>
+            </div>
+            GCash Payment
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="txn-strip">
+            <div class="txn-item"><label>Payment ID</label><div class="val">#@paymentId</div></div>
+            <div class="txn-item"><label>Amount</label><div class="val blue">PHP @amount.ToString("N2")</div></div>
+            <div class="txn-item"><label>Purpose</label><div class="val">@payType</div></div>
+            <div class="txn-item"><label>Status</label><div class="val" style="color:#D97706;">Awaiting Proof</div></div>
+        </div>
+
+        <!-- Progress indicator -->
+        <div class="progress-steps">
+            <div class="prog-step">
+                <div class="prog-dot done">✓</div>
+                <div class="prog-label done">Details</div>
+            </div>
+            <div class="prog-line done"></div>
+            <div class="prog-step">
+                <div class="prog-dot done">✓</div>
+                <div class="prog-label done">Sent</div>
+            </div>
+            <div class="prog-line done"></div>
+            <div class="prog-step">
+                <div class="prog-dot active">3</div>
+                <div class="prog-label active">Proof</div>
+            </div>
+            <div class="prog-line"></div>
+            <div class="prog-step">
+                <div class="prog-dot idle">4</div>
+                <div class="prog-label">Verify</div>
+            </div>
+        </div>
+
+        <div class="body">
+            <p class="page-title">Upload Payment Screenshot</p>
+            <p class="page-sub">Take a screenshot of your GCash receipt showing the reference number and amount, then upload it below.</p>
+
+            <!-- Reference Number -->
+            <div class="field-group">
+                <span class="field-label">GCash Reference / Trace Number</span>
+                <div class="field-row" id="refRow">
+                    <input type="text" id="referenceNo" class="field-input" placeholder="e.g. 1234567890" maxlength="30">
+                </div>
+                <div class="error-msg" id="refError">Please enter your GCash reference number.</div>
+            </div>
+
+            <!-- Screenshot Upload -->
+            <div class="field-group">
+                <span class="field-label">Payment Screenshot</span>
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="proofFile" accept="image/*" onchange="handleFileSelect(event)" />
+                    <div id="dropDefault">
+                        <div class="drop-icon">📸</div>
+                        <div class="drop-title">Tap to upload screenshot</div>
+                        <div class="drop-sub">JPG, PNG or GIF · Max 5MB</div>
+                    </div>
+                    <div class="file-preview" id="filePreview">
+                        <img id="previewImg" src="" alt="Preview" />
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-change" onclick="resetFile(event)">✕ Choose a different file</div>
+                    </div>
+                </div>
+                <div class="error-msg" id="fileError">Please upload your GCash payment screenshot.</div>
+            </div>
+
+            <div class="tip-box">
+                <strong>📋 What your screenshot should show:</strong>
+                ✅ Transaction status: <strong>Success</strong><br>
+                ✅ Amount: <strong>PHP @amount.ToString("N2")</strong><br>
+                ✅ Reference / Trace number<br>
+                ✅ Date and time of payment
+            </div>
+
+            <button class="btn-primary" id="submitBtn" onclick="handleSubmit()">
+                📤 SUBMIT PROOF OF PAYMENT
+            </button>
+            <button class="btn-secondary" onclick="history.back()">← Back</button>
+        </div>
+    </div>
+
+    <div class="footer">Secured GCash Payment · OACT Registrar Office</div>
+
+    <script>
+        const PAYMENT_ID = @paymentId;
+        let selectedFile = null;
+
+        // Drag and drop
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) applyFile(file);
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) applyFile(file);
+        }
+
+        function applyFile(file) {
+            if (file.size > 5 * 1024 * 1024) {
+                showFieldError('fileError', 'File is too large. Maximum size is 5MB.');
+                return;
+            }
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                document.getElementById('previewImg').src = ev.target.result;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('dropDefault').style.display = 'none';
+                document.getElementById('filePreview').style.display = 'flex';
+                dropZone.classList.add('has-file');
+                document.getElementById('fileError').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetFile(e) {
+            e.stopPropagation();
+            selectedFile = null;
+            document.getElementById('proofFile').value = '';
+            document.getElementById('previewImg').src = '';
+            document.getElementById('dropDefault').style.display = 'block';
+            document.getElementById('filePreview').style.display = 'none';
+            dropZone.classList.remove('has-file');
+        }
+
+        async function handleSubmit() {
+            const refNo = document.getElementById('referenceNo').value.trim();
+            let valid = true;
+
+            if (!refNo) {
+                showFieldError('refError', 'Please enter your GCash reference number.');
+                document.getElementById('refRow').classList.add('err');
+                valid = false;
+            } else {
+                document.getElementById('refError').style.display = 'none';
+                document.getElementById('refRow').classList.remove('err');
+            }
+
+            if (!selectedFile) {
+                document.getElementById('fileError').style.display = 'block';
+                document.getElementById('fileError').textContent = 'Please upload your GCash payment screenshot.';
+                valid = false;
+            } else {
+                document.getElementById('fileError').style.display = 'none';
+            }
+
+            if (!valid) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            document.getElementById('loadingTxt').textContent = 'Uploading proof…';
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const formData = new FormData();
+                formData.append('paymentId',   PAYMENT_ID);
+                formData.append('referenceNo', refNo);
+                formData.append('proofImage',  selectedFile);
+
+                const res  = await fetch('/Payment/UploadProof', { method:'POST', body: formData });
+                const data = await res.json();
+                document.getElementById('loadingOverlay').classList.remove('show');
+
+                if (!data.success) {
+                    btn.disabled = false;
+                    showError(data.message || 'Upload failed. Please try again.');
+                    return;
+                }
+
+                // Redirect to confirmation/waiting page
+                window.location.href = `/Payment/PaymentConfirmation?paymentId=${PAYMENT_ID}`;
+
+            } catch(err) {
+                document.getElementById('loadingOverlay').classList.remove('show');
+                btn.disabled = false;
+                showError('Network error. Please try again.');
+            }
+        }
+
+        function showFieldError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        function showError(msg) {
+            const ex = document.getElementById('errBox'); if (ex) ex.remove();
+            const box = document.createElement('div');
+            box.id = 'errBox';
+            box.style.cssText = 'background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:.85rem 1rem;margin:0 0 1rem;font-size:.8rem;color:#991B1B;line-height:1.55;text-align:left;';
+            box.innerHTML = '⚠️ ' + msg;
+            const btn = document.getElementById('submitBtn');
+            btn.parentNode.insertBefore(box, btn);
+            box.scrollIntoView({ behavior:'smooth', block:'center' });
+        }
+    </script>
+</body>
+</html>

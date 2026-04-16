@@ -1,0 +1,397 @@
+@{
+    ViewBag.Title = "Subjects Review List";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .subject-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        transition: all 0.3s;
+        background-color: #fff;
+    }
+
+        .subject-card:hover {
+            border-color: #051094;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+    .subject-header {
+        background: linear-gradient(135deg, #051094 0%, #0a1d8f 100%);
+        color: white;
+        border-radius: 8px 8px 0 0;
+        padding: 12px 16px;
+    }
+
+    .subject-body {
+        padding: 16px;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
+    .info-value {
+        font-size: 0.95rem;
+        color: #212529;
+        font-weight: 500;
+    }
+
+    .badge-program {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 20px;
+        }
+
+    .stats-card {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 16px;
+        border-left: 4px solid #051094;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 style="color:#051094;">
+            <i class="bi bi-book-half"></i> Subjects Review List
+        </h3>
+        <div>
+            <button class="btn btn-outline-secondary me-2" onclick="navigateBack()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button class="btn btn-primary" onclick="navigateToEnrollment()">
+                <i class="bi bi-plus-circle"></i> Add New Subjects
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="info-label">Total Subjects</div>
+                <h4 class="mb-0" id="totalSubjects">0</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="info-label">Programs</div>
+                <h4 class="mb-0" id="totalPrograms">0</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="info-label">Total Units</div>
+                <h4 class="mb-0" id="totalUnits">0</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="info-label">Total Hours</div>
+                <h4 class="mb-0" id="totalHours">0</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Filter by Program</label>
+                <select class="form-select" id="filterProgram" onchange="applyFilters()">
+                    <option value="">All Programs</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Year Level</label>
+                <select class="form-select" id="filterYear" onchange="applyFilters()">
+                    <option value="">All Years</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Semester</label>
+                <select class="form-select" id="filterSemester" onchange="applyFilters()">
+                    <option value="">All Semesters</option>
+                    <option value="1">1st Semester</option>
+                    <option value="2">2nd Semester</option>
+                    <option value="3">Summer</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Search</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search by code or title..." onkeyup="applyFilters()">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subjectsContainer">
+        <!-- Subjects will be loaded here -->
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading subjects...</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let allSubjects = [];
+
+        $(document).ready(function() {
+            loadSubjects();
+        });
+
+        function loadSubjects() {
+            $.ajax({
+                url: '@Url.Action("GetSubjects", "EnrollmentAdmin")',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success && response.subjects && response.subjects.length > 0) {
+                        allSubjects = response.subjects;
+                        populateFilters();
+                        renderSubjects(allSubjects);
+                        updateStatistics(allSubjects);
+                    } else {
+                        showEmptyState();
+                    }
+                },
+                error: function() {
+                    $('#subjectsContainer').html(`
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error loading subjects. Please try again.
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        function populateFilters() {
+            const programs = [...new Set(allSubjects.map(s => s.program))].sort();
+            const programSelect = $('#filterProgram');
+            programSelect.empty();
+            programSelect.append('<option value="">All Programs</option>');
+            programs.forEach(p => {
+                programSelect.append(`<option value="${p}">${p}</option>`);
+            });
+        }
+
+        function applyFilters() {
+            const programFilter = $('#filterProgram').val();
+            const yearFilter = $('#filterYear').val();
+            const semesterFilter = $('#filterSemester').val();
+            const searchTerm = $('#searchInput').val().toLowerCase();
+
+            let filtered = allSubjects.filter(subject => {
+                const matchProgram = !programFilter || subject.program === programFilter;
+                const matchYear = !yearFilter || subject.yearLevel.toString() === yearFilter;
+                const matchSemester = !semesterFilter || subject.semester.toString() === semesterFilter;
+                const matchSearch = !searchTerm ||
+                    subject.courseCode.toLowerCase().includes(searchTerm) ||
+                    subject.descriptiveTitle.toLowerCase().includes(searchTerm);
+
+                return matchProgram && matchYear && matchSemester && matchSearch;
+            });
+
+            renderSubjects(filtered);
+            updateStatistics(filtered);
+        }
+
+        function clearFilters() {
+            $('#filterProgram').val('');
+            $('#filterYear').val('');
+            $('#filterSemester').val('');
+            $('#searchInput').val('');
+            applyFilters();
+        }
+
+        function renderSubjects(subjects) {
+            if (subjects.length === 0) {
+                $('#subjectsContainer').html(`
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No subjects found matching your filters.
+                    </div>
+                `);
+                return;
+            }
+
+            let html = '<div class="row g-3">';
+
+            subjects.forEach(function(subject) {
+                const yearLevel = getYearLevelText(subject.yearLevel);
+                const semester = getSemesterText(subject.semester);
+
+                html += `
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="subject-card">
+                            <div class="subject-header">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="badge-program">${subject.program}</span>
+                                        <h6 class="mt-2 mb-0 fw-bold">${subject.courseCode}</h6>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-light" onclick="deleteSubject(${subject.subjectId}, '${subject.courseCode}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="subject-body">
+                                <div class="mb-3">
+                                    <div class="info-label">Descriptive Title</div>
+                                    <div class="info-value">${subject.descriptiveTitle}</div>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <div class="info-label">Lecture</div>
+                                        <div class="info-value">${subject.lectureHours} hrs</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="info-label">Lab</div>
+                                        <div class="info-value">${subject.laboratoryHours} hrs</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="info-label">Units</div>
+                                        <div class="info-value">${subject.units}</div>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="info-label">Year Level</div>
+                                        <div class="info-value">${yearLevel}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="info-label">Semester</div>
+                                        <div class="info-value">${semester}</div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="info-label">Total Hours</div>
+                                    <div class="info-value">${subject.totalHours} hours</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            $('#subjectsContainer').html(html);
+        }
+
+        function updateStatistics(subjects) {
+            const totalSubjects = subjects.length;
+            const totalPrograms = [...new Set(subjects.map(s => s.program))].length;
+            const totalUnits = subjects.reduce((sum, s) => sum + parseFloat(s.units), 0);
+            const totalHours = subjects.reduce((sum, s) => sum + parseInt(s.totalHours), 0);
+
+            $('#totalSubjects').text(totalSubjects);
+            $('#totalPrograms').text(totalPrograms);
+            $('#totalUnits').text(totalUnits.toFixed(1));
+            $('#totalHours').text(totalHours);
+        }
+
+        function showEmptyState() {
+            $('#subjectsContainer').html(`
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h5>No Subjects Found</h5>
+                    <p class="text-muted">Get started by adding subjects to your curriculum.</p>
+                    <button class="btn btn-primary mt-3" onclick="navigateToEnrollment()">
+                        <i class="bi bi-plus-circle"></i> Add Subjects
+                    </button>
+                </div>
+            `);
+            updateStatistics([]);
+        }
+
+        function getYearLevelText(level) {
+            const levels = {
+                1: '1st Year',
+                2: '2nd Year',
+                3: '3rd Year',
+                4: '4th Year'
+            };
+            return levels[level] || level;
+        }
+
+        function getSemesterText(sem) {
+            const semesters = {
+                1: '1st Semester',
+                2: '2nd Semester',
+                3: 'Summer'
+            };
+            return semesters[sem] || sem;
+        }
+
+        function deleteSubject(id, courseCode) {
+            if (!confirm(`Are you sure you want to delete the subject "${courseCode}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("DeleteSubject", "EnrollmentAdmin")',
+                type: 'POST',
+                data: { id: id },
+                success: function(response) {
+                    if (response.success) {
+                        alert('✓ ' + response.message);
+                        loadSubjects();
+                    } else {
+                        alert('✗ ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('✗ Error deleting subject. Please try again.');
+                }
+            });
+        }
+
+        function navigateToEnrollment() {
+            window.location.href = '@Url.Action("Enrollment", "EnrollmentAdmin")';
+        }
+
+        function navigateBack() {
+            window.location.href = '@Url.Action("Enrollment", "EnrollmentAdmin")';
+        }
+    </script>
+}

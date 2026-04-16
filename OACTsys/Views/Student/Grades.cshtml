@@ -1,0 +1,391 @@
+﻿@*
+═══════════════════════════════════════════════════════════════════
+  FILE: Views/Student/Grades.cshtml
+  Route:  GET /Student/Grades
+  Model:  OACTsys.Models.ViewModels.StudentGradesViewModel
+═══════════════════════════════════════════════════════════════════
+*@
+
+@model OACTsys.Models.ViewModels.StudentGradesViewModel
+@{
+    ViewData["Title"] = "My Grades";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+
+    // Group enrollments by YearLevel → Semester
+    var grouped = (Model.Enrollments ?? new())
+        .Where(e => e.Subject != null)
+        .GroupBy(e => e.YearLevel)
+        .OrderBy(g => g.Key)
+        .ToList();
+
+    string YearLabel(int y) => y switch { 1=>"1st Year",2=>"2nd Year",3=>"3rd Year",4=>"4th Year",_=>$"{y}th Year"};
+    string SemLabel(int s)  => s switch { 1=>"1st Semester",2=>"2nd Semester",3=>"Summer",_=>$"Semester {s}"};
+    string GradeRemark(string? g) {
+        if (string.IsNullOrEmpty(g)) return "";
+        if (!decimal.TryParse(g, out var v)) return "";
+        if (v == 4.0m) return "INC";
+        if (v >= 1.0m && v <= 3.0m) return "Passed";
+        if (v == 5.0m) return "Failed";
+        return "Conditional";
+    }
+    string RemarkClass(string? g) {
+        var r = GradeRemark(g);
+        return r switch { "Passed"=>"pass","Failed"=>"fail","INC"=>"inc","Conditional"=>"cond",_=>"" };
+    }
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+:root {
+    --bg:#f4f7ff; --surface:#fff; --border:#dce3f3;
+    --primary:#2f54eb; --primary-h:#1d3fbf;
+    --accent:#52c41a; --warn:#faad14; --danger:#ff4d4f;
+    --text:#1a1f36; --muted:#8c93b0;
+    --radius:12px; --shadow:0 4px 24px rgba(47,84,235,.09);
+}
+
+/* ── Page ── */
+.gp   { padding:32px 28px; font-family:'Segoe UI',sans-serif; color:var(--text); max-width:1100px; margin:0 auto; }
+
+/* ── Header card ── */
+.hcard {
+    background:linear-gradient(135deg,#2f54eb 0%,#1d3fbf 100%);
+    border-radius:var(--radius); padding:28px 32px;
+    display:flex; align-items:center; gap:24px; flex-wrap:wrap;
+    margin-bottom:26px; box-shadow:0 8px 32px rgba(47,84,235,.22);
+    color:#fff; position:relative; overflow:hidden;
+}
+.hcard::before {
+    content:''; position:absolute; right:-60px; top:-60px;
+    width:220px; height:220px; border-radius:50%;
+    background:rgba(255,255,255,.07);
+}
+.hcard-av {
+    width:64px; height:64px; border-radius:50%;
+    background:rgba(255,255,255,.18);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; font-weight:800; flex-shrink:0;
+    border:3px solid rgba(255,255,255,.35);
+}
+.hcard-name  { font-size:1.35rem; font-weight:800; line-height:1.1; }
+.hcard-meta  { font-size:.82rem; opacity:.78; margin-top:4px; }
+.hcard-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.hpill {
+    background:rgba(255,255,255,.18); border-radius:20px;
+    padding:3px 12px; font-size:.75rem; font-weight:600;
+    border:1px solid rgba(255,255,255,.25);
+}
+
+/* ── Download strip ── */
+.dl-strip {
+    display:flex; gap:10px; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:14px 20px;
+    margin-bottom:24px; box-shadow:var(--shadow);
+    align-items:center;
+}
+.dl-label { font-size:.82rem; font-weight:600; color:var(--muted); flex:1; }
+.dl-btn {
+    display:inline-flex; align-items:center; gap:8px;
+    border:none; border-radius:8px; padding:9px 20px;
+    font-size:.84rem; font-weight:700; cursor:pointer;
+    transition:all .2s; text-decoration:none;
+}
+.dl-docx { background:#2b579a; color:#fff; }
+.dl-docx:hover { background:#1f4080; transform:translateY(-1px); }
+.dl-pdf  { background:#c0392b; color:#fff; }
+.dl-pdf:hover  { background:#962d22; transform:translateY(-1px); }
+
+/* ── Section card ── */
+.sec-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); box-shadow:var(--shadow);
+    margin-bottom:20px; overflow:hidden;
+}
+.sec-head {
+    display:flex; align-items:center; gap:12px;
+    padding:13px 20px; background:#f6f8ff;
+    border-bottom:1px solid var(--border);
+}
+.sec-head-year {
+    font-size:.75rem; font-weight:700; color:#fff;
+    background:var(--primary); border-radius:5px;
+    padding:2px 10px;
+}
+.sec-head-sem  { font-size:.875rem; font-weight:700; color:var(--text); }
+.sec-head-cnt  {
+    margin-left:auto; font-size:.72rem; color:var(--muted);
+    background:var(--bg); border:1px solid var(--border);
+    border-radius:20px; padding:1px 10px;
+}
+
+/* ── Grade table ── */
+.tbl-wrap  { overflow-x:auto; }
+table      { width:100%; border-collapse:collapse; min-width:600px; }
+thead th   {
+    padding:9px 14px; font-size:.7rem; font-weight:700;
+    color:var(--muted); text-transform:uppercase; letter-spacing:.06em;
+    background:#fafbff; border-bottom:1px solid var(--border);
+    text-align:left; white-space:nowrap;
+}
+thead th.num { text-align:center; }
+tbody tr   { transition:background .12s; }
+tbody tr:hover { background:#f4f7ff; }
+tbody td   {
+    padding:11px 14px; font-size:.855rem;
+    border-bottom:1px solid var(--border); vertical-align:middle;
+}
+tbody tr:last-child td { border-bottom:none; }
+td.num  { text-align:center; }
+td.code { font-weight:700; color:var(--primary); font-size:.82rem; }
+
+/* ── Grade badge ── */
+.grade-val {
+    display:inline-block; font-weight:800; font-size:.92rem;
+    color:var(--text); min-width:36px; text-align:center;
+}
+.grade-val.empty { color:var(--muted); font-weight:400; font-size:.8rem; }
+
+.remark {
+    display:inline-block; font-size:.7rem; font-weight:700;
+    padding:2px 9px; border-radius:4px; white-space:nowrap; margin-left:6px;
+}
+.remark.pass { background:#f0fff4; color:#27ae60; }
+.remark.fail { background:#fff1f0; color:var(--danger); }
+.remark.inc  { background:#fffbe6; color:#d48806; }
+.remark.cond { background:#fff7e6; color:#d46b08; }
+
+/* ── Total row ── */
+.total-row td {
+    background:#f6f8ff; font-weight:700;
+    border-top:2px solid var(--border);
+    border-bottom:none; font-size:.82rem;
+}
+.total-units {
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--primary); color:#fff;
+    border-radius:6px; padding:2px 10px; font-size:.78rem;
+}
+
+/* ── No grades ── */
+.empty-sem {
+    text-align:center; padding:32px; color:var(--muted);
+    font-size:.84rem;
+}
+.empty-sem i { font-size:1.8rem; display:block; margin-bottom:8px; opacity:.5; }
+
+/* ── No enrollments at all ── */
+.empty-page {
+    text-align:center; padding:60px 20px; color:var(--muted);
+}
+.empty-page i { font-size:3rem; display:block; margin-bottom:12px; opacity:.4; }
+
+/* ── Legend ── */
+.legend {
+    display:flex; gap:14px; flex-wrap:wrap;
+    font-size:.74rem; color:var(--muted);
+    margin-top:4px; padding:10px 20px;
+    border-top:1px solid var(--border);
+    background:#fafbff;
+}
+.legend b { color:var(--text); }
+
+@@media(max-width:640px){
+    .gp    { padding:16px 10px; }
+    .hcard { padding:18px 16px; }
+    .dl-strip { flex-direction:column; align-items:stretch; }
+    .dl-btn { justify-content:center; }
+}
+</style>
+
+<div class="gp">
+
+    <!-- ── Student Header Card ── -->
+    <div class="hcard">
+        <div class="hcard-av">
+            @string.Concat((Model.FullName ?? "?").Split(' ').Take(2).Select(w => char.ToUpper(w[0])))
+        </div>
+        <div>
+            <div class="hcard-name">@Model.FullName</div>
+            <div class="hcard-meta">@Model.StudentNumber</div>
+            <div class="hcard-pills">
+                <span class="hpill"><i class="fa-solid fa-graduation-cap" style="margin-right:4px;"></i>@Model.Course</span>
+                <span class="hpill">@Model.YearLevel</span>
+                <span class="hpill">@Model.Semester</span>
+                <span class="hpill">SY @Model.AcademicYear</span>
+            </div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+            <div style="font-size:.78rem;opacity:.65;">Official Grade Record</div>
+            <div style="font-size:.72rem;opacity:.5;margin-top:2px;">For reference purposes only</div>
+        </div>
+    </div>
+
+    <!-- ── Download Strip ── -->
+    <div class="dl-strip">
+        <span class="dl-label">
+            <i class="fa-solid fa-download" style="margin-right:6px;color:var(--primary);"></i>
+            Download your grade record:
+        </span>
+        <a href="/Student/DownloadGradesDocx" class="dl-btn dl-docx">
+            <i class="fa-solid fa-file-word"></i> Download as Word (.docx)
+        </a>
+        <a href="/Student/DownloadGradesPdf" class="dl-btn dl-pdf">
+            <i class="fa-solid fa-file-pdf"></i> Download as PDF
+        </a>
+    </div>
+
+    @if (!grouped.Any())
+    {
+        <!-- No enrollments yet -->
+        <div class="sec-card">
+            <div class="empty-page">
+                <i class="fa-solid fa-book-open"></i>
+                <div style="font-weight:600;margin-bottom:4px;">No Grade Records Yet</div>
+                <div>Your grades will appear here once your subjects are enrolled and grades are submitted.</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var yearGroup in grouped)
+        {
+            var semGroups = yearGroup
+                .GroupBy(e => e.Semester)
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            @foreach (var semGroup in semGroups)
+            {
+                var semList = semGroup.ToList();
+                var totalUnits = semList.Where(e => e.Subject != null).Sum(e => e.Subject!.Units);
+                var hasGrades  = semList.Any(e => !string.IsNullOrEmpty(e.FinalGrade));
+
+                <div class="sec-card">
+                    <!-- Section header -->
+                    <div class="sec-head">
+                        <span class="sec-head-year">@YearLabel(yearGroup.Key)</span>
+                        <span class="sec-head-sem">@SemLabel(semGroup.Key)</span>
+                        <span class="sec-head-cnt">@semList.Count subject(s)</span>
+                    </div>
+
+                    @if (!semList.Any())
+                    {
+                        <div class="empty-sem">
+                            <i class="fa-solid fa-inbox"></i>
+                            No subjects enrolled this semester.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="tbl-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Code</th>
+                                        <th>Description</th>
+                                        <th class="num">Units</th>
+                                        <th class="num">Final Grade</th>
+                                        <th class="num">Remarks</th>
+                                        <th class="num">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{ int rowN = 0; }
+                                    @foreach (var se in semList)
+                                    {
+                                        if (se.Subject == null) continue;
+                                        rowN++;
+                                        var grade    = se.FinalGrade ?? "";
+                                        var remark   = GradeRemark(grade);
+                                        var rmClass  = RemarkClass(grade);
+                                        var statusBg = se.Status switch {
+                                            "Passed"      => "background:#f0fff4;color:#27ae60;",
+                                            "Failed"      => "background:#fff1f0;color:#ff4d4f;",
+                                            "Incomplete"  => "background:#fffbe6;color:#d48806;",
+                                            _             => "background:#f4f4f4;color:#888;"
+                                        };
+
+                                        <tr>
+                                            <td style="color:var(--muted);font-size:.76rem;">@rowN</td>
+                                            <td class="code">@se.Subject.CourseCode</td>
+                                            <td>@se.Subject.DescriptiveTitle</td>
+                                            <td class="num">@se.Subject.Units.ToString("0.##")</td>
+                                            <td class="num">
+                                                @if (!string.IsNullOrEmpty(grade))
+                                                {
+                                                    <span class="grade-val">@grade</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="grade-val empty">—</span>
+                                                }
+                                            </td>
+                                            <td class="num">
+                                                @if (!string.IsNullOrEmpty(remark))
+                                                {
+                                                    <span class="remark @rmClass">@remark</span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color:var(--muted);font-size:.78rem;">—</span>
+                                                }
+                                            </td>
+                                            <td class="num">
+                                                @if (!string.IsNullOrEmpty(se.Status))
+                                                {
+                                                    <span style="display:inline-block;border-radius:5px;font-size:.7rem;font-weight:600;padding:2px 9px;@statusBg">
+                                                        @se.Status
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color:var(--muted);font-size:.78rem;">Ongoing</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <!-- Total row -->
+                                <tfoot>
+                                    <tr class="total-row">
+                                        <td colspan="3" style="text-align:right;padding-right:10px;">
+                                            Total Units
+                                        </td>
+                                        <td class="num">
+                                            <span class="total-units">
+                                                <i class="fa-solid fa-sigma" style="font-size:.7rem;"></i>
+                                                @totalUnits.ToString("0.##")
+                                            </span>
+                                        </td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Grade scale legend -->
+                        <div class="legend">
+                            <span><b>1.0</b> Excellent</span>
+                            <span><b>1.25–1.5</b> Very Good</span>
+                            <span><b>1.75–2.0</b> Good</span>
+                            <span><b>2.25–2.5</b> Satisfactory</span>
+                            <span><b>2.75–3.0</b> Passing</span>
+                            <span><b>4.0</b> Incomplete</span>
+                            <span><b>5.0</b> Failed</span>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        <!-- Note -->
+        <p style="font-size:.74rem;color:var(--muted);text-align:center;margin-top:8px;">
+            <i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>
+            Note: For reference purposes only. Not valid for transfer without official school stamp.
+        </p>
+    }
+
+</div>

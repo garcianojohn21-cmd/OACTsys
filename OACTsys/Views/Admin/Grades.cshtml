@@ -1,0 +1,1253 @@
+﻿@*
+═══════════════════════════════════════════════════════════════════
+  FILE:   Views/Admin/Grades.cshtml
+  Route:  GET /Admin/Grades   (AdminController.Grades)
+  Model:  OACTsys.Models.ViewModels.GradesViewModel
+═══════════════════════════════════════════════════════════════════
+*@
+
+@model OACTsys.Models.ViewModels.GradesViewModel
+@{
+    ViewData["Title"] = "Manage Grades";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var safeModel = Model ?? new OACTsys.Models.ViewModels.GradesViewModel();
+
+    var courses = safeModel.Students
+        .Select(s => s.Course).Where(c => !string.IsNullOrEmpty(c))
+        .Distinct().OrderBy(x => x).ToList();
+
+    var genders = safeModel.Students
+        .Select(s => s.Gender).Where(g => !string.IsNullOrEmpty(g))
+        .Distinct().OrderBy(x => x).ToList();
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+/* ── tokens ── */
+:root {
+    --bg:#f0f4ff; --surface:#fff; --border:#dce3f3;
+    --primary:#2f54eb; --primary-h:#1d3fbf;
+    --accent:#52c41a; --warn:#faad14; --danger:#ff4d4f;
+    --text:#1a1f36; --muted:#8c93b0;
+    --radius:10px; --shadow:0 4px 24px rgba(47,84,235,.10);
+    --prelim:#f9a825;  --midterm:#0288d1; --final:#2e7d32;
+}
+.gp { padding:32px 28px; font-family:'Segoe UI',sans-serif; color:var(--text); }
+.ph         { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px; }
+.ph h2      { font-size:1.5rem; font-weight:700; margin:0; }
+.ph-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.btn         { display:inline-flex; align-items:center; gap:7px; border:none; border-radius:8px; padding:9px 18px; font-size:.84rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-h); transform:translateY(-1px); }
+.btn-success { background:#389e0d; color:#fff; }
+.btn-success:hover { background:#237804; transform:translateY(-1px); }
+.btn-outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
+.btn-outline:hover { background:var(--bg); }
+.btn-sm     { padding:7px 16px; font-size:.8rem; }
+.btn-row    { background:var(--primary); color:#fff; border:none; border-radius:7px; padding:6px 13px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .2s; white-space:nowrap; }
+.btn-row:hover { background:var(--primary-h); transform:translateY(-1px); }
+.btn-row-view {
+    background:#fff; color:var(--primary); border:1.5px solid var(--primary);
+    border-radius:7px; padding:6px 13px; font-size:.78rem; font-weight:600;
+    cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    transition:all .2s; white-space:nowrap; box-shadow:0 1px 4px rgba(47,84,235,.08);
+}
+.btn-row-view:hover { background:var(--primary); color:#fff; transform:translateY(-1px); box-shadow:0 4px 12px rgba(47,84,235,.22); }
+
+/* ── Photo avatars ── */
+.av-photo { width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;display:inline-block;vertical-align:middle;margin-right:9px; }
+.av-lg-photo { width:46px;height:46px;border-radius:50%;object-fit:cover;border:2.5px solid rgba(255,255,255,.45);flex-shrink:0;display:block; }
+
+.fb   { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:22px; box-shadow:var(--shadow); }
+.fg   { display:flex; flex-direction:column; gap:4px; }
+.fg label { font-size:.7rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.fsel { appearance:none; background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%238c93b0' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 10px center; border:1px solid var(--border); border-radius:7px; padding:8px 32px 8px 12px; font-size:.84rem; color:var(--text); cursor:pointer; min-width:148px; transition:border-color .2s; }
+.fsel:focus { outline:none; border-color:var(--primary); }
+.sw   { position:relative; margin-left:auto; }
+.sw i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:.8rem; }
+.si   { border:1px solid var(--border); border-radius:7px; padding:8px 12px 8px 30px; font-size:.84rem; width:220px; background:var(--bg); }
+.si:focus { outline:none; border-color:var(--primary); }
+.card      { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+.card-head { display:flex; align-items:center; justify-content:space-between; padding:13px 20px; border-bottom:1px solid var(--border); background:#fafbff; flex-wrap:wrap; gap:8px; }
+.card-head span { font-size:.875rem; font-weight:600; }
+.bcnt      { background:var(--primary); color:#fff; border-radius:20px; font-size:.7rem; font-weight:700; padding:2px 10px; }
+.tbl-wrap   { overflow-x:auto; }
+table       { width:100%; border-collapse:collapse; min-width:960px; }
+thead th    { padding:10px 14px; text-align:left; font-size:.69rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; background:#f6f8ff; border-bottom:1px solid var(--border); white-space:nowrap; }
+tbody tr    { transition:background .15s; }
+tbody tr:hover { background:#f4f7ff; }
+tbody td    { padding:10px 14px; font-size:.845rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+tbody tr:last-child td { border-bottom:none; }
+.av    { width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;margin-right:9px;flex-shrink:0;vertical-align:middle; }
+.sname { font-weight:600; vertical-align:middle; }
+.stuno { font-size:.75rem; color:var(--muted); display:block; }
+.td-contact  { line-height:1.6; }
+.ct-phone    { display:block; font-size:.80rem; color:var(--text); }
+.ct-email    { display:block; font-size:.73rem; color:var(--primary); }
+.bx       { display:inline-block; border-radius:5px; font-size:.7rem; font-weight:600; padding:2px 8px; }
+.b-amd    { background:#e6f0ff; color:#2f54eb; }
+.b-avt    { background:#fff3e0; color:#e67e00; }
+.b-other-c{ background:#f4f4f4; color:#555; }
+.b-y1     { background:#f0fff4; color:#27ae60; }
+.b-y2     { background:#fdf5ff; color:#8e44ad; }
+.b-yn     { background:#f4f4f4; color:#555; }
+.b-male   { background:#e6f7ff; color:#0958d9; }
+.b-female { background:#fff0f6; color:#c41d7f; }
+.b-other-g{ background:#f9f0ff; color:#531dab; }
+.empty-st   { text-align:center; padding:52px 20px; color:var(--muted); }
+.empty-st i { font-size:2.5rem; margin-bottom:10px; display:block; }
+
+/* ══════════ MODAL SHELL ══════════ */
+.mo     { display:none; position:fixed; inset:0; background:rgba(10,15,40,.46); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; }
+.mo.open{ display:flex; animation:mofade .2s; }
+@@keyframes mofade  { from{opacity:0}                            to{opacity:1} }
+@@keyframes moslide { from{transform:translateY(28px);opacity:0} to{transform:translateY(0);opacity:1} }
+.mbox   { background:var(--surface); border-radius:14px; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.25); animation:moslide .25s; overflow:hidden; }
+#grade-modal .mbox { width:min(1040px,96vw); max-height:92vh; }
+#excel-modal  .mbox { width:min(900px,96vw); max-height:92vh; }
+.mh           { padding:17px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; color:#fff; }
+.mh-blue      { background:linear-gradient(135deg,#2f54eb,#1d3fbf); }
+.mh-blue-view { background:linear-gradient(135deg,#0958d9,#003eb3); }
+.mh-green     { background:linear-gradient(135deg,#389e0d,#237804); }
+.mico     { width:42px;height:42px;background:rgba(255,255,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
+.mtitle   { font-size:1rem; font-weight:700; }
+.msub     { font-size:.78rem; opacity:.75; }
+.mcls     { margin-left:auto; background:rgba(255,255,255,.18); border:none; color:#fff; width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0; }
+.mcls:hover { background:rgba(255,255,255,.32); }
+.mb       { padding:20px 24px; overflow-y:auto; flex:1; }
+.mf       { padding:13px 24px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:flex-end; gap:10px; background:#fafbff; }
+.stu-strip  { display:flex; align-items:center; gap:16px; flex-wrap:wrap; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:12px 16px; margin-bottom:18px; }
+.av-lg      { width:46px;height:46px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;flex-shrink:0; }
+.si-main    { font-weight:700; font-size:.95rem; }
+.si-sub     { font-size:.75rem; color:var(--muted); margin-top:2px; }
+.si-grid    { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:8px; flex:1; min-width:0; }
+.si-item    { display:flex; flex-direction:column; gap:1px; }
+.si-item .lbl { font-size:.66rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.si-item .val { font-size:.82rem; font-weight:500; color:var(--text); word-break:break-all; }
+.semlbl     { display:flex; align-items:center; gap:8px; font-size:.76rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; padding:6px 0 4px; margin-top:10px; }
+.semlbl::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── Grade table with Prelim / Midterm / Final ── */
+.gt         { width:100%; border-collapse:collapse; margin-bottom:4px; }
+.gt thead th { padding:8px 10px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); background:#f6f8ff; border-bottom:2px solid var(--border); text-align:center; white-space:nowrap; }
+.gt thead th:first-child,.gt thead th:nth-child(2) { text-align:left; }
+.gt thead th.th-prelim  { color:var(--prelim);  background:#fffde7; }
+.gt thead th.th-midterm { color:var(--midterm); background:#e3f2fd; }
+.gt thead th.th-final   { color:var(--final);   background:#e8f5e9; }
+.gt tbody tr:hover { background:#f8faff; }
+.gt tbody td  { padding:8px 10px; font-size:.84rem; border-bottom:1px solid var(--border); vertical-align:middle; text-align:center; }
+.gt tbody td:first-child,.gt tbody td:nth-child(2) { text-align:left; }
+.gt tbody tr:last-child td { border-bottom:none; }
+/* grade inputs */
+.gi { border:1px solid var(--border); border-radius:6px; padding:5px 7px; font-size:.82rem; width:68px; text-align:center; background:var(--bg); transition:border-color .2s,box-shadow .2s; }
+.gi:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(47,84,235,.12); }
+.gi.iv    { border-color:var(--danger); box-shadow:0 0 0 3px rgba(255,77,79,.12); }
+.gi.ok    { border-color:var(--accent); box-shadow:0 0 0 3px rgba(82,196,26,.12); }
+.gi[disabled] { opacity:.65; cursor:not-allowed; background:#f0f2f8; }
+.gi-prelim:focus  { border-color:var(--prelim);  box-shadow:0 0 0 3px rgba(249,168,37,.15); }
+.gi-midterm:focus { border-color:var(--midterm); box-shadow:0 0 0 3px rgba(2,136,209,.15); }
+.gi-final:focus   { border-color:var(--final);   box-shadow:0 0 0 3px rgba(46,125,50,.15); }
+.rp       { font-size:.7rem; font-weight:600; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+.rp-pass  { background:#f0fff4; color:#27ae60; }
+.rp-fail  { background:#fff1f0; color:var(--danger); }
+.rp-inc   { background:#fffbe6; color:#d48806; }
+.rp-cond  { background:#fff7e6; color:#d46b08; }
+.grade-legend { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; padding:8px 12px; background:#fafbff; border:1px solid var(--border); border-radius:7px; }
+.grade-legend span { font-size:.74rem; color:var(--muted); }
+.grade-legend b    { color:var(--text); }
+/* grade type pills */
+.gtype-prelim  { color:var(--prelim);  font-size:.68rem; font-weight:700; }
+.gtype-midterm { color:var(--midterm); font-size:.68rem; font-weight:700; }
+.gtype-final   { color:var(--final);   font-size:.68rem; font-weight:700; }
+
+/* ── View-only banner ── */
+.view-only-banner { display:flex;align-items:center;gap:8px;background:#e6f0ff;border:1px solid #adc6ff;border-radius:7px;padding:8px 14px;margin-bottom:14px;font-size:.78rem;font-weight:600;color:#2f54eb; }
+
+/* ══════════ EXCEL MODAL ══════════ */
+.steps      { display:flex; align-items:center; margin-bottom:22px; }
+.step       { display:flex; align-items:center; gap:8px; }
+.step-num   { width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;background:var(--border);color:var(--muted);transition:all .3s; }
+.step.active .step-num { background:var(--primary); color:#fff; box-shadow:0 0 0 4px rgba(47,84,235,.18); }
+.step.done   .step-num { background:var(--accent);  color:#fff; }
+.step-lbl              { font-size:.78rem; font-weight:600; color:var(--muted); }
+.step.active .step-lbl { color:var(--text); }
+.step.done   .step-lbl { color:var(--accent); }
+.sline      { flex:1;height:2px;background:var(--border);margin:0 10px;min-width:28px;transition:background .3s; }
+.sline.done { background:var(--accent); }
+.dz         { border:2.5px dashed var(--border);border-radius:12px;background:var(--bg);padding:34px 24px;text-align:center;cursor:pointer;transition:all .25s;position:relative; }
+.dz:hover,.dz.drag { border-color:var(--primary); background:#eef2ff; }
+.dz > i     { font-size:2.5rem;color:var(--primary);margin-bottom:10px;display:block;opacity:.75; }
+.dz p       { margin:4px 0; color:var(--muted); font-size:.875rem; }
+.dz strong  { color:var(--text); font-weight:700; font-size:.95rem; }
+#file-input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.fmtbox     { background:#f6f8ff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:16px; }
+.fmtbox h4  { font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px; }
+.ftbl       { width:100%;border-collapse:collapse;font-size:.8rem; }
+.ftbl th    { background:#eef2ff;color:var(--primary);padding:6px 10px;text-align:left;font-weight:700;border:1px solid var(--border); }
+.ftbl td    { padding:5px 10px;border:1px solid var(--border); }
+.ftbl tbody tr:nth-child(even){ background:#fafbff; }
+.opt-col    { font-size:.72rem; color:var(--muted); }
+/* grade column colour hints in the format table */
+.ftbl th.col-prelim  { background:#fffde7; color:var(--prelim);  }
+.ftbl th.col-midterm { background:#e3f2fd; color:var(--midterm); }
+.ftbl th.col-final   { background:#e8f5e9; color:var(--final);   }
+.flow-note  { background:#fffbe6;border:1px solid #ffe58f;border-radius:7px;padding:10px 14px;margin-top:12px;font-size:.78rem;color:#7c5c00; }
+.tstrip     { display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#e6f0ff,#f0fff4);border:1px solid #c8dafe;border-radius:8px;padding:10px 16px;margin-top:12px; }
+.tstrip > i { color:var(--primary); font-size:1.1rem; }
+.tstrip span{ font-size:.82rem; font-weight:600; color:var(--text); flex:1; }
+.btmpl      { background:var(--primary);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .2s;white-space:nowrap; }
+.btmpl:hover { background:var(--primary-h); }
+.finfo      { display:none;align-items:center;gap:12px;background:#f6f8ff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px; }
+.finfo.show { display:flex; }
+.finfo > i  { color:var(--accent); font-size:1.3rem; }
+.fname2     { font-weight:600; font-size:.875rem; }
+.fmeta2     { font-size:.75rem; color:var(--muted); }
+.brem       { margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:2px 6px;border-radius:5px;transition:all .2s; }
+.brem:hover { background:#fff1f0; color:var(--danger); }
+#preview-sec   { display:none; }
+.pstats        { display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.pstat         { flex:1;min-width:90px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center; }
+.pval          { font-size:1.3rem;font-weight:800;color:var(--primary);line-height:1;margin-bottom:3px; }
+.plbl          { font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em; }
+.ps-ok   .pval { color:var(--accent); }
+.ps-warn .pval { color:var(--warn);   }
+.ps-err  .pval { color:var(--danger); }
+.ptblwrap      { overflow:auto; max-height:260px; border:1px solid var(--border); border-radius:8px; }
+.ptbl          { width:100%;border-collapse:collapse;font-size:.82rem;min-width:700px; }
+.ptbl thead th { position:sticky;top:0;z-index:2;padding:8px 12px;background:#f6f8ff;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap; }
+.ptbl thead th.col-prelim  { background:#fffde7; color:var(--prelim);  }
+.ptbl thead th.col-midterm { background:#e3f2fd; color:var(--midterm); }
+.ptbl thead th.col-final   { background:#e8f5e9; color:var(--final);   }
+.ptbl tbody td { padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle; }
+.ptbl tbody tr:hover { background:#f4f7ff; }
+.row-ok   td:first-child { border-left:3px solid var(--accent); }
+.row-err  td:first-child { border-left:3px solid var(--danger); background:#fff5f5; }
+.row-warn td:first-child { border-left:3px solid var(--warn);   background:#fffbf0; }
+.emsg { font-size:.72rem; color:var(--danger); font-style:italic; }
+.wmsg { font-size:.72rem; color:var(--warn);   font-style:italic; }
+.legend   { display:flex; gap:14px; margin-top:10px; font-size:.75rem; color:var(--muted); flex-wrap:wrap; }
+.legi     { display:flex; align-items:center; gap:5px; }
+.legdot   { width:10px;height:10px;border-radius:2px;flex-shrink:0; }
+.toast { position:fixed;bottom:26px;right:26px;z-index:99999;background:#1a1f36;color:#fff;padding:12px 18px;border-radius:10px;font-size:.855rem;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);max-width:420px; }
+.toast.show { transform:translateY(0); opacity:1; }
+@@media(max-width:680px){
+    .gp { padding:16px 10px; }
+    .ph { flex-direction:column; align-items:flex-start; }
+    .sw { margin-left:0; width:100%; }
+    .si { width:100%; }
+    .si-grid { margin-top:8px; width:100%; }
+}
+</style>
+
+<div class="gp">
+
+    <!-- Page Header -->
+    <div class="ph">
+        <h2>
+            <i class="fa-solid fa-graduation-cap" style="color:var(--primary);margin-right:8px;"></i>
+            Manage Grades
+        </h2>
+        <div class="ph-actions">
+            <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">
+                <i class="fa-solid fa-file-arrow-down"></i> Download Template
+            </button>
+            <button class="btn btn-success" onclick="openExcelModal()">
+                <i class="fa-solid fa-file-excel"></i> Bulk Upload Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="fb">
+        <div class="fg">
+            <label>Course</label>
+            <select id="fc" class="fsel" onchange="applyFilter()">
+                <option value="">All Courses</option>
+                @foreach (var c in courses)
+                {
+                    <option value="@c">@c</option>
+                }
+            </select>
+        </div>
+        <div class="fg">
+            <label>Year Level</label>
+            <select id="fy" class="fsel" onchange="applyFilter()">
+                <option value="">All Years</option>
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+            </select>
+        </div>
+        <div class="fg">
+            <label>Semester</label>
+            <select id="fs" class="fsel" onchange="applyFilter()">
+                <option value="">All Semesters</option>
+                <option value="1st Sem">1st Semester</option>
+                <option value="2nd Sem">2nd Semester</option>
+                <option value="Summer">Summer</option>
+            </select>
+        </div>
+        <div class="fg">
+            <label>Gender</label>
+            <select id="fgdr" class="fsel" onchange="applyFilter()">
+                <option value="">All Genders</option>
+                @foreach (var g in genders)
+                {
+                    <option value="@g">@g</option>
+                }
+            </select>
+        </div>
+        <div class="sw">
+            <i class="fa fa-search"></i>
+            <input type="text" id="fq" class="si"
+                   placeholder="Name, student no., email…"
+                   oninput="applyFilter()">
+        </div>
+    </div>
+
+    <!-- Student Table -->
+    <div class="card">
+        <div class="card-head">
+            <span>Student List</span>
+            <span class="bcnt" id="scnt">@safeModel.Students.Count</span>
+        </div>
+
+        @if (!safeModel.Students.Any())
+        {
+            <div class="empty-st">
+                <i class="fa-solid fa-users-slash"></i>
+                <div style="font-weight:600;margin-bottom:3px;">No enrolled students yet</div>
+                <div style="font-size:.78rem;">Students appear here once they have Enrolled status.</div>
+            </div>
+        }
+        else
+        {
+            <div class="tbl-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Student</th>
+                            <th>Gender</th>
+                            <th>Contact Info</th>
+                            <th>Course</th>
+                            <th>Year Level</th>
+                            <th>Semester</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stbody">
+                        @{ int rowNum = 0; }
+                        @foreach (var s in safeModel.Students)
+                        {
+                            rowNum++;
+
+                            var ini = string.Concat(
+                                (s.FullName ?? s.StudentNumber ?? "?")
+                                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                .Take(2).Select(w => char.ToUpper(w[0])));
+                            if (string.IsNullOrEmpty(ini)) ini = "?";
+
+                            var courseClass  = (s.Course ?? "").ToUpper() switch {
+                                "AMD" => "b-amd", "AVT" => "b-avt", _ => "b-other-c" };
+                            var yearClass    = s.YearLevel switch {
+                                "1st Year" => "b-y1", "2nd Year" => "b-y2", _ => "b-yn" };
+                            var genderClass  = (s.Gender ?? "").ToLower() switch {
+                                "male" => "b-male", "female" => "b-female", _ => "b-other-g" };
+
+                            var photoUrl = s.PhotoUrl ?? "";
+
+                            var studentJson = System.Text.Json.JsonSerializer.Serialize(new {
+                                studentId     = s.StudentId,
+                                studentNumber = s.StudentNumber,
+                                fullName      = s.FullName,
+                                gender        = s.Gender,
+                                phone         = s.PhoneNumber,
+                                email         = s.Email,
+                                course        = s.Course,
+                                yearLevel     = s.YearLevel,
+                                semester      = s.Semester,
+                                photoUrl      = photoUrl
+                            });
+
+                            var subjJson = System.Text.Json.JsonSerializer.Serialize(
+                                (s.Subjects ?? new()).Select(sub => new {
+                                    subjectEnrollmentId = sub.SubjectEnrollmentId,
+                                    subjectId           = sub.SubjectId,
+                                    code                = sub.Code,
+                                    title               = sub.Title,
+                                    units               = sub.Units,
+                                    sem                 = sub.Semester,
+                                    prelimGrade         = sub.PrelimGrade,
+                                    midtermGrade        = sub.MidtermGrade,
+                                    finalGrade          = sub.FinalGrade,
+                                    status              = sub.Status
+                                })
+                            );
+
+                            var searchStr = string.Join(" ",
+                                s.FullName, s.StudentNumber, s.Email, s.PhoneNumber
+                            ).ToLower();
+
+                            <tr class="stu-row"
+                                data-course="@s.Course"
+                                data-year="@s.YearLevel"
+                                data-sem="@s.Semester"
+                                data-gender="@s.Gender"
+                                data-search="@searchStr">
+
+                                <td style="color:var(--muted);font-size:.76rem;">@rowNum</td>
+
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:9px;">
+                                        @if (!string.IsNullOrEmpty(photoUrl))
+                                        {
+                                            <img src="@photoUrl" class="av-photo" alt="@s.FullName"
+                                                 onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';" />
+                                            <span class="av" style="display:none;">@ini</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="av">@ini</span>
+                                        }
+                                        <div>
+                                            <span class="sname">@s.FullName</span>
+                                            <span class="stuno">@s.StudentNumber</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrEmpty(s.Gender))
+                                    {
+                                        <span class="bx @genderClass">@s.Gender</span>
+                                    }
+                                    else { <span style="color:var(--muted);font-size:.78rem;">—</span> }
+                                </td>
+
+                                <td class="td-contact">
+                                    @if (!string.IsNullOrEmpty(s.PhoneNumber))
+                                    {
+                                        <span class="ct-phone">
+                                            <i class="fa-solid fa-phone" style="font-size:.7rem;margin-right:4px;color:var(--muted);"></i>@s.PhoneNumber
+                                        </span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(s.Email))
+                                    {
+                                        <span class="ct-email">
+                                            <i class="fa-solid fa-envelope" style="font-size:.7rem;margin-right:4px;"></i>@s.Email
+                                        </span>
+                                    }
+                                    @if (string.IsNullOrEmpty(s.PhoneNumber) && string.IsNullOrEmpty(s.Email))
+                                    {
+                                        <span style="color:var(--muted);font-size:.78rem;">—</span>
+                                    }
+                                </td>
+
+                                <td><span class="bx @courseClass">@s.Course</span></td>
+                                <td><span class="bx @yearClass">@s.YearLevel</span></td>
+                                <td style="font-size:.8rem;color:var(--muted);">@s.Semester</td>
+
+                                <td style="text-align:right;">
+                                    <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+                                        <button class="btn-row"
+                                                onclick='openManual(@Html.Raw(studentJson), @Html.Raw(subjJson))'>
+                                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                                            Upload Grades
+                                        </button>
+                                        <button class="btn-row-view"
+                                                onclick='openViewGrades(@Html.Raw(studentJson), @Html.Raw(subjJson))'>
+                                            <i class="fa-solid fa-eye"></i>
+                                            View Grades
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="empty-st" id="js-empty" style="display:none;">
+            <i class="fa-solid fa-filter-circle-xmark"></i>
+            <div style="font-weight:600;margin-bottom:3px;">No students match the filters</div>
+            <div style="font-size:.78rem;">Try adjusting the dropdowns or clearing the search.</div>
+        </div>
+    </div>
+
+</div><!-- /gp -->
+
+<!-- ═══════════════════════════════════════════
+     MODAL A — Manual Grade Entry / View Grades
+═══════════════════════════════════════════ -->
+<div class="mo" id="grade-modal">
+  <div class="mbox">
+    <div class="mh mh-blue" id="modal-header">
+        <div class="mico" id="modal-icon"><i class="fa-solid fa-file-pen"></i></div>
+        <div>
+            <div class="mtitle" id="mn"></div>
+            <div class="msub"  id="mm"></div>
+        </div>
+        <button class="mcls" onclick="closeManual()"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="mb">
+        <div class="stu-strip">
+            <div class="av-lg" id="m-av">?</div>
+            <div>
+                <div class="si-main" id="m-fullname"></div>
+                <div class="si-sub"  id="m-stuno"></div>
+            </div>
+            <div class="si-grid" id="m-infogrid"></div>
+        </div>
+        <div id="view-only-notice" style="display:none;">
+            <div class="view-only-banner">
+                <i class="fa-solid fa-eye"></i>
+                View Only — Grades are read-only in this mode. Click "Upload Grades" to edit.
+            </div>
+        </div>
+        <div class="grade-legend">
+            <span><b>1.0</b> = Excellent</span>
+            <span><b>1.25–1.75</b> = Very Good</span>
+            <span><b>2.0–2.5</b> = Good</span>
+            <span><b>2.75–3.0</b> = Passing</span>
+            <span><b>4.0</b> = Incomplete</span>
+            <span><b>5.0</b> = Failed</span>
+        </div>
+        <div id="mbody"></div>
+    </div>
+    <div class="mf">
+        <button class="btn btn-outline btn-sm" onclick="closeManual()">Close</button>
+        <button class="btn btn-primary btn-sm" id="btn-save-manual" onclick="saveManual()">
+            <i class="fa-solid fa-floppy-disk"></i> Save Grades
+        </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL B — Bulk Excel Upload
+═══════════════════════════════════════════ -->
+<div class="mo" id="excel-modal">
+  <div class="mbox">
+    <div class="mh mh-green">
+        <div class="mico"><i class="fa-solid fa-file-excel"></i></div>
+        <div>
+            <div class="mtitle">Bulk Upload Grades via Excel</div>
+            <div class="msub">Upload → Preview &amp; Validate → Confirm → Grades saved automatically</div>
+        </div>
+        <button class="mcls" onclick="closeExcel()"><i class="fa fa-xmark"></i></button>
+    </div>
+
+    <div class="mb">
+        <div class="steps">
+            <div class="step active" id="s1i"><div class="step-num">1</div><div class="step-lbl">Select File</div></div>
+            <div class="sline" id="sl1"></div>
+            <div class="step" id="s2i"><div class="step-num">2</div><div class="step-lbl">Preview &amp; Validate</div></div>
+            <div class="sline" id="sl2"></div>
+            <div class="step" id="s3i"><div class="step-num">3</div><div class="step-lbl">Confirm Upload</div></div>
+        </div>
+
+        <!-- STEP 1 -->
+        <div id="upload-sec">
+            <div class="dz" id="dz">
+                <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <strong>Click to browse or drag &amp; drop your Excel file</strong>
+                <p>Supported: <b>.xlsx</b> &nbsp;·&nbsp; <b>.xls</b> &nbsp;·&nbsp; <b>.csv</b></p>
+                <p style="font-size:.75rem;opacity:.6;">Maximum file size: 5 MB</p>
+            </div>
+
+            <div class="finfo" id="finfo">
+                <i class="fa-solid fa-file-excel"></i>
+                <div>
+                    <div class="fname2" id="fname"></div>
+                    <div class="fmeta2" id="fmeta"></div>
+                </div>
+                <button class="brem" onclick="removeFile()" title="Remove">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+
+            <div class="fmtbox">
+                <h4><i class="fa-solid fa-circle-info" style="margin-right:5px;"></i>Required Excel Column Format</h4>
+                <p style="font-size:.78rem;color:var(--muted);margin:0 0 10px;">
+                    The header row is auto-detected — branding rows above it are skipped automatically.
+                    Columns marked <span class="opt-col">(optional)</span> can be omitted if not yet available.
+                </p>
+                <table class="ftbl">
+                    <thead>
+                        <tr>
+                            <th>Student Number</th>
+                            <th>Subject Code</th>
+                            <th class="col-prelim">Prelim <span style="font-weight:400;">(optional)</span></th>
+                            <th class="col-midterm">Midterm <span style="font-weight:400;">(optional)</span></th>
+                            <th class="col-final">Final Grade <span style="font-weight:400;">(optional)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>2024-0001</td><td>AMD101</td><td>1.50</td><td>1.75</td><td>1.75</td></tr>
+                        <tr><td>2024-0002</td><td>AMD102</td><td>2.00</td><td></td><td></td></tr>
+                        <tr><td>2024-0003</td><td>AVT101</td><td></td><td>1.75</td><td>2.00</td></tr>
+                    </tbody>
+                </table>
+                <div class="flow-note">
+                    <i class="fa-solid fa-route" style="margin-right:5px;"></i>
+                    <b>Workflow:</b> Teacher sends Excel to Registrar → Registrar uploads here →
+                    System matches <b>Student Number + Subject Code</b> to active enrollment →
+                    Prelim / Midterm / Final grades updated independently →
+                    Status is set automatically once the <b>Final Grade</b> is present.
+                </div>
+                <div class="tstrip">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Need the template? Download the pre-formatted Excel file with all columns.</span>
+                    <button class="btmpl" onclick="downloadTemplate()">
+                        <i class="fa-solid fa-file-arrow-down"></i> Download Template
+                    </button>
+                </div>
+            </div>
+        </div><!-- /upload-sec -->
+
+        <!-- STEP 2 -->
+        <div id="preview-sec">
+            <div class="pstats" id="pstats"></div>
+            <div class="ptblwrap">
+                <table class="ptbl">
+                    <thead>
+                        <tr>
+                            <th>Row</th>
+                            <th>Student No.</th>
+                            <th>Student Name</th>
+                            <th>Subject Code</th>
+                            <th class="col-prelim" style="text-align:center;">Prelim</th>
+                            <th class="col-midterm" style="text-align:center;">Midterm</th>
+                            <th class="col-final"   style="text-align:center;">Final</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ptbody"></tbody>
+                </table>
+            </div>
+            <div class="legend">
+                <div class="legi"><div class="legdot" style="background:var(--accent);"></div>Valid — will be saved</div>
+                <div class="legi"><div class="legdot" style="background:var(--warn);"></div>Warning — enrollment not found</div>
+                <div class="legi"><div class="legdot" style="background:var(--danger);"></div>Error — invalid value or missing field</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mf">
+        <button class="btn btn-outline btn-sm" onclick="closeExcel()">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="bparse"   onclick="parseExcel()"    style="display:none;"><i class="fa-solid fa-magnifying-glass"></i> Preview &amp; Validate</button>
+        <button class="btn btn-outline btn-sm" id="bback"    onclick="backToUpload()"  style="display:none;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button class="btn btn-success btn-sm" id="bconfirm" onclick="confirmUpload()" style="display:none;"><i class="fa-solid fa-cloud-arrow-up"></i> Confirm &amp; Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+    <i id="toast-ic" class="fa-solid fa-circle-check"></i>
+    <span id="toast-msg"></span>
+</div>
+
+@Html.AntiForgeryToken()
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+/* ── CSRF ── */
+const CSRF = () =>
+    document.querySelector('[name=__RequestVerificationToken]')?.value ?? '';
+
+/* ══════════════════════════════════════════════
+   CLIENT-SIDE FILTER
+══════════════════════════════════════════════ */
+function applyFilter() {
+    const course = document.getElementById('fc').value;
+    const year   = document.getElementById('fy').value;
+    const sem    = document.getElementById('fs').value;
+    const gender = document.getElementById('fgdr').value;
+    const q      = document.getElementById('fq').value.toLowerCase().trim();
+
+    const rows = document.querySelectorAll('tr.stu-row');
+    let visible = 0;
+
+    rows.forEach(tr => {
+        const match =
+            (!course  || tr.dataset.course  === course)  &&
+            (!year    || tr.dataset.year    === year)     &&
+            (!sem     || tr.dataset.sem     === sem)      &&
+            (!gender  || tr.dataset.gender  === gender)   &&
+            (!q       || tr.dataset.search.includes(q));
+
+        tr.style.display = match ? '' : 'none';
+        if (match) tr.cells[0].textContent = ++visible;
+    });
+
+    document.getElementById('scnt').textContent       = visible;
+    document.getElementById('js-empty').style.display =
+        (visible === 0 && rows.length > 0) ? 'block' : 'none';
+}
+
+/* ══════════════════════════════════════════════
+   SHARED: build modal body
+══════════════════════════════════════════════ */
+let curStudent = null;
+
+function buildModal(student, subjects) {
+    curStudent = { ...student, subjects };
+
+    document.getElementById('mn').textContent =
+        student.fullName || student.studentNumber || '—';
+    document.getElementById('mm').textContent =
+        [student.course, student.yearLevel, student.semester].filter(Boolean).join(' · ');
+
+    const avEl = document.getElementById('m-av');
+    if (student.photoUrl) {
+        avEl.innerHTML        = `<img src="${esc(student.photoUrl)}" class="av-lg-photo"
+                                      alt="${esc(student.fullName)}"
+                                      onerror="this.parentElement.innerHTML='${initials(student.fullName||student.studentNumber)}'">`;
+        avEl.style.background = 'transparent';
+        avEl.style.padding    = '0';
+    } else {
+        avEl.textContent      = initials(student.fullName || student.studentNumber);
+        avEl.style.background = '';
+        avEl.style.padding    = '';
+    }
+
+    document.getElementById('m-fullname').textContent = student.fullName      || '—';
+    document.getElementById('m-stuno').textContent    = student.studentNumber || '';
+
+    document.getElementById('m-infogrid').innerHTML =
+        infoItem('Gender',   student.gender    || '—') +
+        infoItem('Phone',    student.phone     || '—') +
+        infoItem('Email',    student.email     || '—') +
+        infoItem('Course',   student.course    || '—') +
+        infoItem('Year',     student.yearLevel || '—') +
+        infoItem('Semester', student.semester  || '—');
+
+    const body = document.getElementById('mbody');
+    body.innerHTML = '';
+
+    if (!subjects || subjects.length === 0) {
+        body.innerHTML =
+            '<p style="color:var(--muted);text-align:center;padding:28px 0;">' +
+            'No enrolled subjects found for this student.</p>';
+        return;
+    }
+
+    const bySem = {};
+    subjects.forEach(s => {
+        const k = s.sem || 'N/A';
+        (bySem[k] = bySem[k] || []).push(s);
+    });
+
+    Object.keys(bySem).forEach(sem => {
+        const lbl = document.createElement('div');
+        lbl.className = 'semlbl';
+        lbl.innerHTML =
+            `<i class="fa-solid fa-calendar-days" style="color:var(--primary);font-size:.76rem;"></i>${esc(sem)}`;
+        body.appendChild(lbl);
+
+        const tbl = document.createElement('table');
+        tbl.className = 'gt';
+        tbl.innerHTML = `<thead><tr>
+            <th>Code</th>
+            <th>Subject</th>
+            <th>Units</th>
+            <th class="th-prelim">Prelim</th>
+            <th class="th-midterm">Midterm</th>
+            <th class="th-final">Final Grade</th>
+            <th>Remarks</th>
+        </tr></thead><tbody></tbody>`;
+        body.appendChild(tbl);
+
+        const tb = tbl.querySelector('tbody');
+        bySem[sem].forEach(sub => {
+            const seid = sub.subjectEnrollmentId;
+            const tr   = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:600;color:var(--primary);font-size:.8rem;">${esc(sub.code)}</td>
+                <td style="min-width:160px;">${esc(sub.title)}</td>
+                <td>${sub.units}</td>
+                <td>
+                    <input type="number" class="gi gi-prelim"
+                        id="p-${seid}"
+                        value="${esc(sub.prelimGrade)}"
+                        min="1" max="5" step="0.25"
+                        placeholder="1.0–5.0"
+                        oninput="onGradeInput(this,'${seid}','prelim')">
+                </td>
+                <td>
+                    <input type="number" class="gi gi-midterm"
+                        id="m-${seid}"
+                        value="${esc(sub.midtermGrade)}"
+                        min="1" max="5" step="0.25"
+                        placeholder="1.0–5.0"
+                        oninput="onGradeInput(this,'${seid}','midterm')">
+                </td>
+                <td>
+                    <input type="number" class="gi gi-final"
+                        id="f-${seid}"
+                        value="${esc(sub.finalGrade)}"
+                        min="1" max="5" step="0.25"
+                        placeholder="1.0–5.0"
+                        oninput="onGradeInput(this,'${seid}','final')">
+                </td>
+                <td style="text-align:center;" id="rm-${seid}">
+                    ${remarkHtml(sub.finalGrade)}
+                </td>`;
+            tb.appendChild(tr);
+        });
+    });
+}
+
+/* ══════════════════════════════════════════════
+   UPLOAD GRADES MODAL (editable)
+══════════════════════════════════════════════ */
+function openManual(student, subjects) {
+    buildModal(student, subjects);
+
+    document.getElementById('modal-header').className          = 'mh mh-blue';
+    document.getElementById('modal-icon').innerHTML            = '<i class="fa-solid fa-file-pen"></i>';
+    document.getElementById('view-only-notice').style.display  = 'none';
+    document.getElementById('btn-save-manual').style.display   = 'flex';
+
+    document.querySelectorAll('.gi').forEach(el => {
+        el.removeAttribute('disabled');
+        el.style.opacity = '';
+        el.style.cursor  = '';
+    });
+
+    document.getElementById('grade-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+/* ══════════════════════════════════════════════
+   VIEW GRADES MODAL (read-only)
+══════════════════════════════════════════════ */
+function openViewGrades(student, subjects) {
+    buildModal(student, subjects);
+
+    document.getElementById('modal-header').className          = 'mh mh-blue-view';
+    document.getElementById('modal-icon').innerHTML            = '<i class="fa-solid fa-eye"></i>';
+    document.getElementById('mn').textContent                  =
+        student.fullName || student.studentNumber || '—';
+    document.getElementById('mm').textContent                  =
+        'Grade Report · ' + [student.course, student.yearLevel, student.semester]
+            .filter(Boolean).join(' · ');
+    document.getElementById('view-only-notice').style.display  = 'block';
+    document.getElementById('btn-save-manual').style.display   = 'none';
+
+    document.querySelectorAll('.gi').forEach(el => {
+        el.setAttribute('disabled', true);
+        el.style.opacity = '.65';
+        el.style.cursor  = 'not-allowed';
+    });
+
+    document.getElementById('grade-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function onGradeInput(el, seid, type) {
+    const v = parseFloat(el.value);
+    el.classList.remove('iv', 'ok');
+    if (el.value === '') {
+        if (type === 'final')
+            document.getElementById(`rm-${seid}`).innerHTML =
+                '<span style="color:var(--muted);">—</span>';
+        return;
+    }
+    if (isNaN(v) || v < 1 || v > 5) { el.classList.add('iv'); return; }
+    el.classList.add('ok');
+    if (type === 'final')
+        document.getElementById(`rm-${seid}`).innerHTML = remarkHtml(el.value);
+}
+
+function remarkHtml(val) {
+    if (val === '' || val == null) return '<span style="color:var(--muted);">—</span>';
+    const n = parseFloat(val);
+    if (isNaN(n))              return '<span style="color:var(--muted);">—</span>';
+    if (n === 4.0)             return '<span class="rp rp-inc">INC</span>';
+    if (n >= 1.0 && n <= 3.0) return '<span class="rp rp-pass">Passed</span>';
+    if (n === 5.0)             return '<span class="rp rp-fail">Failed</span>';
+    return '<span class="rp rp-cond">Conditional</span>';
+}
+
+function saveManual() {
+    if (!curStudent) return;
+
+    const payload = [];
+    let hasError  = false;
+
+    (curStudent.subjects || []).forEach(sub => {
+        const seid = sub.subjectEnrollmentId;
+        const pEl  = document.getElementById(`p-${seid}`);
+        const mEl  = document.getElementById(`m-${seid}`);
+        const fEl  = document.getElementById(`f-${seid}`);
+
+        const entry = { subjectEnrollmentId: seid, prelimGrade: '', midtermGrade: '', finalGrade: '' };
+        let   hasValue = false;
+
+        [[pEl, 'prelimGrade'], [mEl, 'midtermGrade'], [fEl, 'finalGrade']].forEach(([el, key]) => {
+            if (!el || el.value === '') return;
+            const v = parseFloat(el.value);
+            if (isNaN(v) || v < 1 || v > 5) { hasError = true; return; }
+            entry[key] = el.value.trim();
+            hasValue = true;
+        });
+
+        if (hasValue) payload.push(entry);
+    });
+
+    if (hasError)        { showToast('Fix invalid grades. Valid range: 1.0 – 5.0.', true); return; }
+    if (!payload.length) { showToast('No grades entered. Fill in at least one grade.', true); return; }
+
+    const btn = document.getElementById('btn-save-manual');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
+    fetch('/Admin/SaveGrades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': CSRF() },
+        body: JSON.stringify({ studentId: curStudent.studentId, grades: payload })
+    })
+    .then(r => r.json())
+    .then(d => {
+        d.success
+            ? (closeManual(), showToast(d.message || 'Grades saved successfully.'))
+            : showToast(d.message || 'Failed to save grades.', true);
+    })
+    .catch(() => showToast('Network error. Please try again.', true))
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Grades';
+    });
+}
+
+function closeManual() {
+    document.getElementById('grade-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    curStudent = null;
+}
+document.getElementById('grade-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeManual();
+});
+
+/* ══════════════════════════════════════════════
+   EXCEL MODAL
+══════════════════════════════════════════════ */
+let excelFile = null, parsedRows = [];
+
+function openExcelModal() {
+    resetExcel();
+    document.getElementById('excel-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeExcel() {
+    document.getElementById('excel-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    resetExcel();
+}
+document.getElementById('excel-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeExcel();
+});
+
+function setStep(n) {
+    [1,2,3].forEach(i => {
+        const el = document.getElementById(`s${i}i`);
+        el.classList.remove('active','done');
+        if (i < n)   el.classList.add('done');
+        if (i === n) el.classList.add('active');
+    });
+    document.getElementById('sl1').classList.toggle('done', n > 1);
+    document.getElementById('sl2').classList.toggle('done', n > 2);
+}
+
+function resetExcel() {
+    excelFile = null; parsedRows = [];
+    const fi = document.getElementById('file-input'); if (fi) fi.value = '';
+    document.getElementById('finfo').classList.remove('show');
+    ['bparse','bback','bconfirm'].forEach(id =>
+        document.getElementById(id).style.display = 'none');
+    document.getElementById('upload-sec').style.display  = 'block';
+    document.getElementById('preview-sec').style.display = 'none';
+    setStep(1);
+}
+
+function backToUpload() {
+    document.getElementById('upload-sec').style.display  = 'block';
+    document.getElementById('preview-sec').style.display = 'none';
+    document.getElementById('bparse').style.display   = 'flex';
+    document.getElementById('bback').style.display    = 'none';
+    document.getElementById('bconfirm').style.display = 'none';
+    setStep(1);
+}
+
+const dzEl = document.getElementById('dz');
+document.getElementById('file-input').addEventListener('change', e => {
+    if (e.target.files[0]) selectFile(e.target.files[0]);
+});
+dzEl.addEventListener('dragover',  e => { e.preventDefault(); dzEl.classList.add('drag'); });
+dzEl.addEventListener('dragleave', () => dzEl.classList.remove('drag'));
+dzEl.addEventListener('drop', e => {
+    e.preventDefault();
+    dzEl.classList.remove('drag');
+    if (e.dataTransfer.files[0]) selectFile(e.dataTransfer.files[0]);
+});
+
+function selectFile(f) {
+    const ok = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel', 'text/csv'
+    ];
+    if (!ok.includes(f.type) && !/\.(xlsx|xls|csv)$/i.test(f.name)) {
+        showToast('Please upload .xlsx, .xls, or .csv only.', true); return;
+    }
+    if (f.size > 5 * 1024 * 1024) { showToast('File must be under 5 MB.', true); return; }
+    excelFile = f;
+    document.getElementById('fname').textContent = f.name;
+    document.getElementById('fmeta').textContent = `${(f.size / 1024).toFixed(1)} KB`;
+    document.getElementById('finfo').classList.add('show');
+    document.getElementById('bparse').style.display = 'flex';
+}
+
+function removeFile() {
+    excelFile = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('finfo').classList.remove('show');
+    document.getElementById('bparse').style.display = 'none';
+}
+
+function parseExcel() {
+    if (!excelFile) { showToast('Please select a file first.', true); return; }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            const norm = v => String(v).trim().toLowerCase().replace(/[\s_\-]/g, '');
+            const SIGNALS = ['studentnumber','studentno','student#','stuno'];
+
+            let headerRowIdx = -1;
+            for (let i = 0; i < rawRows.length; i++) {
+                if (rawRows[i].some(cell => SIGNALS.includes(norm(cell)))) {
+                    headerRowIdx = i; break;
+                }
+            }
+            if (headerRowIdx === -1) {
+                showToast('Header row not found. The file must contain a "Student Number" column.', true);
+                return;
+            }
+
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+            range.s.r  = headerRowIdx;
+            ws['!ref'] = XLSX.utils.encode_range(range);
+
+            const dataRows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+            buildPreview(dataRows);
+        } catch (err) {
+            showToast('Could not read the file. Make sure it is a valid Excel/CSV.', true);
+        }
+    };
+    reader.readAsArrayBuffer(excelFile);
+}
+
+function buildLookupMaps() {
+    const stuByNo = {}, subjByCode = {};
+    document.querySelectorAll('tr.stu-row').forEach(tr => {
+        const btn = tr.querySelector('.btn-row');
+        if (!btn) return;
+        try {
+            const oc = btn.getAttribute('onclick') || '';
+            const m  = oc.match(/^openManual\((\{[\s\S]*?\}),\s*(\[[\s\S]*?\])\)$/);
+            if (!m) return;
+            const stu  = JSON.parse(m[1]);
+            const subs = JSON.parse(m[2]);
+            if (stu.studentNumber) stuByNo[stu.studentNumber] = stu;
+            subs.forEach(s => { if (s.code) subjByCode[s.code] = s.title || s.code; });
+        } catch { /* ignore */ }
+    });
+    return { stuByNo, subjByCode };
+}
+
+function parseGradeCell(raw) {
+    if (raw === '' || raw == null) return null;
+    const v = parseFloat(String(raw).trim());
+    return isNaN(v) ? 'INVALID' : v;
+}
+
+function buildPreview(rows) {
+    parsedRows = [];
+    let ok = 0, warn = 0, err = 0;
+    const tb = document.getElementById('ptbody');
+    tb.innerHTML = '';
+    const { stuByNo, subjByCode } = buildLookupMaps();
+
+    rows.forEach((r, i) => {
+        const keys = Object.keys(r);
+        const g = (...names) => {
+            for (const n of names) {
+                const k = keys.find(k =>
+                    k.trim().toLowerCase().replace(/[\s_\-]/g,'') === n.toLowerCase());
+                if (k !== undefined) return String(r[k]).trim();
+            }
+            return '';
+        };
+
+        const stuNo    = g('studentnumber','studentno','student#','stuno');
+        const subCode  = g('subjectcode','subcode','coursecode','code');
+        const prelimRaw  = g('prelim','prelimgrade','preliminarygrade');
+        const midtermRaw = g('midterm','midtermgrade');
+        const finalRaw   = g('finalgrade','final','grade');
+
+        const pv = parseGradeCell(prelimRaw);
+        const mv = parseGradeCell(midtermRaw);
+        const fv = parseGradeCell(finalRaw);
+
+        let status = 'ok', emsg = '';
+
+        if (!stuNo || !subCode) {
+            status = 'err'; emsg = 'Missing Student Number or Subject Code.';
+        } else if (pv === 'INVALID') {
+            status = 'err'; emsg = `Invalid Prelim grade "${esc(prelimRaw)}".`;
+        } else if (mv === 'INVALID') {
+            status = 'err'; emsg = `Invalid Midterm grade "${esc(midtermRaw)}".`;
+        } else if (fv === 'INVALID') {
+            status = 'err'; emsg = `Invalid Final grade "${esc(finalRaw)}".`;
+        } else if (pv !== null && (pv < 1 || pv > 5)) {
+            status = 'err'; emsg = `Prelim "${esc(prelimRaw)}" out of range 1–5.`;
+        } else if (mv !== null && (mv < 1 || mv > 5)) {
+            status = 'err'; emsg = `Midterm "${esc(midtermRaw)}" out of range 1–5.`;
+        } else if (fv !== null && (fv < 1 || fv > 5)) {
+            status = 'err'; emsg = `Final "${esc(finalRaw)}" out of range 1–5.`;
+        } else if (!stuByNo[stuNo]) {
+            status = 'warn'; emsg = `Student "${esc(stuNo)}" not found in current view.`;
+        } else if (!subjByCode[subCode]) {
+            status = 'warn'; emsg = `Subject "${esc(subCode)}" not found in current view.`;
+        } else if (pv === null && mv === null && fv === null) {
+            status = 'warn'; emsg = 'All grade columns are empty — row will be skipped.';
+        }
+
+        if      (status === 'ok')   ok++;
+        else if (status === 'warn') warn++;
+        else                        err++;
+
+        const stu = stuByNo[stuNo];
+
+        parsedRows.push({
+            stuNo, subCode,
+            prelimGrade:  (pv !== null && pv !== 'INVALID') ? pv : null,
+            midtermGrade: (mv !== null && mv !== 'INVALID') ? mv : null,
+            finalGrade:   (fv !== null && fv !== 'INVALID') ? fv : null,
+            status, stuId: stu?.studentId
+        });
+
+        const fmtG = v => v !== null ? `<b>${v.toFixed(2)}</b>` : '<span style="color:var(--muted)">—</span>';
+
+        const tr = document.createElement('tr');
+        tr.className = `row-${status}`;
+        tr.innerHTML = `
+            <td style="color:var(--muted);font-size:.74rem;">${i + 2}</td>
+            <td style="font-weight:600;">${esc(stuNo) || '<span style="color:var(--danger)">—</span>'}</td>
+            <td>${stu ? esc(stu.fullName || stu.studentNumber) : '<span class="wmsg">Not found</span>'}</td>
+            <td style="font-weight:600;color:var(--primary);">${esc(subCode) || '—'}</td>
+            <td style="text-align:center;">${fmtG(parsedRows[parsedRows.length-1].prelimGrade)}</td>
+            <td style="text-align:center;">${fmtG(parsedRows[parsedRows.length-1].midtermGrade)}</td>
+            <td style="text-align:center;">${fmtG(parsedRows[parsedRows.length-1].finalGrade)}</td>
+            <td>${sbadge(status, emsg)}</td>`;
+        tb.appendChild(tr);
+    });
+
+    document.getElementById('pstats').innerHTML = `
+        <div class="pstat ps-ok"><div class="pval">${ok}</div><div class="plbl">Valid</div></div>
+        <div class="pstat ps-warn"><div class="pval">${warn}</div><div class="plbl">Warnings</div></div>
+        <div class="pstat ps-err"><div class="pval">${err}</div><div class="plbl">Errors</div></div>
+        <div class="pstat"><div class="pval">${rows.length}</div><div class="plbl">Total Rows</div></div>`;
+
+    document.getElementById('upload-sec').style.display  = 'none';
+    document.getElementById('preview-sec').style.display = 'block';
+    document.getElementById('bparse').style.display   = 'none';
+    document.getElementById('bback').style.display    = 'flex';
+    document.getElementById('bconfirm').style.display = (ok + warn > 0) ? 'flex' : 'none';
+    setStep(2);
+}
+
+function sbadge(s, msg) {
+    if (s === 'ok')   return '<span class="rp rp-pass">✓ Valid</span>';
+    if (s === 'warn') return `<span class="rp rp-inc">⚠ Warning</span><br><span class="wmsg">${esc(msg)}</span>`;
+    return `<span class="rp rp-fail">✗ Error</span><br><span class="emsg">${esc(msg)}</span>`;
+}
+
+function confirmUpload() {
+    const uploadable = parsedRows
+        .filter(r => r.status === 'ok' || r.status === 'warn')
+        .filter(r => r.prelimGrade !== null || r.midtermGrade !== null || r.finalGrade !== null)
+        .map(r => ({
+            studentNumber: r.stuNo,
+            subjectCode:   r.subCode,
+            prelimGrade:   r.prelimGrade,
+            midtermGrade:  r.midtermGrade,
+            finalGrade:    r.finalGrade
+        }));
+
+    if (!uploadable.length) { showToast('No valid rows to upload.', true); return; }
+
+    const btn = document.getElementById('bconfirm');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading…';
+
+    fetch('/Admin/BulkUploadGrades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': CSRF() },
+        body: JSON.stringify(uploadable)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) { setStep(3); closeExcel(); showToast(d.message || 'Grades uploaded successfully.'); }
+        else showToast(d.message || 'Upload failed.', true);
+    })
+    .catch(() => showToast('Network error. Please try again.', true))
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Confirm &amp; Upload';
+    });
+}
+
+function downloadTemplate() {
+    window.location.href = '/Admin/DownloadGradesTemplate';
+}
+
+let _tt = null;
+function showToast(msg, isErr = false) {
+    const t  = document.getElementById('toast');
+    const ic = document.getElementById('toast-ic');
+    document.getElementById('toast-msg').textContent = msg;
+    ic.className   = isErr ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check';
+    ic.style.color = isErr ? 'var(--danger)' : '#52c41a';
+    t.classList.add('show');
+    if (_tt) clearTimeout(_tt);
+    _tt = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function initials(name) {
+    return (name || '?').split(/\s+/).filter(Boolean)
+        .slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+}
+function infoItem(lbl, val) {
+    return `<div class="si-item"><span class="lbl">${lbl}</span><span class="val">${esc(val)}</span></div>`;
+}
+function esc(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+applyFilter();
+</script>

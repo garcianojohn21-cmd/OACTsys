@@ -1,0 +1,94 @@
+﻿@{
+    Layout = "_StudentLayout";
+    ViewData["Title"] = "Profile Management";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="text-admiral fw-bold mb-0">PROFILE MANAGEMENT</h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["ProfileSuccess"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["ProfileSuccess"]</div>
+                    }
+
+                    <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-4 text-center border-end">
+                                <div class="mb-3">
+                                    <img id="profilePreview" src="https://via.placeholder.com/150"
+                                         class="rounded-circle img-thumbnail shadow-sm"
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                </div>
+                                <label class="btn btn-sm btn-outline-primary mb-3">
+                                    Upload New Photo
+                                    <input type="file" name="ProfilePicture" hidden onchange="previewImage(this)">
+                                </label>
+                                <p class="text-muted small">JPG or PNG. Max size 2MB.</p>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">FULL NAME</label>
+                                        <input type="text" name="FullName" class="form-control" value="Juan Dela Cruz">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">BIRTHDAY</label>
+                                        <input type="date" name="Birthday" class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">EMAIL (Read-Only)</label>
+                                        <input type="email" class="form-control bg-light"
+                                               value="@Context.Session.GetString("UserEmail")" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">MOBILE NUMBER</label>
+                                        <input type="text" name="Mobile" class="form-control" placeholder="0912 345 6789">
+                                    </div>
+
+                                    <div class="col-12 mt-4">
+                                        <h6 class="text-admiral fw-bold border-bottom pb-2">ADDRESS DETAILS</h6>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="small fw-bold">BUILDING / STREET / HOUSE NO.</label>
+                                        <input type="text" name="Street" class="form-control">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="small fw-bold">BARANGAY / CITY / PROVINCE</label>
+                                        <input type="text" name="Barangay" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="small fw-bold">ZIP CODE</label>
+                                        <input type="text" name="ZipCode" class="form-control">
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 text-end">
+                                    <button type="submit" class="btn btn-admiral px-5">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profilePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

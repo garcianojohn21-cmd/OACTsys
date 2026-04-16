@@ -1,0 +1,508 @@
+@model OACTsys.Models.Student
+@{
+    ViewBag.Title = "Pay via GCash";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+}
+
+@section Styles {
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --ink:    #0d1117;
+        --accent: #00d4aa;
+        --blue:   #0099ff;
+        --warn:   #f59e0b;
+        --border: rgba(255,255,255,0.08);
+        --card:   rgba(255,255,255,0.06);
+    }
+    body { background: var(--ink); font-family: 'DM Sans', sans-serif; color: #e2e8f0; min-height: 100vh; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+    .pay-page {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+    }
+
+    .page-logo {
+        text-align: center;
+        padding: 1.5rem 0 0.5rem;
+        font-family: 'Syne', sans-serif;
+        font-size: .85rem;
+        color: #64748b;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    /* ── Amount Hero ── */
+    .amount-hero {
+        background: linear-gradient(135deg, rgba(0,153,255,.15), rgba(0,212,170,.08));
+        border: 1px solid rgba(0,153,255,.2);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        margin: 1.5rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .amount-hero::before {
+        content:'';
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 70% 30%, rgba(0,153,255,.15), transparent 60%);
+        pointer-events: none;
+    }
+    .amount-hero .purpose-label {
+        display: inline-block;
+        background: rgba(0,153,255,.2);
+        color: var(--blue);
+        padding: .3em .9em; border-radius: 999px;
+        font-size: .75rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .08em;
+        margin-bottom: 1rem;
+    }
+    .amount-hero .amount-label {
+        color: #64748b; font-size: .85rem; margin-bottom: .25rem;
+    }
+    .amount-hero .amount-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 3rem; font-weight: 800;
+        color: #fff; line-height: 1;
+        margin-bottom: 1rem;
+    }
+    .amount-hero .student-name {
+        color: #94a3b8; font-size: .875rem;
+    }
+
+    /* ── GCash Card ── */
+    .gcash-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    .gcash-card-title {
+        font-size: .75rem; text-transform: uppercase;
+        letter-spacing: .08em; color: #64748b; margin-bottom: 1rem;
+    }
+    .gcash-receiver {
+        display: flex; align-items: center; gap: 1rem;
+    }
+    .gcash-avatar {
+        width: 48px; height: 48px;
+        background: linear-gradient(135deg, #007bff, #00a0ff);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; flex-shrink: 0;
+    }
+    .gcash-recv-name { font-weight: 600; color: #fff; margin: 0 0 .2rem; }
+    .gcash-recv-num  { color: var(--blue); font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin: 0; }
+
+    /* ── QR Code ── */
+    .qr-wrapper {
+        text-align: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+    .qr-wrapper img { max-width: 200px; border-radius: 10px; }
+    .qr-placeholder {
+        width: 180px; height: 180px;
+        background: rgba(255,255,255,.04);
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        display: inline-flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        color: #475569; font-size: .8rem; gap: .5rem;
+    }
+    .qr-wrapper .qr-label {
+        margin-top: .75rem; color: #64748b; font-size: .8rem;
+    }
+
+    /* ── Main CTA ── */
+    .gcash-cta {
+        display: flex; align-items: center; justify-content: center; gap: .875rem;
+        width: 100%;
+        background: linear-gradient(135deg, #007bff, #0099ff);
+        color: #fff; border: none; border-radius: 16px;
+        padding: 1.1rem; font-family: 'Syne', sans-serif;
+        font-size: 1.05rem; font-weight: 800;
+        cursor: pointer; transition: all .2s;
+        text-decoration: none; margin-bottom: 1rem;
+    }
+    .gcash-cta:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .gcash-cta .cta-icon {
+        width: 36px; height: 36px;
+        background: rgba(255,255,255,.15);
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    /* ── Steps ── */
+    .steps { list-style: none; padding: 0; margin: 0; }
+    .steps li {
+        display: flex; gap: .875rem; align-items: flex-start;
+        padding: .875rem 0;
+        border-bottom: 1px solid rgba(255,255,255,.04);
+        font-size: .875rem; color: #94a3b8;
+    }
+    .steps li:last-child { border-bottom: none; }
+    .step-num {
+        width: 28px; height: 28px; flex-shrink: 0;
+        background: rgba(0,153,255,.15); color: var(--blue);
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Syne', sans-serif; font-weight: 700; font-size: .8rem;
+    }
+    .step-text strong { display: block; color: #fff; margin-bottom: .2rem; }
+
+    /* ── Reference Submit ── */
+    .ref-section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .ref-section h4 { font-size: 1rem; color: #fff; margin: 0 0 1rem; }
+    .form-label { display: block; color: #94a3b8; font-size: .8rem; font-weight: 500; margin-bottom: .5rem; }
+    .form-control {
+        width: 100%; background: rgba(255,255,255,.06);
+        border: 1px solid var(--border); border-radius: 10px;
+        padding: .75rem 1rem; color: #fff; font-family: 'DM Sans', sans-serif;
+        font-size: .9rem; box-sizing: border-box; transition: border-color .2s;
+    }
+    .form-control:focus { outline: none; border-color: var(--blue); }
+    .form-group { margin-bottom: 1rem; }
+
+    .btn-submit {
+        width: 100%; background: var(--accent); color: #0d1117;
+        border: none; border-radius: 12px;
+        padding: .875rem; font-family: 'Syne', sans-serif;
+        font-size: .95rem; font-weight: 700;
+        cursor: pointer; transition: all .2s;
+    }
+    .btn-submit:hover { filter: brightness(1.05); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Status Badge ── */
+    .status-card {
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-top: 1rem;
+        font-size: .875rem;
+        display: flex; align-items: center; gap: .75rem;
+    }
+    .status-card.pending { background: rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.2); color: var(--warn); }
+    .status-card.success { background: rgba(0,212,170,.1); border:1px solid rgba(0,212,170,.2); color: var(--accent); }
+    .status-card.error   { background: rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.2); color: #ef4444; }
+
+    /* ── Divider ── */
+    .or-divider {
+        display: flex; align-items: center; gap: .75rem;
+        color: #475569; font-size: .8rem; margin: 1.25rem 0;
+    }
+    .or-divider::before, .or-divider::after {
+        content:''; flex:1; border-top: 1px solid var(--border);
+    }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+        position: fixed; inset: 0; background: rgba(13,17,23,.85);
+        backdrop-filter: blur(8px);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        z-index: 999; display: none;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner-lg {
+        width: 52px; height: 52px;
+        border: 3px solid rgba(0,153,255,.2);
+        border-top-color: var(--blue);
+        border-radius: 50%; animation: spin .8s linear infinite;
+        margin-bottom: 1rem;
+    }
+    @@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+}
+
+<div class="pay-page">
+
+    <div class="page-logo">Northern College — Secure Payment</div>
+
+    <!-- Amount Hero -->
+    <div class="amount-hero">
+        <div class="purpose-label" id="purposeLabel">Loading…</div>
+        <div class="amount-label">Amount Due</div>
+        <div class="amount-value" id="amountDisplay">₱—</div>
+        <div class="student-name" id="studentDisplay">Loading student info…</div>
+    </div>
+
+    <!-- GCash Receiver -->
+    <div class="gcash-card">
+        <div class="gcash-card-title">Pay To</div>
+        <div class="gcash-receiver">
+            <div class="gcash-avatar">💳</div>
+            <div>
+                <p class="gcash-recv-name" id="receiverName">—</p>
+                <p class="gcash-recv-num"  id="receiverNumber">—</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code -->
+    <div class="qr-wrapper" id="qrSection" style="display:none">
+        <div class="qr-label" style="margin-bottom:.75rem; color:#94a3b8; font-size:.8rem">Scan QR Code in GCash App</div>
+        <div id="qrImageContainer"></div>
+        <div class="qr-label">Amount is pre-filled in the QR — just scan and confirm</div>
+    </div>
+
+    <!-- GCash CTA -->
+    <a href="#" id="gcashDeepLink" class="gcash-cta" onclick="launchGCash(event)">
+        <div class="cta-icon">📱</div>
+        <div>
+            <div style="font-size:.7rem; font-weight:500; opacity:.8">TAP TO OPEN</div>
+            Open GCash & Pay Now
+        </div>
+    </a>
+
+    <div class="or-divider">or scan QR code above</div>
+
+    <!-- How it works -->
+    <div class="gcash-card">
+        <div class="gcash-card-title">How It Works</div>
+        <ul class="steps">
+            <li>
+                <div class="step-num">1</div>
+                <div class="step-text">
+                    <strong>Tap "Open GCash & Pay Now"</strong>
+                    GCash opens automatically with your school's number and the exact amount pre-filled.
+                </div>
+            </li>
+            <li>
+                <div class="step-num">2</div>
+                <div class="step-text">
+                    <strong>Review &amp; Confirm</strong>
+                    Check the amount and receiver, then tap Send Money in GCash.
+                </div>
+            </li>
+            <li>
+                <div class="step-num">3</div>
+                <div class="step-text">
+                    <strong>Submit Reference Number</strong>
+                    After payment, copy the 13-digit reference number from GCash and paste it below.
+                </div>
+            </li>
+            <li>
+                <div class="step-num">4</div>
+                <div class="step-text">
+                    <strong>Wait for Verification</strong>
+                    Admin will verify your payment and mark it as confirmed.
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Reference Number Submission -->
+    <div class="ref-section" id="refSection" style="display:none">
+        <h4>📋 Submit GCash Reference Number</h4>
+        <div class="form-group">
+            <label class="form-label">GCash Reference Number (13 digits)</label>
+            <input type="text" class="form-control" id="refInput"
+                   placeholder="e.g. 9021884112345" maxlength="13"
+                   oninput="this.value = this.value.replace(/\D/g,'')">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Screenshot of Payment (optional)</label>
+            <input type="file" class="form-control" id="proofFile" accept="image/*">
+        </div>
+        <div id="refStatus" class="status-card pending" style="display:none"></div>
+        <button class="btn-submit" id="submitRefBtn" onclick="submitReference()">Submit Reference Number</button>
+    </div>
+
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-lg"></div>
+    <p style="color:#94a3b8; font-family:'DM Sans',sans-serif">Opening GCash…</p>
+</div>
+
+@section Scripts {
+<script>
+// ──────────────────────────────────────
+// Config (injected from URL params / session)
+// ──────────────────────────────────────
+const urlParams    = new URLSearchParams(window.location.search);
+const studentId    = parseInt(urlParams.get('studentId'))  || @(Model?.StudentId ?? 0);
+const paymentType  = urlParams.get('type')                 || 'Enrollment';
+const amount       = parseFloat(urlParams.get('amount'))   || @(ViewBag.TuitionAmount ?? 0);
+const studentName = @Json.Serialize((string)(ViewBag.StudentName ?? Model.StudentNumber ?? "Student"));
+
+let currentPaymentId  = null;
+let gcashDeepLinkUrl  = null;
+
+// ──────────────────────────────────────
+// INIT
+// ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    // Display student info
+    document.getElementById('purposeLabel').textContent   = paymentType + ' Fee';
+    document.getElementById('amountDisplay').textContent  = '₱' + amount.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    document.getElementById('studentDisplay').textContent = studentName;
+
+    await loadGCashConfig();
+    await initiatePayment();
+});
+
+// ──────────────────────────────────────
+// LOAD GCASH CONFIG
+// ──────────────────────────────────────
+async function loadGCashConfig() {
+    try {
+        const res  = await fetch('/Payments/GetGCashConfig');
+        const json = await res.json();
+        if (json.success) {
+            document.getElementById('receiverName').textContent   = json.accountName;
+            document.getElementById('receiverNumber').textContent = formatPhone(json.gcashNumber);
+
+            if (json.qrCodePath) {
+                document.getElementById('qrImageContainer').innerHTML =
+                    `<img src="${json.qrCodePath}" style="max-width:200px; border-radius:10px; border:1px solid rgba(255,255,255,.08)">`;
+                document.getElementById('qrSection').style.display = 'block';
+            }
+        } else {
+            document.getElementById('receiverName').textContent   = 'Not configured';
+            document.getElementById('receiverNumber').textContent = 'Contact admin';
+        }
+    } catch {
+        document.getElementById('receiverName').textContent = 'Error loading config';
+    }
+}
+
+// ──────────────────────────────────────
+// INITIATE PAYMENT (create pending record + get deep link)
+// ──────────────────────────────────────
+async function initiatePayment() {
+    try {
+        const res  = await fetch('/Payments/InitiateGCashPayment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId, paymentType, amount })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            currentPaymentId = json.paymentId;
+            gcashDeepLinkUrl = json.deepLink;
+
+            // Show reference section now that we have a paymentId
+            document.getElementById('refSection').style.display = 'block';
+        } else {
+            showRefStatus('GCash setup incomplete: ' + json.message, 'error');
+        }
+    } catch (err) {
+        showRefStatus('Failed to initialize payment.', 'error');
+    }
+}
+
+// ──────────────────────────────────────
+// LAUNCH GCASH (deep link)
+// ──────────────────────────────────────
+function launchGCash(e) {
+    e.preventDefault();
+    if (!gcashDeepLinkUrl) {
+        alert('Payment not initialized yet. Please wait.');
+        return;
+    }
+
+    // Show loading briefly
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('show');
+
+    // Try to open GCash app via deep link
+    window.location.href = gcashDeepLinkUrl;
+
+    // Hide overlay after 2s (app should have launched by then)
+    setTimeout(() => {
+        overlay.classList.remove('show');
+        // If still on page, GCash may not be installed — show alternative
+        document.getElementById('qrSection').style.display = 'block';
+        document.getElementById('qrSection').scrollIntoView({ behavior: 'smooth' });
+    }, 2500);
+}
+
+// ──────────────────────────────────────
+// SUBMIT REFERENCE NUMBER
+// ──────────────────────────────────────
+async function submitReference() {
+    const ref = document.getElementById('refInput').value.trim();
+    if (!ref || ref.length < 13) {
+        showRefStatus('Please enter a valid 13-digit GCash reference number.', 'error');
+        return;
+    }
+    if (!currentPaymentId) {
+        showRefStatus('Payment not initialized. Please refresh.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('submitRefBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    // Handle proof file upload if present
+    let proofPath = null;
+    const proofFile = document.getElementById('proofFile').files[0];
+    if (proofFile) {
+        const fd = new FormData();
+        fd.append('file', proofFile);
+        try {
+            const ur = await fetch('/Payments/UploadProof', { method: 'POST', body: fd });
+            const uj = await ur.json();
+            if (uj.success) proofPath = uj.path;
+        } catch {}
+    }
+
+    try {
+        const res  = await fetch('/Payments/SubmitGCashReference', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId: currentPaymentId, referenceNumber: ref, proofPath })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            showRefStatus('✓ Reference submitted! Your payment is now under review. You\'ll be notified once verified.', 'success');
+            btn.style.display = 'none';
+        } else {
+            showRefStatus(json.message, 'error');
+            btn.disabled = false;
+            btn.textContent = 'Submit Reference Number';
+        }
+    } catch {
+        showRefStatus('Network error. Please try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Submit Reference Number';
+    }
+}
+
+// ──────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────
+function formatPhone(n) {
+    n = (n || '').replace(/\D/g, '');
+    return n.replace(/(\d{4})(\d{3})(\d{4})/, '$1-$2-$3');
+}
+
+function showRefStatus(msg, type) {
+    const el = document.getElementById('refStatus');
+    el.textContent = msg;
+    el.className   = `status-card ${type}`;
+    el.style.display = 'flex';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+}

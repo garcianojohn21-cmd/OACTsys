@@ -1,0 +1,1249 @@
+﻿@{
+    ViewBag.Title = "Enrollment Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    
+
+    :root {
+        --navy:      #051094;
+        --navy-deep: #030b72;
+        --navy-soft: #1a3fd4;
+        --navy-tint: #e8ebff;
+        --navy-pale: #f0f3ff;
+        --green:     #16a34a; --green-bg:  #dcfce7;
+        --amber:     #d97706; --amber-bg:  #fef3c7;
+        --red:       #dc2626; --red-bg:    #fee2e2;
+        --sky:       #0284c7; --sky-bg:    #e0f2fe;
+        --purple:    #7c3aed; --purple-bg: #ede9fe;
+        --white:     #ffffff;
+        --surface:   #f5f7ff;
+        --border:    #e2e7ff;
+        --text-1:    #0d1b4b;
+        --text-2:    #4a5b8a;
+        --text-3:    #8a97c0;
+        --shadow-sm: 0 1px 3px rgba(5,16,148,.08);
+        --shadow-md: 0 4px 16px rgba(5,16,148,.10);
+        --shadow-lg: 0 12px 40px rgba(5,16,148,.14);
+        --radius:    14px;
+        --radius-sm: 9px;
+        --radius-xs: 6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface); }
+
+    /* ── HERO ── */
+    .em-hero {
+        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-soft) 100%);
+        padding: 1.75rem 2rem 3.5rem; position: relative; overflow: hidden;
+    }
+    .em-hero::before {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background:
+            radial-gradient(ellipse 50% 65% at 90% 0%,  rgba(59,130,246,.22) 0%, transparent 55%),
+            radial-gradient(ellipse 30% 50% at 0% 100%, rgba(255,255,255,.06) 0%, transparent 50%);
+    }
+    .em-hero::after {
+        content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 40px;
+        background: var(--surface); clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .em-hero-inner { position: relative; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 1.25rem; justify-content: space-between; }
+    .em-hero-left  { display: flex; align-items: center; gap: 1rem; }
+    .em-hero-icon  { width: 56px; height: 56px; border-radius: var(--radius-sm); background: rgba(255,255,255,.15); border: 2px solid rgba(255,255,255,.25); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; flex-shrink: 0; }
+    .em-hero-title { font-size: clamp(1.25rem,2.5vw,1.7rem); font-weight: 800; color: #fff; margin: 0 0 .2rem; letter-spacing: -.3px; }
+    .em-hero-sub   { font-size: .78rem; color: rgba(255,255,255,.62); margin: 0; font-weight: 500; }
+
+    .em-hero-nav { display: flex; gap: .55rem; flex-wrap: wrap; }
+    .em-nav-pill {
+        background: rgba(255,255,255,.12); color: rgba(255,255,255,.9);
+        border: 1.5px solid rgba(255,255,255,.22); border-radius: var(--radius-sm);
+        padding: .5rem 1rem; font-size: .77rem; font-weight: 700; font-family: inherit;
+        cursor: pointer; display: flex; align-items: center; gap: .4rem;
+        text-decoration: none; transition: all .2s; white-space: nowrap;
+    }
+    .em-nav-pill:hover { background: rgba(255,255,255,.22); color: #fff; }
+    .em-nav-pill.green  { background: rgba(74,222,128,.2);  border-color: rgba(74,222,128,.4); }
+    .em-nav-pill.amber  { background: rgba(251,191,36,.2);  border-color: rgba(251,191,36,.4); }
+    .em-nav-pill.gray   { background: rgba(255,255,255,.08); }
+    .em-nav-pill.back   { background: rgba(255,255,255,.08); }
+
+    .readonly-notice {
+        background: var(--amber-bg); border-left: 4px solid var(--amber);
+        border-radius: var(--radius-sm); padding: .85rem 1.1rem;
+        display: flex; align-items: center; gap: .65rem;
+        font-size: .8rem; font-weight: 600; color: #92400e; margin-bottom: 1.25rem;
+    }
+    .readonly-notice i { font-size: 1.1rem; flex-shrink: 0; }
+
+    .em-content { padding: 1.75rem 2rem 3rem; }
+
+    .em-card {
+        background: var(--white); border: 1.5px solid var(--border);
+        border-radius: var(--radius); box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem; overflow: hidden;
+    }
+    .em-card-head {
+        padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--navy-pale);
+        display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+    }
+    .em-card-step {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: var(--navy); color: #fff; font-weight: 800; font-size: .9rem;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; box-shadow: 0 2px 8px rgba(5,16,148,.25);
+    }
+    .em-card-title { font-size: .82rem; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--navy); margin: 0; }
+    .em-card-body  { padding: 1.5rem; }
+
+    /* ── BUTTONS ── */
+    .btn-navy { background: var(--navy); color: #fff; border: none; border-radius: var(--radius-sm); padding: .55rem 1.1rem; font-size: .8rem; font-weight: 700; font-family: inherit; display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; white-space: nowrap; transition: background .2s, transform .15s; }
+    .btn-navy:hover { background: var(--navy-deep); transform: translateY(-1px); }
+    .btn-outline { background: var(--white); color: var(--text-2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: .55rem 1.1rem; font-size: .8rem; font-weight: 700; font-family: inherit; display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; white-space: nowrap; transition: all .2s; }
+    .btn-outline:hover { border-color: var(--navy); color: var(--navy); background: var(--navy-pale); }
+    .btn-green  { background: var(--green);  color: #fff; border: none; border-radius: var(--radius-sm); padding: .55rem 1.1rem; font-size: .8rem; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; transition: opacity .2s; }
+    .btn-green:hover  { opacity: .88; }
+    .btn-red    { background: var(--red);    color: #fff; border: none; border-radius: var(--radius-sm); padding: .4rem .75rem; font-size: .75rem; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; transition: opacity .2s; }
+    .btn-red:hover    { opacity: .88; }
+    .btn-sky    { background: var(--sky);    color: #fff; border: none; border-radius: var(--radius-sm); padding: .55rem 1.1rem; font-size: .8rem; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; transition: opacity .2s; }
+    .btn-sky:hover    { opacity: .88; }
+    .btn-purple { background: var(--purple); color: #fff; border: none; border-radius: var(--radius-sm); padding: .55rem 1.1rem; font-size: .8rem; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; transition: opacity .2s; }
+    .btn-purple:hover { opacity: .88; }
+    .btn-outline-navy { background: var(--white); color: var(--navy); border: 1.5px solid var(--navy); border-radius: var(--radius-sm); padding: .4rem .75rem; font-size: .75rem; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; transition: all .2s; }
+    .btn-outline-navy:hover { background: var(--navy); color: #fff; }
+    .btn-outline-red  { background: var(--white); color: var(--red);  border: 1.5px solid var(--red);  border-radius: var(--radius-sm); padding: .4rem .75rem; font-size: .75rem; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; transition: all .2s; }
+    .btn-outline-red:hover  { background: var(--red);  color: #fff; }
+    .btn-next { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%); color: #fff; border: none; border-radius: var(--radius-sm); padding: .65rem 1.5rem; font-size: .82rem; font-weight: 800; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: .45rem; box-shadow: 0 4px 14px rgba(5,16,148,.28); transition: transform .2s, box-shadow .2s; }
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(5,16,148,.35); }
+
+    /* ── FORMS ── */
+    .em-input, .em-select { width: 100%; padding: .55rem .8rem; border: 1.5px solid var(--border); border-radius: var(--radius-xs); font-family: inherit; font-size: .82rem; color: var(--text-1); background: var(--surface); outline: none; transition: border-color .2s, box-shadow .2s; }
+    .em-input:focus, .em-select:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px rgba(5,16,148,.1); }
+    .em-input::placeholder { color: var(--text-3); }
+    .em-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--text-2); display: block; margin-bottom: .28rem; }
+
+    .field-item { background: var(--amber-bg); border: 2px dashed #f59e0b; border-radius: var(--radius-sm); padding: 1.1rem 1.25rem; margin-bottom: .9rem; }
+
+    .subject-add-form { background: var(--navy-pale); border: 1.5px dashed rgba(5,16,148,.25); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.25rem; display: none; }
+    .subject-add-title { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--navy); margin-bottom: 1rem; display: flex; align-items: center; gap: .4rem; }
+
+    .filter-row { background: var(--navy-pale); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; }
+    .filter-row > div { flex: 1; min-width: 130px; }
+
+    /* ── TABLES ── */
+    .em-table-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .em-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .em-table th { background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%); color: #fff; font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; padding: .75rem 1rem; white-space: nowrap; text-align: left; }
+    .em-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .em-table tr:last-child td { border-bottom: none; }
+    .em-table tr:hover td { background: var(--navy-pale); }
+    .drag-handle { cursor: grab; color: var(--text-3); font-size: 1.15rem; line-height: 1; user-select: none; transition: color .2s; padding: 0 .2rem; }
+    .drag-handle:hover { color: var(--navy); }
+    .drag-handle:active { cursor: grabbing; }
+    .sortable-ghost  { opacity: .35; background: #dbeafe !important; outline: 2px dashed var(--navy-soft); }
+    .sortable-chosen { background: #eff6ff !important; box-shadow: 0 6px 20px rgba(5,16,148,.15); }
+
+    /* ── BADGES ── */
+    .badge-type     { font-size: .62rem; font-weight: 700; padding: .18rem .58rem; border-radius: 50px; background: var(--navy-pale); color: var(--navy); }
+    .badge-required { font-size: .62rem; font-weight: 700; padding: .18rem .58rem; border-radius: 50px; background: var(--red-bg); color: var(--red); }
+    .badge-optional { font-size: .62rem; font-weight: 700; padding: .18rem .58rem; border-radius: 50px; background: var(--border); color: var(--text-2); }
+    .badge-category { font-size: .62rem; font-weight: 700; padding: .18rem .58rem; border-radius: var(--radius-xs); background: var(--navy); color: #fff; }
+    .badge-amt      { font-size: .62rem; font-weight: 700; padding: .18rem .58rem; border-radius: 50px; background: var(--sky-bg); color: var(--sky); }
+    .badge-avt      { font-size: .62rem; font-weight: 700; padding: .18rem .58rem; border-radius: 50px; background: var(--green-bg); color: var(--green); }
+
+    .option-box { background: var(--navy-pale); border-radius: var(--radius-xs); padding: .85rem 1rem; margin-top: .6rem; border: 1px solid var(--border); }
+    .option-box-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--navy); margin-bottom: .65rem; }
+    .option-row { display: flex; gap: .4rem; margin-bottom: .4rem; }
+    .option-row input { flex: 1; }
+
+    .action-bar { display: flex; justify-content: flex-end; gap: .65rem; flex-wrap: wrap; padding: 1rem 1.5rem; border-top: 1px solid var(--border); background: var(--navy-pale); border-radius: 0 0 var(--radius) var(--radius); }
+    .action-bar.between { justify-content: space-between; }
+
+    .info-banner { background: var(--sky-bg); border-left: 4px solid var(--sky); border-radius: var(--radius-sm); padding: .9rem 1.1rem; display: flex; align-items: center; gap: .65rem; font-size: .8rem; color: #075985; font-weight: 600; }
+    .info-banner i { font-size: 1.1rem; flex-shrink: 0; }
+
+    .drag-hint { font-size: .68rem; color: var(--text-3); font-style: italic; display: flex; align-items: center; gap: .3rem; margin-left: auto; }
+    .empty-row td { text-align: center; padding: 2.5rem; color: var(--text-3); font-size: .82rem; }
+    .empty-row i   { font-size: 1.75rem; display: block; margin-bottom: .5rem; }
+
+    /* ══════════════════════════════════════════
+       UPLOAD SUBJECT MODAL
+    ══════════════════════════════════════════ */
+    .upload-modal-overlay {
+        position: fixed; inset: 0; background: rgba(3,11,114,.6);
+        z-index: 9990; display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .upload-modal-overlay.show { display: flex; }
+    .upload-modal {
+        background: var(--white); border-radius: var(--radius);
+        box-shadow: var(--shadow-lg); width: 96%; max-width: 740px;
+        max-height: 90vh; overflow-y: auto;
+        animation: modalIn .22s ease;
+    }
+    @@keyframes modalIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+    .upload-modal-head {
+        display: flex; align-items: center; gap: .75rem;
+        padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--border);
+        background: var(--purple-bg); position: sticky; top: 0; z-index: 2;
+    }
+    .upload-modal-icon { width: 42px; height: 42px; border-radius: var(--radius-xs); background: var(--purple); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .upload-modal-head h5 { font-size: .95rem; font-weight: 800; color: var(--purple); margin: 0; }
+    .upload-modal-head small { font-size: .71rem; color: var(--text-3); }
+    .upload-modal-body { padding: 1.4rem; }
+    .upload-modal-foot { display: flex; justify-content: flex-end; gap: .65rem; flex-wrap: wrap; padding: 1rem 1.4rem; border-top: 1px solid var(--border); background: var(--surface); border-radius: 0 0 var(--radius) var(--radius); }
+
+    /* Template download strip */
+    .template-strip {
+        background: var(--purple-bg); border: 1px solid rgba(124,58,237,.22);
+        border-radius: var(--radius-sm); padding: .85rem 1.1rem;
+        display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+        margin-bottom: 1.1rem;
+    }
+    .template-strip-text { font-size: .78rem; color: var(--text-2); font-weight: 600; flex: 1; min-width: 180px; }
+    .template-dl {
+        display: inline-flex; align-items: center; gap: .4rem;
+        font-size: .76rem; font-weight: 700; color: var(--purple);
+        text-decoration: none; background: rgba(124,58,237,.12);
+        padding: .4rem .85rem; border-radius: var(--radius-xs); transition: background .2s;
+    }
+    .template-dl:hover { background: rgba(124,58,237,.22); color: var(--purple); }
+
+    /* Drop zone */
+    .drop-zone {
+        border: 2px dashed rgba(124,58,237,.4); border-radius: var(--radius-sm);
+        background: rgba(255,255,255,.7); padding: 2rem 1.5rem;
+        text-align: center; cursor: pointer; transition: all .25s; position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--purple); background: rgba(237,233,254,.5); }
+    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-zone-icon  { font-size: 2.5rem; color: var(--purple); margin-bottom: .6rem; display: block; }
+    .drop-zone-label { font-size: .85rem; font-weight: 700; color: var(--purple); margin: 0 0 .3rem; }
+    .drop-zone-sub   { font-size: .73rem; color: var(--text-3); margin: 0; }
+    .drop-zone-file  { font-size: .78rem; font-weight: 700; color: var(--green); margin-top: .55rem; display: none; }
+
+    /* Replace checkbox */
+    .replace-wrap {
+        display: flex; align-items: center; gap: .5rem; margin-top: .85rem;
+        font-size: .78rem; font-weight: 600; color: var(--text-2); cursor: pointer;
+    }
+    .replace-wrap input { accent-color: var(--purple); width: 15px; height: 15px; cursor: pointer; }
+
+    /* Progress */
+    .upload-progress { margin-top: .85rem; display: none; }
+    .upload-progress-bar-wrap { height: 7px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .upload-progress-bar { height: 100%; background: linear-gradient(90deg, var(--purple), var(--sky)); border-radius: 99px; width: 0%; transition: width .35s ease; }
+    .upload-progress-label { font-size: .72rem; color: var(--text-2); font-weight: 600; margin-top: .35rem; }
+
+    /* Preview */
+    .preview-box { margin-top: 1.1rem; display: none; }
+    .preview-box-title { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-2); margin-bottom: .55rem; display: flex; align-items: center; gap: .4rem; }
+    .preview-stats { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: .75rem; }
+    .preview-stat { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: .35rem .75rem; font-size: .72rem; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: .3rem; }
+    .preview-stat.green  { border-color: var(--green);  color: var(--green);  background: var(--green-bg);  }
+    .preview-stat.purple { border-color: var(--purple); color: var(--purple); background: var(--purple-bg); }
+
+    .preview-table-wrap { max-height: 300px; overflow-y: auto; border-radius: var(--radius-xs); border: 1px solid var(--border); }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: .74rem; }
+    .preview-table th { background: var(--purple); color: #fff; font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; padding: .6rem .8rem; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+    .preview-table td { padding: .55rem .8rem; border-bottom: 1px solid var(--border); color: var(--text-1); }
+    .preview-table tr:last-child td { border-bottom: none; }
+    .preview-table tr:hover td { background: var(--purple-bg); }
+    .preview-table tr.is-new td { background: rgba(220,252,231,.4); }
+
+    /* ── TOAST ── */
+    #toast-rack { position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 9999; display: flex; flex-direction: column; gap: .45rem; }
+    .toast-item { background: var(--white); border-radius: var(--radius-sm); padding: .7rem 1rem; font-size: .81rem; font-weight: 600; box-shadow: var(--shadow-lg); border-left: 4px solid var(--navy); display: flex; align-items: center; gap: .55rem; min-width: 240px; color: var(--text-1); animation: toastIn .22s ease; transition: opacity .35s; }
+    .toast-item.success { border-color: var(--green); }
+    .toast-item.danger  { border-color: var(--red);   }
+    .toast-item.warning { border-color: var(--amber);  }
+    .toast-item i { font-size: .9rem; flex-shrink: 0; }
+    .toast-item.success i { color: var(--green); }
+    .toast-item.danger  i { color: var(--red);   }
+    .toast-item.warning i { color: var(--amber);  }
+    .toast-item.info    i { color: var(--navy);  }
+    @@keyframes toastIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+
+    @@media (max-width: 768px) {
+        .em-hero   { padding: 1.4rem 1.25rem 3rem; }
+        .em-content { padding: 1.25rem; }
+        .em-card-body { padding: 1.1rem; }
+    }
+</style>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════ -->
+<div class="em-hero">
+    <div class="em-hero-inner">
+        <div class="em-hero-left">
+            <div class="em-hero-icon"><i class="bi bi-gear-fill"></i></div>
+            <div>
+                <h1 class="em-hero-title">Enrollment Management</h1>
+                <p class="em-hero-sub">Configure form fields and subjects for each program</p>
+            </div>
+        </div>
+        <div class="em-hero-nav">
+            <button class="em-nav-pill green" onclick="navigateToDone()"><i class="bi bi-check-circle-fill"></i> Done</button>
+            <button class="em-nav-pill amber" onclick="navigateToPending()"><i class="bi bi-clock-history"></i> Pending</button>
+            <button class="em-nav-pill gray"  onclick="navigateToArchive()"><i class="bi bi-archive-fill"></i> Archive</button>
+            <button class="em-nav-pill back"  onclick="navigateBack()"><i class="bi bi-arrow-left"></i> Dashboard</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     CONTENT
+═══════════════════════════════════════════════════ -->
+<div class="em-content">
+
+    <div class="readonly-notice d-none" id="readonlyNotice">
+        <i class="bi bi-lock-fill"></i>
+        <span><strong>Read-Only Mode:</strong> Only Super Administrators can modify enrollment fields and subjects.</span>
+    </div>
+
+    <!-- ══ STEP 1: ENROLLMENT FORM FIELDS ══════════════════ -->
+    <div class="em-card">
+        <div class="em-card-head">
+            <div class="em-card-step">1</div>
+            <span class="em-card-title"><i class="bi bi-ui-checks me-1"></i>Enrollment Form Fields</span>
+            <button class="btn-navy ms-auto" onclick="addField()" id="addFieldBtn">
+                <i class="bi bi-plus-circle"></i> Add Field
+            </button>
+        </div>
+        <div class="em-card-body">
+            <div id="formFieldsEdit"></div>
+            <div id="finalizedFieldsContainer" style="display:none;">
+                <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.75rem;">
+                    <span style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--green);display:flex;align-items:center;gap:.35rem;">
+                        <i class="bi bi-check-circle-fill"></i> Finalized Fields
+                    </span>
+                    <span class="drag-hint" id="dragHintLabel"><i class="bi bi-grip-vertical"></i> Drag to reorder</span>
+                </div>
+                <div class="em-table-wrap">
+                    <table class="em-table">
+                        <thead>
+                            <tr>
+                                <th style="width:3%" class="text-center">⠿</th>
+                                <th style="width:14%">Category</th>
+                                <th style="width:18%">Field Name</th>
+                                <th style="width:10%">Type</th>
+                                <th style="width:9%">Required</th>
+                                <th style="width:20%">Options / Details</th>
+                                <th style="width:16%">Form Placeholder</th>
+                                <th style="width:10%" class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finalizedFieldsList"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="noFieldsMsg" style="text-align:center;padding:2.5rem;color:var(--text-3);font-size:.82rem;">
+                <i class="bi bi-ui-checks" style="font-size:2rem;display:block;margin-bottom:.5rem;"></i>
+                No fields yet. Click <strong>Add Field</strong> to begin.
+            </div>
+        </div>
+        <div class="action-bar">
+            <button class="btn-sky" onclick="loadSavedFields()"><i class="bi bi-arrow-clockwise"></i> Reload</button>
+            <button class="btn-outline" onclick="location.reload()"><i class="bi bi-x-circle"></i> Cancel</button>
+            <button class="btn-navy" onclick="saveEnrollmentFields()" id="saveFieldsBtn"><i class="bi bi-save"></i> Save All Changes</button>
+        </div>
+    </div>
+
+    <!-- ══ STEP 2: SUBJECTS ════════════════════════════════ -->
+    <div class="em-card">
+        <div class="em-card-head">
+            <div class="em-card-step">2</div>
+            <span class="em-card-title"><i class="bi bi-book me-1"></i>Subjects per Course / Year / Semester</span>
+
+            <button class="btn-purple ms-auto me-2" onclick="openUploadModal()" id="uploadSubjectBtn"
+                    title="Bulk-import subjects from the .docx curriculum template">
+                <i class="bi bi-file-earmark-arrow-up"></i> Upload Subject
+            </button>
+
+            <button class="btn-navy" onclick="toggleAddSubjectForm()" id="addSubjectBtn">
+                <i class="bi bi-plus-circle"></i> Add Subject
+            </button>
+        </div>
+        <div class="em-card-body">
+
+            <!-- Add subject form -->
+            <div class="subject-add-form" id="addSubjectForm">
+                <div class="subject-add-title"><i class="bi bi-plus-square"></i> New Subject Details</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.65rem;">
+                    <div>
+                        <label class="em-label">Program</label>
+                        <select class="em-select" id="newSubjectProgram">
+                            <option value="">-- Select --</option>
+                            <option value="AMT">AMT</option>
+                            <option value="AVT">AVT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="em-label">Course Code</label>
+                        <input type="text" class="em-input" id="newSubjectCourseCode" placeholder="e.g. AMT101">
+                    </div>
+                    <div style="grid-column:span 2;">
+                        <label class="em-label">Descriptive Title</label>
+                        <input type="text" class="em-input" id="newSubjectTitle" placeholder="Subject name">
+                    </div>
+                    <div><label class="em-label">Lec Hrs</label><input type="number" class="em-input" id="newSubjectLec" value="0" min="0"></div>
+                    <div><label class="em-label">Lab Hrs</label><input type="number" class="em-input" id="newSubjectLab" value="0" min="0"></div>
+                    <div><label class="em-label">Units</label><input type="number" class="em-input" id="newSubjectUnits" value="0" min="0" step="0.5"></div>
+                    <div><label class="em-label">Total Hrs</label><input type="number" class="em-input" id="newSubjectTotalHours" value="0" min="0"></div>
+                    <div>
+                        <label class="em-label">Year Level</label>
+                        <select class="em-select" id="newSubjectYear">
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="em-label">Semester</label>
+                        <select class="em-select" id="newSubjectSemester">
+                            <option value="1">1st Semester</option>
+                            <option value="2">2nd Semester</option>
+                            <option value="3">Summer</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex;gap:.55rem;margin-top:1rem;">
+                    <button class="btn-green" onclick="addNewSubject()"><i class="bi bi-check-lg"></i> Add to List</button>
+                    <button class="btn-outline" onclick="toggleAddSubjectForm()"><i class="bi bi-x-lg"></i> Cancel</button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-row">
+                <div>
+                    <label class="em-label"><i class="bi bi-funnel me-1"></i>Program</label>
+                    <select class="em-select" id="filterProgram" onchange="filterSubjects()">
+                        <option value="">All Programs</option>
+                        <option value="AMT">AMT</option>
+                        <option value="AVT">AVT</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="em-label"><i class="bi bi-calendar me-1"></i>Year</label>
+                    <select class="em-select" id="filterYear" onchange="filterSubjects()">
+                        <option value="">All Years</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="em-label"><i class="bi bi-clock me-1"></i>Semester</label>
+                    <select class="em-select" id="filterSemester" onchange="filterSubjects()">
+                        <option value="">All Semesters</option>
+                        <option value="1">1st Semester</option>
+                        <option value="2">2nd Semester</option>
+                        <option value="3">Summer</option>
+                    </select>
+                </div>
+                <div style="flex:0;min-width:auto;">
+                    <label class="em-label">&nbsp;</label>
+                    <button class="btn-outline" onclick="clearFilters()" style="width:100%;"><i class="bi bi-x-circle"></i> Clear</button>
+                </div>
+            </div>
+
+            <!-- Subjects table -->
+            <div class="em-table-wrap">
+                <table class="em-table">
+                    <thead>
+                        <tr>
+                            <th>Program</th><th>Code</th><th>Title</th>
+                            <th class="text-center">Lec</th><th class="text-center">Lab</th>
+                            <th class="text-center">Units</th><th class="text-center">Total Hrs</th>
+                            <th>Year</th><th>Semester</th><th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjectsTableBody">
+                        <tr class="empty-row"><td colspan="10"><i class="bi bi-inbox"></i> No subjects yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="action-bar between">
+            <button class="btn-sky" onclick="loadSavedSubjects()"><i class="bi bi-arrow-clockwise"></i> Reload</button>
+            <div style="display:flex;gap:.55rem;flex-wrap:wrap;">
+                <button class="btn-outline" onclick="location.reload()"><i class="bi bi-x-circle"></i> Cancel</button>
+                <button class="btn-navy" onclick="saveSubjects()" id="saveSubjectsBtn"><i class="bi bi-save"></i> Save Subjects</button>
+                <button class="btn-next" onclick="navigateToTuitionSetup()">Next: Tuition Setup <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <span><strong>Next Step:</strong> After saving subjects, click <strong>Next: Tuition Setup</strong> to configure fees per year level and semester.</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     UPLOAD SUBJECT MODAL
+═══════════════════════════════════════════════════ -->
+<div class="upload-modal-overlay" id="uploadModalOverlay">
+    <div class="upload-modal">
+
+        <!-- Head -->
+        <div class="upload-modal-head">
+            <div class="upload-modal-icon"><i class="bi bi-file-earmark-word"></i></div>
+            <div style="flex:1;">
+                <h5>Upload Subjects from Template</h5>
+                <small>Bulk-import subjects using the curriculum .docx template</small>
+            </div>
+            <button onclick="closeUploadModal()" style="background:none;border:none;font-size:1.3rem;color:var(--text-3);cursor:pointer;line-height:1;padding:.2rem;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="upload-modal-body">
+
+            <!-- Download template strip -->
+            <div class="template-strip">
+                <div class="template-strip-text">
+                    <i class="bi bi-info-circle me-1" style="color:var(--purple);"></i>
+                    Use the official curriculum template to ensure correct parsing. Download it below if you don't have it yet.
+                </div>
+                <a href="/templates/subjects_template.docx" download class="template-dl">
+                    <i class="bi bi-download"></i> subjects_template.docx
+                </a>
+            </div>
+
+            <!-- Drop zone -->
+            <div class="drop-zone" id="dropZone">
+                <input type="file" id="docxFileInput"
+                       accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                       onchange="handleFileSelected(this)">
+                <i class="bi bi-cloud-upload drop-zone-icon"></i>
+                <p class="drop-zone-label">Drag &amp; drop your .docx here, or click to browse</p>
+                <p class="drop-zone-sub">Accepts <strong>.docx</strong> format &bull; Must match the curriculum template structure</p>
+                <p class="drop-zone-file" id="dropZoneFileName"></p>
+            </div>
+
+            <!-- Replace existing toggle -->
+            <label class="replace-wrap" id="replaceToggleWrap" style="display:none;">
+                <input type="checkbox" id="replaceExistingCheck">
+                <span>Overwrite existing subjects that match (same Program + Course Code + Year + Semester)</span>
+            </label>
+
+            <!-- Progress bar -->
+            <div class="upload-progress" id="uploadProgress">
+                <div class="upload-progress-bar-wrap">
+                    <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                </div>
+                <div class="upload-progress-label" id="uploadProgressLabel">Processing…</div>
+            </div>
+
+            <!-- Preview box -->
+            <div class="preview-box" id="previewBox">
+                <div class="preview-box-title"><i class="bi bi-table"></i> Preview — Subjects Found in Document</div>
+                <div class="preview-stats" id="previewStats"></div>
+                <div class="preview-table-wrap">
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                <th>Program</th><th>Code</th><th>Title</th>
+                                <th>Lec</th><th>Lab</th><th>Hrs</th><th>Units</th>
+                                <th>Year</th><th>Sem</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody"></tbody>
+                    </table>
+                </div>
+                <p style="font-size:.68rem;color:var(--text-3);margin-top:.55rem;font-style:italic;">
+                    <span style="display:inline-block;width:10px;height:10px;background:rgba(220,252,231,.8);border:1px solid var(--green);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>
+                    Green highlighted rows are <strong>new</strong> subjects not yet in the database.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="upload-modal-foot">
+            <button class="btn-outline" onclick="closeUploadModal()"><i class="bi bi-x-circle"></i> Cancel</button>
+            <button class="btn-purple" onclick="previewUpload()" id="btnPreview" disabled>
+                <i class="bi bi-eye"></i> Preview
+            </button>
+            <button class="btn-green" onclick="confirmUpload()" id="btnConfirmUpload" style="display:none;">
+                <i class="bi bi-cloud-check"></i> Confirm Import
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-rack"></div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script>
+    let finalizedFields  = [];
+    let allSubjects      = [];
+    let sortableInstance = null;
+    let isSuperAdmin     = @(ViewBag.IsSuperAdmin ? "true" : "false");
+
+    // Upload state
+    let selectedDocxFile  = null;
+    let previewedSubjects = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSavedFields();
+        loadSavedSubjects();
+        if (!isSuperAdmin) restrictUI();
+        initDropZone();
+    });
+
+    /* ── RESTRICT UI ── */
+    function restrictUI() {
+        document.getElementById('readonlyNotice').classList.remove('d-none');
+        ['addFieldBtn','saveFieldsBtn','addSubjectBtn','saveSubjectsBtn','uploadSubjectBtn'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.disabled = true; el.style.opacity = '.45'; el.title = 'Super Admins only'; }
+        });
+        document.getElementById('dragHintLabel').style.display = 'none';
+    }
+
+    /* ── NAVIGATION ── */
+    function navigateToDone()         { window.location.href = '@Url.Action("DoneStudents","EnrollmentAdmin")'; }
+    function navigateToPending()      { window.location.href = '@Url.Action("PendingStudents","EnrollmentAdmin")'; }
+    function navigateToArchive()      { window.location.href = '@Url.Action("ArchivedStudents","EnrollmentAdmin")'; }
+    function navigateBack()           { window.location.href = '@Url.Action("Dashboard","Admin")'; }
+    function navigateToTuitionSetup() { window.location.href = '@Url.Action("TuitionFeeSetup","EnrollmentAdmin")'; }
+
+    /* ── LOAD DATA ── */
+    function loadSavedFields() {
+        fetch('@Url.Action("GetEnrollmentFields","Admin")')
+            .then(r => r.json())
+            .then(d => {
+                if (d.success && d.fields?.length) {
+                    if (d.isSuperAdmin !== undefined) isSuperAdmin = d.isSuperAdmin;
+                    finalizedFields = d.fields;
+                    renderFinalizedFields();
+                }
+            }).catch(() => toast('Could not load fields.','danger'));
+    }
+
+    function loadSavedSubjects() {
+        fetch('@Url.Action("GetSubjects","Admin")')
+            .then(r => r.json())
+            .then(d => {
+                if (d.isSuperAdmin !== undefined) isSuperAdmin = d.isSuperAdmin;
+                allSubjects = d.success && d.subjects?.length ? d.subjects : [];
+                renderSubjectsTable();
+            }).catch(() => toast('Could not load subjects.','danger'));
+    }
+
+    /* ── RENDER FINALIZED FIELDS ── */
+    function renderFinalizedFields() {
+        const container = document.getElementById('finalizedFieldsContainer');
+        const noMsg     = document.getElementById('noFieldsMsg');
+        if (!finalizedFields.length) { container.style.display = 'none'; noMsg.style.display = ''; return; }
+        container.style.display = ''; noMsg.style.display = 'none';
+
+        const tbody = document.getElementById('finalizedFieldsList');
+        tbody.innerHTML = '';
+        finalizedFields.forEach((f, i) => {
+            let details = '—';
+            if (f.fieldType === 'select' && f.options?.length) details = f.options.join(', ');
+            else if (f.fieldType === 'file' || f.fieldType === 'image') details = `${f.acceptedFileTypes||'all'} · ${f.maxFileSize||5}MB`;
+            else if (f.fieldType === 'email') details = 'Email format';
+            else if (f.fieldType === 'phone') details = 'Phone format';
+            else if (f.fieldType === 'date')  details = 'Date picker';
+            else if ((f.minLimit||f.maxLimit) && ['text','number'].includes(f.fieldType))
+                details = `Limit: ${f.minLimit??0}–${f.maxLimit??'∞'}`;
+
+            const tk = f.templateKey
+                ? `<code style="font-size:.72rem;color:var(--green);background:var(--green-bg);padding:.1rem .4rem;border-radius:4px;">{{${esc(f.templateKey)}}}</code>`
+                : '<span style="color:var(--text-3);font-size:.75rem;">—</span>';
+            const drag = isSuperAdmin
+                ? `<td style="text-align:center;"><span class="drag-handle" title="Drag to reorder">&#10781;</span></td>`
+                : `<td style="text-align:center;"><i class="bi bi-lock" style="color:var(--text-3);font-size:.75rem;"></i></td>`;
+            const actions = isSuperAdmin
+                ? `<button class="btn-outline-navy me-1" onclick="editFinalizedField(${i})" title="Edit"><i class="bi bi-pencil"></i></button>
+                   <button class="btn-outline-red" onclick="removeFinalizedField(${i})" title="Delete"><i class="bi bi-trash"></i></button>`
+                : `<i class="bi bi-lock" style="color:var(--text-3);font-size:.8rem;"></i>`;
+
+            const tr = document.createElement('tr');
+            tr.dataset.index = i;
+            tr.innerHTML = `${drag}
+                <td>${f.category ? `<span class="badge-category">${esc(f.category)}</span>` : '<span style="color:var(--text-3)">—</span>'}</td>
+                <td><strong>${esc(f.fieldName)}</strong></td>
+                <td><span class="badge-type">${esc(f.fieldType)}</span></td>
+                <td>${f.isRequired ? '<span class="badge-required">Required</span>' : '<span class="badge-optional">Optional</span>'}</td>
+                <td style="font-size:.74rem;color:var(--text-2);max-width:160px;word-break:break-word;">${esc(details)}</td>
+                <td>${tk}</td>
+                <td style="text-align:center;">${actions}</td>`;
+            tbody.appendChild(tr);
+        });
+        if (isSuperAdmin) initSortable();
+    }
+
+    function initSortable() {
+        if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+        const tbody = document.getElementById('finalizedFieldsList');
+        if (!tbody) return;
+        sortableInstance = new Sortable(tbody, {
+            handle: '.drag-handle', animation: 150,
+            ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+            onEnd(evt) {
+                const moved = finalizedFields.splice(evt.oldIndex, 1)[0];
+                finalizedFields.splice(evt.newIndex, 0, moved);
+                renderFinalizedFields();
+            }
+        });
+    }
+
+    /* ── RENDER SUBJECTS TABLE ── */
+    function renderSubjectsTable() {
+        const tbody = document.getElementById('subjectsTableBody');
+        tbody.innerHTML = '';
+        const fp = document.getElementById('filterProgram').value;
+        const fy = document.getElementById('filterYear').value;
+        const fs = document.getElementById('filterSemester').value;
+
+        const filtered = allSubjects.filter(s =>
+            (!fp || (s.program||'') === fp) &&
+            (!fy || String(s.yearLevel) === fy) &&
+            (!fs || String(s.semester) === fs)
+        );
+
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr class="empty-row"><td colspan="10"><i class="bi bi-inbox"></i>${allSubjects.length ? ' No subjects match these filters.' : ' No subjects yet. Click Add Subject to begin.'}</td></tr>`;
+            return;
+        }
+
+        filtered.forEach(s => {
+            const prog = (s.program||'').toUpperCase();
+            const badge = prog === 'AMT' ? `<span class="badge-amt">AMT</span>` : `<span class="badge-avt">AVT</span>`;
+            const yl = s.yearLevel, sm = s.semester;
+            const yearTxt = `${yl}${sfx(yl)} Year`;
+            const semTxt  = sm === 3 ? 'Summer' : `${sm}${sfx(sm)} Sem`;
+            const sid = s.id || s.subjectId || 0;
+            const actions = isSuperAdmin
+                ? `<button class="btn-outline-navy" onclick="editSubject(${sid})" title="Edit" style="margin-right:.3rem"><i class="bi bi-pencil"></i></button>
+                   <button class="btn-outline-red" onclick="deleteSubject(${sid})" title="Delete"><i class="bi bi-trash"></i></button>`
+                : `<i class="bi bi-lock" style="color:var(--text-3);font-size:.8rem;"></i>`;
+
+            const tr = document.createElement('tr');
+            tr.dataset.subjectId = sid;
+            tr.innerHTML = `
+                <td>${badge}</td>
+                <td><strong>${esc(s.courseCode)}</strong></td>
+                <td>${esc(s.descriptiveTitle)}</td>
+                <td style="text-align:center;">${s.lectureHours||0}</td>
+                <td style="text-align:center;">${s.laboratoryHours||s.labHours||0}</td>
+                <td style="text-align:center;font-weight:800;">${s.units||0}</td>
+                <td style="text-align:center;">${s.totalHours||0}</td>
+                <td>${yearTxt}</td><td>${semTxt}</td>
+                <td style="text-align:center;">${actions}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function sfx(n) { const j=n%10,k=n%100; if(j==1&&k!=11)return'st'; if(j==2&&k!=12)return'nd'; if(j==3&&k!=13)return'rd'; return'th'; }
+    function filterSubjects() { renderSubjectsTable(); }
+    function clearFilters()   { ['filterProgram','filterYear','filterSemester'].forEach(id => document.getElementById(id).value=''); renderSubjectsTable(); }
+
+    /* ══════════════════════════════════════════════════════
+       UPLOAD MODAL
+    ══════════════════════════════════════════════════════ */
+
+    function openUploadModal() {
+        if (!isSuperAdmin) { toast('Only Super Administrators can upload subjects.','warning'); return; }
+        resetUploadModal();
+        document.getElementById('uploadModalOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeUploadModal() {
+        document.getElementById('uploadModalOverlay').classList.remove('show');
+        document.body.style.overflow = '';
+        resetUploadModal();
+    }
+
+    function resetUploadModal() {
+        selectedDocxFile  = null;
+        previewedSubjects = [];
+
+        const safeSet = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
+        safeSet('docxFileInput',        el => el.value = '');
+        safeSet('dropZoneFileName',     el => { el.style.display = 'none'; el.textContent = ''; });
+        safeSet('replaceToggleWrap',    el => el.style.display = 'none');
+        safeSet('replaceExistingCheck', el => el.checked = false);
+        safeSet('previewBox',           el => el.style.display = 'none');
+        safeSet('previewStats',         el => el.innerHTML = '');
+        safeSet('previewTableBody',     el => el.innerHTML = '');
+        safeSet('uploadProgress',       el => el.style.display = 'none');
+        safeSet('uploadProgressBar',    el => el.style.width = '0%');
+        safeSet('btnConfirmUpload',     el => { el.style.display = 'none'; el.disabled = false; });
+        safeSet('btnPreview',           el => { el.disabled = true; el.style.display = ''; });
+        document.getElementById('dropZone').classList.remove('drag-over');
+    }
+
+    /* ── Drop zone ── */
+    function initDropZone() {
+        const zone = document.getElementById('dropZone');
+        zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const file = e.dataTransfer?.files?.[0];
+            if (file) applyFile(file);
+        });
+    }
+
+    function handleFileSelected(input) {
+        const file = input.files?.[0];
+        if (file) applyFile(file);
+    }
+
+    function applyFile(file) {
+        if (!file.name.toLowerCase().endsWith('.docx')) {
+            toast('Please select a valid .docx file.','warning');
+            return;
+        }
+        selectedDocxFile = file;
+
+        const nameEl = document.getElementById('dropZoneFileName');
+        nameEl.textContent   = '\uD83D\uDCC4 ' + file.name;
+        nameEl.style.display = 'block';
+
+        document.getElementById('replaceToggleWrap').style.display  = 'flex';
+        document.getElementById('previewBox').style.display          = 'none';
+        document.getElementById('btnPreview').disabled               = false;
+        document.getElementById('btnConfirmUpload').style.display    = 'none';
+        document.getElementById('btnConfirmUpload').disabled         = false;
+        previewedSubjects = [];
+    }
+
+    /* ── PREVIEW ── */
+    async function previewUpload() {
+        if (!selectedDocxFile) { toast('Please select a .docx file first.','warning'); return; }
+
+        setProgress(true, 'Reading document…', 20);
+        document.getElementById('btnPreview').disabled = true;
+
+        const fd = new FormData();
+        fd.append('file', selectedDocxFile);
+
+        try {
+            setProgress(true, 'Parsing curriculum template…', 55);
+            const resp = await fetch('@Url.Action("PreviewSubjectUpload","Admin")', { method:'POST', body:fd });
+
+            if (!resp.ok) {
+                throw new Error(`Server error ${resp.status}: ${resp.statusText}`);
+            }
+
+            setProgress(true, 'Building preview table…', 85);
+            const data = await resp.json();
+            setProgress(false);
+            document.getElementById('btnPreview').disabled = false;
+
+            if (!data.success) { toast(data.message || 'Could not parse document.','danger'); return; }
+
+            previewedSubjects = data.subjects || [];
+            if (!previewedSubjects.length) {
+                toast('No subjects found. Make sure the file follows the template structure.','warning');
+                return;
+            }
+
+            renderPreviewTable(previewedSubjects, data.existingCodesMap || {});
+            document.getElementById('btnConfirmUpload').style.display = '';
+            document.getElementById('btnConfirmUpload').disabled       = false;
+            toast(`Preview ready — ${previewedSubjects.length} subject(s) found.`, 'success');
+        } catch(err) {
+            setProgress(false);
+            document.getElementById('btnPreview').disabled = false;
+            toast('Error previewing file: ' + err.message, 'danger');
+        }
+    }
+
+    function renderPreviewTable(subjects, existingMap) {
+        const tbody = document.getElementById('previewTableBody');
+        const stats = document.getElementById('previewStats');
+        tbody.innerHTML = '';
+        let newCount = 0, existCount = 0;
+
+        subjects.forEach(s => {
+            const key   = `${(s.program||'').toUpperCase()}_${(s.courseCode||'').toUpperCase()}_${s.yearLevel}_${s.semester}`;
+            const isNew = !existingMap[key];
+            if (isNew) newCount++; else existCount++;
+
+            const yl = s.yearLevel, sm = s.semester;
+            const progBadge = (s.program||'').toUpperCase() === 'AMT'
+                ? `<span class="badge-amt">AMT</span>` : `<span class="badge-avt">AVT</span>`;
+            const statusBadge = isNew
+                ? `<span style="font-size:.6rem;font-weight:700;padding:.15rem .5rem;border-radius:50px;background:var(--green-bg);color:var(--green);">New</span>`
+                : `<span style="font-size:.6rem;font-weight:700;padding:.15rem .5rem;border-radius:50px;background:var(--border);color:var(--text-2);">Exists</span>`;
+
+            const tr = document.createElement('tr');
+            if (isNew) tr.classList.add('is-new');
+            tr.innerHTML = `
+                <td>${progBadge}</td>
+                <td><strong>${esc(s.courseCode)}</strong></td>
+                <td style="max-width:190px;word-break:break-word;">${esc(s.descriptiveTitle)}</td>
+                <td style="text-align:center;">${s.lectureHours||0}</td>
+                <td style="text-align:center;">${s.laboratoryHours||0}</td>
+                <td style="text-align:center;">${s.totalHours||0}</td>
+                <td style="text-align:center;font-weight:700;">${s.units||0}</td>
+                <td style="text-align:center;">${yl}${sfx(yl)}</td>
+                <td style="text-align:center;">${sm===3?'Sum':sm+sfx(sm)}</td>
+                <td>${statusBadge}</td>`;
+            tbody.appendChild(tr);
+        });
+
+        stats.innerHTML = `
+            <div class="preview-stat purple"><i class="bi bi-list-ul"></i> ${subjects.length} Total</div>
+            <div class="preview-stat green"><i class="bi bi-plus-circle"></i> ${newCount} New</div>
+            <div class="preview-stat"><i class="bi bi-arrow-repeat"></i> ${existCount} Existing</div>`;
+        document.getElementById('previewBox').style.display = '';
+    }
+
+    /* ── CONFIRM IMPORT ── */
+    async function confirmUpload() {
+        if (!selectedDocxFile)         { toast('No file selected.','warning'); return; }
+        if (!previewedSubjects.length) { toast('Please click Preview first.','warning'); return; }
+
+        const replace   = document.getElementById('replaceExistingCheck').checked;
+        const confirmBtn = document.getElementById('btnConfirmUpload');
+
+        setProgress(true, 'Uploading file…', 30);
+        confirmBtn.disabled = true;
+
+        const fd = new FormData();
+        fd.append('file', selectedDocxFile);
+        fd.append('replaceExisting', replace ? 'true' : 'false');
+
+        try {
+            setProgress(true, 'Saving subjects to database…', 65);
+            const resp = await fetch('@Url.Action("UploadSubjectsFromDocx","Admin")', {
+                method: 'POST',
+                body: fd
+            });
+
+            if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(`Server error ${resp.status}: ${text.substring(0,200)}`);
+            }
+
+            setProgress(true, 'Finishing…', 95);
+            const data = await resp.json();
+            setProgress(false);
+
+            if (data.success) {
+                toast(data.message || 'Subjects imported successfully!', 'success');
+                closeUploadModal();
+                loadSavedSubjects();
+            } else {
+                confirmBtn.disabled = false;
+                toast(data.message || 'Import failed. Please check the file and try again.', 'danger');
+            }
+        } catch(err) {
+            setProgress(false);
+            confirmBtn.disabled = false;
+            toast('Error during import: ' + err.message, 'danger');
+        }
+    }
+
+    function setProgress(visible, label='', pct=0) {
+        document.getElementById('uploadProgress').style.display      = visible ? '' : 'none';
+        document.getElementById('uploadProgressBar').style.width     = pct + '%';
+        document.getElementById('uploadProgressLabel').textContent   = label;
+    }
+
+    /* ── ADD FIELD ── */
+    function addField() {
+        if (!isSuperAdmin) { toast('Only Super Administrators can add fields.','warning'); return; }
+        addFieldFromData({ fieldName:'', category:'', fieldType:'text', isRequired:true, templateKey:null, minLimit:null, maxLimit:null, options:[], acceptedFileTypes:null, maxFileSize:5, helperText:'' });
+    }
+
+    function addFieldFromData(field) {
+        const container = document.getElementById('formFieldsEdit');
+        document.getElementById('noFieldsMsg').style.display = 'none';
+        const div = document.createElement('div');
+        div.className = 'field-item mb-3';
+        const tk = field.templateKey || '';
+        function tkOpt(v,l){ return `<option value="${v}" ${tk===v?'selected':''}>${l}</option>`; }
+        const showLimits   = ['text','email','phone','number'].includes(field.fieldType);
+        const showDropdown = field.fieldType === 'select';
+        const showFile     = field.fieldType === 'file' || field.fieldType === 'image';
+        let optionsHtml = '';
+        if (showDropdown && field.options?.length) {
+            optionsHtml = field.options.map(o=>`<div class="option-row"><input type="text" class="em-input option-input" value="${esc(o)}" placeholder="Option value"><button class="btn-outline-red" onclick="removeOption(this)"><i class="bi bi-x"></i></button></div>`).join('');
+        } else if (showDropdown) {
+            optionsHtml = `<div class="option-row"><input type="text" class="em-input option-input" placeholder="Enter option"><button class="btn-outline-red" onclick="removeOption(this)"><i class="bi bi-x"></i></button></div>`;
+        }
+        div.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.65rem;align-items:end;">
+            <div>
+                <label class="em-label">Category</label>
+                <select class="em-select category-select">
+                    <option value="">— None —</option>
+                    ${['Personal Data','Educational Background','For Transferees','Family Background','Contact Information','Documents','Other'].map(c=>`<option value="${c}" ${field.category===c?'selected':''}>${c}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <label class="em-label">Field Name</label>
+                <input type="text" class="em-input" placeholder="e.g. Full Name" value="${esc(field.fieldName)}">
+            </div>
+            <div>
+                <label class="em-label">Type</label>
+                <select class="em-select field-type-select" onchange="handleFieldTypeChange(this)">
+                    ${['text','number','email','phone','date','select','file','image'].map(t=>`<option value="${t}" ${field.fieldType===t?'selected':''}>${{text:'Text',number:'Number',email:'Email',phone:'Phone',date:'Date',select:'Dropdown',file:'Document Upload',image:'Image Upload'}[t]}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <label class="em-label">Required?</label>
+                <select class="em-select required-select">
+                    <option value="Required" ${field.isRequired?'selected':''}>Required</option>
+                    <option value="Optional" ${!field.isRequired?'selected':''}>Optional</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:.4rem;padding-bottom:1px;">
+                <button class="btn-green" onclick="finalizeField(this)" title="Finalize"><i class="bi bi-check-lg"></i></button>
+                <button class="btn-outline-red" onclick="removeFieldEdit(this)" title="Remove"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+        <div style="margin-top:.65rem;">
+            <label class="em-label">Form Placeholder</label>
+            <select class="em-select template-key-select" style="max-width:420px;">
+                <option value="">— Not on admission form —</option>
+                <optgroup label="Personal Data">
+                    ${tkOpt('full_name','Full Name')}${tkOpt('gender','Gender')}${tkOpt('birthdate','Birthdate')}${tkOpt('birthplace','Birthplace')}${tkOpt('home_address','Home Address')}${tkOpt('email_address','Email Address')}${tkOpt('mobile_number','Mobile Number')}${tkOpt('photo_2x2','2×2 Photo')}
+                </optgroup>
+                <optgroup label="Educational Background">
+                    ${tkOpt('grade_school_name','Grade School – Name')}${tkOpt('grade_school_address','Grade School – Address')}${tkOpt('gs_from','GS Year From')}${tkOpt('gs_to','GS Year To')}
+                    ${tkOpt('junior_high_school_name','Junior HS – Name')}${tkOpt('junior_high_school_address','Junior HS – Address')}${tkOpt('jhs_from','JHS Year From')}${tkOpt('jhs_to','JHS Year To')}
+                    ${tkOpt('senior_high_school_name','Senior HS – Name')}${tkOpt('senior_high_school_address','Senior HS – Address')}${tkOpt('shs_from','SHS Year From')}${tkOpt('shs_to','SHS Year To')}
+                </optgroup>
+                <optgroup label="Transferee">
+                    ${tkOpt('transferee_school_name','Prev School – Name')}${tkOpt('transferee_school_address','Prev School – Address')}${tkOpt('tf_from','Date From')}${tkOpt('tf_to','Date To')}
+                </optgroup>
+                <optgroup label="Parents">
+                    ${tkOpt('father_name',"Father's Name")}${tkOpt('father_occupation',"Father's Occupation")}${tkOpt('father_email',"Father's Email")}${tkOpt('father_mobile',"Father's Mobile")}
+                    ${tkOpt('mother_name',"Mother's Name")}${tkOpt('mother_occupation',"Mother's Occupation")}${tkOpt('mother_email',"Mother's Email")}${tkOpt('mother_mobile',"Mother's Mobile")}
+                </optgroup>
+                <optgroup label="Signature">
+                    ${tkOpt('signature_image','Signature – Image')}${tkOpt('signature_over_printed_name','Signature – Printed Name')}
+                </optgroup>
+            </select>
+        </div>
+        <div class="char-limits-row" style="${showLimits?'':'display:none;'}margin-top:.65rem;">
+            <div class="option-box">
+                <div class="option-box-title"><i class="bi bi-rulers me-1"></i>Input Limits</div>
+                <div style="display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="min-width:130px;"><label class="em-label">Min</label><input type="number" class="em-input field-min-limit" min="0" value="${field.minLimit??''}" placeholder="e.g. 2"></div>
+                    <div style="min-width:130px;"><label class="em-label">Max</label><input type="number" class="em-input field-max-limit" min="0" value="${field.maxLimit??''}" placeholder="e.g. 100"></div>
+                    <small style="color:var(--text-3);font-size:.72rem;">Text/email/phone = char count &bull; Number = value range</small>
+                </div>
+            </div>
+        </div>
+        ${showDropdown ? `<div class="dropdown-options-container" style="margin-top:.65rem;"><div class="option-box"><div class="option-box-title"><i class="bi bi-list-ul me-1"></i>Dropdown Options</div><div class="options-list">${optionsHtml}</div><button class="btn-outline-navy" onclick="addOption(this)" style="margin-top:.55rem;font-size:.74rem;"><i class="bi bi-plus"></i> Add Option</button></div></div>` : ''}
+        ${showFile ? `<div class="file-options-container" style="margin-top:.65rem;"><div class="option-box"><div class="option-box-title"><i class="bi bi-file-earmark me-1"></i>${field.fieldType==='image'?'Image':'Document'} Upload Settings</div><div style="display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;"><div style="min-width:170px;"><label class="em-label">Accepted Types</label><select class="em-select file-type-select">${['all','pdf','doc','excel','ppt','images'].map(v=>`<option value="${v}" ${field.acceptedFileTypes===v?'selected':''}>${{all:'All',pdf:'PDF',doc:'Word',excel:'Excel',ppt:'PowerPoint',images:'Images'}[v]}</option>`).join('')}</select></div><div style="min-width:110px;"><label class="em-label">Max Size (MB)</label><input type="number" class="em-input" value="${field.maxFileSize||5}" min="1" max="50"></div><div style="flex:1;min-width:170px;"><label class="em-label">Helper Text</label><input type="text" class="em-input" value="${esc(field.helperText||'')}" placeholder="e.g. Upload scanned copy"></div></div></div></div>` : ''}`;
+        container.appendChild(div);
+    }
+
+    function handleFieldTypeChange(sel) {
+        const fi  = sel.closest('.field-item');
+        const val = sel.value;
+        const optDiv  = fi.querySelector('.dropdown-options-container');
+        const fileDiv = fi.querySelector('.file-options-container');
+        const limDiv  = fi.querySelector('.char-limits-row');
+        if (optDiv)  optDiv.style.display  = 'none';
+        if (fileDiv) fileDiv.style.display = 'none';
+        if (limDiv)  limDiv.style.display  = 'none';
+        if (val === 'select') {
+            if (!optDiv) {
+                const d = document.createElement('div'); d.className='dropdown-options-container'; d.style.marginTop='.65rem';
+                d.innerHTML=`<div class="option-box"><div class="option-box-title"><i class="bi bi-list-ul me-1"></i>Dropdown Options</div><div class="options-list"><div class="option-row"><input type="text" class="em-input option-input" placeholder="Enter option"><button class="btn-outline-red" onclick="removeOption(this)"><i class="bi bi-x"></i></button></div></div><button class="btn-outline-navy" onclick="addOption(this)" style="margin-top:.55rem;font-size:.74rem;"><i class="bi bi-plus"></i> Add Option</button></div>`;
+                fi.appendChild(d);
+            } else { optDiv.style.display=''; }
+        } else if (val==='file'||val==='image') {
+            if (!fileDiv) {
+                const d = document.createElement('div'); d.className='file-options-container'; d.style.marginTop='.65rem';
+                d.innerHTML=`<div class="option-box"><div class="option-box-title"><i class="bi bi-file-earmark me-1"></i>${val==='image'?'Image':'Document'} Upload Settings</div><div style="display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;"><div style="min-width:170px;"><label class="em-label">Accepted Types</label><select class="em-select file-type-select">${['all','pdf','doc','excel','ppt','images'].map(v=>`<option value="${v}">${{all:'All',pdf:'PDF',doc:'Word',excel:'Excel',ppt:'PowerPoint',images:'Images'}[v]}</option>`).join('')}</select></div><div style="min-width:110px;"><label class="em-label">Max Size (MB)</label><input type="number" class="em-input" value="5" min="1" max="50"></div><div style="flex:1;min-width:170px;"><label class="em-label">Helper Text</label><input type="text" class="em-input" placeholder="e.g. Upload scanned copy"></div></div></div>`;
+                fi.appendChild(d);
+            } else { fileDiv.style.display=''; }
+        }
+        if (['text','number','email','phone'].includes(val)) {
+            if (!limDiv) {
+                const d = document.createElement('div'); d.className='char-limits-row'; d.style.marginTop='.65rem';
+                d.innerHTML=`<div class="option-box"><div class="option-box-title"><i class="bi bi-rulers me-1"></i>Input Limits</div><div style="display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;"><div style="min-width:130px;"><label class="em-label">Min</label><input type="number" class="em-input field-min-limit" min="0" placeholder="e.g. 2"></div><div style="min-width:130px;"><label class="em-label">Max</label><input type="number" class="em-input field-max-limit" min="0" placeholder="e.g. 100"></div><small style="color:var(--text-3);font-size:.72rem;">Text/email/phone = char count &bull; Number = value range</small></div></div>`;
+                fi.appendChild(d);
+            } else { limDiv.style.display=''; }
+        }
+    }
+
+    function addOption(btn) {
+        const list = btn.previousElementSibling;
+        const d = document.createElement('div'); d.className='option-row';
+        d.innerHTML=`<input type="text" class="em-input option-input" placeholder="Enter option"><button class="btn-outline-red" onclick="removeOption(this)"><i class="bi bi-x"></i></button>`;
+        list.appendChild(d);
+    }
+    function removeOption(btn) {
+        const list  = btn.closest('.options-list');
+        const items = list.querySelectorAll('.option-row');
+        if (items.length > 1) btn.closest('.option-row').remove();
+        else toast('At least one option is required.','warning');
+    }
+
+    function finalizeField(btn) {
+        if (!isSuperAdmin) { toast('Only Super Administrators can modify fields.','warning'); return; }
+        const fi = btn.closest('.field-item');
+        const fieldName = fi.querySelector('input[placeholder]').value.trim();
+        if (!fieldName) { toast('Please enter a field name before finalizing.','warning'); return; }
+        const category    = fi.querySelector('.category-select').value;
+        const fieldType   = fi.querySelector('.field-type-select').value;
+        const isRequired  = fi.querySelector('.required-select').value === 'Required';
+        const templateKey = fi.querySelector('.template-key-select')?.value || null;
+        const minLimitEl  = fi.querySelector('.field-min-limit');
+        const maxLimitEl  = fi.querySelector('.field-max-limit');
+        const minLimit    = minLimitEl?.value !== '' ? parseInt(minLimitEl.value) : null;
+        const maxLimit    = maxLimitEl?.value !== '' ? parseInt(maxLimitEl.value) : null;
+        let options = [];
+        if (fieldType === 'select') fi.querySelectorAll('.option-input').forEach(i => { const v=i.value.trim(); if(v) options.push(v); });
+        let acceptedFileTypes=null, maxFileSize=5, helperText='';
+        if (fieldType==='file'||fieldType==='image') {
+            acceptedFileTypes = fi.querySelector('.file-type-select')?.value;
+            maxFileSize = parseInt(fi.querySelector('.file-options-container input[type="number"]')?.value)||5;
+            helperText  = fi.querySelector('.file-options-container input[type="text"]')?.value||'';
+        }
+        finalizedFields.push({ fieldName, category, fieldType, isRequired, templateKey, minLimit, maxLimit, options, acceptedFileTypes, maxFileSize, helperText });
+        fi.remove(); renderFinalizedFields();
+        toast('Field added to list.','success');
+    }
+    function editFinalizedField(i) {
+        if (!isSuperAdmin) { toast('Only Super Administrators can edit fields.','warning'); return; }
+        const f = finalizedFields.splice(i,1)[0];
+        addFieldFromData(f); renderFinalizedFields();
+    }
+    function removeFinalizedField(i) {
+        if (!isSuperAdmin) { toast('Only Super Administrators can remove fields.','warning'); return; }
+        if (!confirm('Remove this field?')) return;
+        finalizedFields.splice(i,1); renderFinalizedFields();
+        toast('Field removed.','success');
+    }
+    function removeFieldEdit(btn) {
+        if (!isSuperAdmin) { toast('Only Super Administrators can remove fields.','warning'); return; }
+        if (confirm('Remove this field?')) btn.closest('.field-item').remove();
+    }
+
+    function toggleAddSubjectForm() {
+        if (!isSuperAdmin) { toast('Only Super Administrators can add subjects.','warning'); return; }
+        const form = document.getElementById('addSubjectForm');
+        if (form.style.display==='none'||!form.style.display) form.style.display='block';
+        else { form.style.display='none'; clearNewSubjectForm(); }
+    }
+    function clearNewSubjectForm() {
+        ['newSubjectProgram','newSubjectCourseCode','newSubjectTitle'].forEach(id => document.getElementById(id).value='');
+        ['newSubjectLec','newSubjectLab','newSubjectTotalHours'].forEach(id => document.getElementById(id).value='0');
+        document.getElementById('newSubjectUnits').value='0';
+        document.getElementById('newSubjectYear').value='1';
+        document.getElementById('newSubjectSemester').value='1';
+    }
+    function addNewSubject() {
+        if (!isSuperAdmin) { toast('Only Super Administrators can add subjects.','warning'); return; }
+        const program    = document.getElementById('newSubjectProgram').value;
+        const courseCode = document.getElementById('newSubjectCourseCode').value.trim();
+        const title      = document.getElementById('newSubjectTitle').value.trim();
+        if (!program||!courseCode||!title) { toast('Please fill Program, Course Code, and Title.','warning'); return; }
+        allSubjects.push({
+            program, courseCode, descriptiveTitle: title,
+            lectureHours:    parseInt(document.getElementById('newSubjectLec').value)||0,
+            laboratoryHours: parseInt(document.getElementById('newSubjectLab').value)||0,
+            units:      parseFloat(document.getElementById('newSubjectUnits').value)||0,
+            totalHours: parseInt(document.getElementById('newSubjectTotalHours').value)||0,
+            yearLevel:  parseInt(document.getElementById('newSubjectYear').value)||1,
+            semester:   parseInt(document.getElementById('newSubjectSemester').value)||1,
+        });
+        renderSubjectsTable(); toggleAddSubjectForm();
+        toast('Subject added to list.','success');
+    }
+    function editSubject(id) {
+        if (!isSuperAdmin) { toast('Only Super Administrators can edit subjects.','warning'); return; }
+        const s = allSubjects.find(x=>(x.id||x.subjectId)===id);
+        if (!s) return;
+        document.getElementById('newSubjectProgram').value    = s.program;
+        document.getElementById('newSubjectCourseCode').value = s.courseCode;
+        document.getElementById('newSubjectTitle').value      = s.descriptiveTitle;
+        document.getElementById('newSubjectLec').value        = s.lectureHours||0;
+        document.getElementById('newSubjectLab').value        = s.laboratoryHours||s.labHours||0;
+        document.getElementById('newSubjectUnits').value      = s.units||0;
+        document.getElementById('newSubjectTotalHours').value = s.totalHours||0;
+        document.getElementById('newSubjectYear').value       = s.yearLevel;
+        document.getElementById('newSubjectSemester').value   = s.semester;
+        allSubjects = allSubjects.filter(x=>(x.id||x.subjectId)!==id);
+        renderSubjectsTable();
+        document.getElementById('addSubjectForm').style.display='block';
+    }
+    function deleteSubject(id) {
+        if (!isSuperAdmin) { toast('Only Super Administrators can delete subjects.','warning'); return; }
+        if (!id) { allSubjects=allSubjects.filter(s=>(s.id||s.subjectId)!==id); renderSubjectsTable(); return; }
+        if (!confirm('Delete this subject?')) return;
+        fetch('@Url.Action("DeleteSubject","Admin")', {
+            method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`id=${id}`
+        }).then(r=>r.json()).then(d=>{
+            if (d.success) { allSubjects=allSubjects.filter(s=>(s.id||s.subjectId)!==id); renderSubjectsTable(); toast(d.message,'success'); }
+            else toast(d.message,'danger');
+        }).catch(()=>toast('Error deleting subject.','danger'));
+    }
+
+    function saveEnrollmentFields() {
+        if (!isSuperAdmin) { toast('Only Super Administrators can save fields.','warning'); return; }
+        if (document.querySelectorAll('.field-item').length) { toast('Please finalize all fields (✓ button) before saving.','warning'); return; }
+        if (!finalizedFields.length) { toast('Please add at least one field before saving.','warning'); return; }
+        const data = finalizedFields.map(f => ({
+            FieldName:f.fieldName, Category:f.category, FieldType:f.fieldType,
+            IsRequired:f.isRequired, Options:f.options?.length?f.options:null,
+            AcceptedFileTypes:f.acceptedFileTypes, MaxFileSize:f.maxFileSize,
+            HelperText:f.helperText, TemplateKey:f.templateKey||null,
+            MinLimit:f.minLimit??null, MaxLimit:f.maxLimit??null,
+        }));
+        fetch('@Url.Action("SaveEnrollmentFields","Admin")', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+        }).then(r=>r.json()).then(d=>{
+            if (d.success) { toast(d.message,'success'); loadSavedFields(); }
+            else toast(d.message,'danger');
+        }).catch(()=>toast('Error saving fields.','danger'));
+    }
+
+    function saveSubjects() {
+        if (!isSuperAdmin) { toast('Only Super Administrators can save subjects.','warning'); return; }
+        if (!allSubjects.length) { toast('Please add at least one subject.','warning'); return; }
+        const data = allSubjects.map(s => ({
+            SubjectId:s.id||s.subjectId||undefined,
+            Program:s.program, CourseCode:s.courseCode, DescriptiveTitle:s.descriptiveTitle,
+            LectureHours:s.lectureHours||0, LabHours:s.laboratoryHours||s.labHours||0,
+            Units:s.units||0, YearLevel:s.yearLevel, Semester:s.semester, TotalHours:s.totalHours||0,
+        }));
+        fetch('@Url.Action("SaveSubjects","Admin")', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+        }).then(r=>r.json()).then(d=>{
+            if (d.success) { toast(d.message,'success'); loadSavedSubjects(); }
+            else toast(d.message,'danger');
+        }).catch(()=>toast('Error saving subjects.','danger'));
+    }
+
+    /* ── TOAST ── */
+    function toast(msg, type='info') {
+        const rack  = document.getElementById('toast-rack');
+        const icons = {success:'bi-check-circle-fill',danger:'bi-x-circle-fill',warning:'bi-exclamation-triangle-fill',info:'bi-info-circle-fill'};
+        const el = document.createElement('div');
+        el.className=`toast-item ${type}`;
+        el.innerHTML=`<i class="bi ${icons[type]||icons.info}"></i>${esc(msg)}`;
+        rack.appendChild(el);
+        setTimeout(()=>el.style.opacity='0',3200);
+        setTimeout(()=>el.remove(),3600);
+    }
+    function esc(s) {
+        if(s==null)return'';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+}

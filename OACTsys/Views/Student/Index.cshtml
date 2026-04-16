@@ -1,0 +1,19 @@
+﻿@{
+    Layout = "_StudentLayout"; // This links it to your sidebar layout
+    ViewData["Title"] = "Student Dashboard";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4">
+                <h2 class="text-admiral fw-bold">WELCOME TO YOUR PORTAL</h2>
+                <p class="text-muted">You are successfully logged in as a <strong>@Context.Session.GetString("UserRole")</strong>.</p>
+                <hr />
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i> This is your main dashboard. Use the sidebar to navigate.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

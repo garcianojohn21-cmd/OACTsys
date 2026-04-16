@@ -1,0 +1,687 @@
+﻿@{
+    ViewData["Title"] = "Admin Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="icon" type="image/x-icon" href="~/images/logo.png" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy:         #051094;
+            --navy-deep:    #020b5c;
+            --navy-mid:     #0d2f6e;
+            --navy-dark:    #040d4a;
+            --white:        #ffffff;
+            --off-white:    #e8edf8;
+            --muted:        rgba(255,255,255,0.50);
+            --border-dim:   rgba(255,255,255,0.15);
+            --light-border: #dde3ef;
+            --text-dark:    #0a1640;
+            --text-mid:     #4a5575;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        /* ── Deep-space navy body + aerospace grid (from _Layout) ── */
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #040d4a;
+            color: var(--off-white);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ══ HEADER (exact _Layout.cshtml) ══ */
+        .oact-header {
+            position: sticky; top: 0; z-index: 1000;
+            background: rgba(3,10,80,0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .oact-header::before {
+            content: ''; display: block; height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%, var(--navy-mid) 20%,
+                var(--white) 50%, var(--navy-mid) 80%, transparent 100%);
+        }
+
+        .header-inner {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 0 32px; height: 72px;
+            max-width: 1400px; margin: 0 auto;
+        }
+
+        .header-brand {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none;
+        }
+
+        .header-brand-logo {
+            width: 52px; height: 52px; object-fit: contain;
+            filter: brightness(0) invert(1); transition: opacity 0.3s;
+        }
+        .header-brand:hover .header-brand-logo { opacity: 0.85; }
+
+        .header-brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+
+        .brand-abbr {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700; font-size: 1rem;
+            color: var(--white); letter-spacing: 3px;
+        }
+
+        .brand-full {
+            font-size: 0.6rem; color: var(--muted);
+            letter-spacing: 1.5px; text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .header-status {
+            display: flex; align-items: center; gap: 6px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem; color: rgba(255,255,255,0.6);
+            letter-spacing: 1px; margin-left: 20px;
+        }
+
+        .status-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #4ade80;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @@keyframes pulse-dot {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:0.4; transform:scale(0.7); }
+        }
+
+        /* ══════════════════════════════════════════════════
+               PAGE WRAPPER
+               Stacks banner on top, then the gradient section
+               fills remaining viewport height
+           ══════════════════════════════════════════════════ */
+        .page-body {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ══ BANNER — bg-banner.jpg + navy left→right overlay ══ */
+        .form-banner {
+            position: relative;
+            background-image: url("@Url.Content("~/css/assets/images/bg-banner.jpg")");
+            background-size: cover;
+            background-position: center;
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .form-banner__overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                to right,
+                rgba(4,  13,  74,  0.93)  0%,
+                rgba(5,  16,  148, 0.82) 30%,
+                rgba(13, 47,  110, 0.60) 60%,
+                rgba(13, 47,  110, 0.28) 100%
+            );
+            z-index: 1;
+        }
+
+        .form-banner__grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 2; pointer-events: none;
+        }
+
+        .form-banner__content {
+            position: relative; z-index: 3;
+            padding: 2.5rem 2rem 2.5rem;
+            width: 100%; max-width: 1400px; margin: 0 auto;
+            animation: fadeDown 0.5s ease both;
+        }
+
+        @@keyframes fadeDown {
+            from { opacity:0; transform:translateY(-12px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        .form-banner__eyebrow {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.63rem; letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.55); margin-bottom: 0.3rem;
+        }
+
+        .form-banner__title {
+            font-family: 'Orbitron', monospace; font-weight: 700;
+            font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+            color: var(--white); letter-spacing: 1.5px;
+            margin-bottom: 0.3rem; line-height: 1.2;
+        }
+
+        .form-banner__sub {
+            font-size: 0.88rem; color: rgba(255,255,255,0.70); margin: 0;
+        }
+
+        /* ══════════════════════════════════════════════════
+               GRADIENT SECTION
+               Fills all remaining height after the banner
+               Card is centred inside it with padding-top
+               to pull it visually up toward the banner
+           ══════════════════════════════════════════════════ */
+        .login-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            /* Pull the card up so it overlaps the banner bottom edge */
+            padding: 0 20px 80px;
+            margin-top: -90px;
+
+            /* Left-white → right-navy gradient (FreshmenRegistration style) */
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0.97)   0%,
+                rgba(244, 246, 255, 0.92)  40%,
+                rgba(102, 155, 188, 0.18)  70%,
+                rgba(5,   16,  148, 0.10) 100%
+            );
+        }
+
+        /* ══════════════════════════════════════════════════
+               LOGIN CARD
+               White body, dark navy header
+               Bold left + top navy border (prog-card style)
+           ══════════════════════════════════════════════════ */
+        .login-card {
+            width: 100%; max-width: 460px;
+            background: var(--white);
+            border-radius: 14px;
+            border-top:  4px solid var(--navy);
+            border-left: 5px solid var(--navy);
+            box-shadow:
+                0 0 0 1px rgba(5,16,148,0.12),
+                0 0 40px rgba(5,16,148,0.20),
+                0 24px 64px rgba(4,13,74,0.26),
+                inset 4px 0 16px rgba(5,16,148,0.04);
+            overflow: hidden;
+            animation: slideUp 0.55s cubic-bezier(0.4,0,0.2,1) both;
+            animation-delay: 0.08s;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .login-card:hover {
+            box-shadow:
+                0 0 0 1px rgba(5,16,148,0.20),
+                0 0 52px rgba(5,16,148,0.28),
+                0 32px 76px rgba(4,13,74,0.30),
+                inset 4px 0 22px rgba(5,16,148,0.07);
+            transform: translateY(-4px);
+        }
+
+        @@keyframes slideUp {
+            from { opacity:0; transform:translateY(32px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        /* Shimmer top line — matches _Layout header::before */
+        .card-shimmer {
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%, var(--navy-mid) 20%,
+                var(--navy) 50%, var(--navy-mid) 80%, transparent 100%);
+        }
+
+        /* ── Dark navy card header ── */
+        .card-header {
+            background: linear-gradient(135deg,
+                var(--navy-dark) 0%, var(--navy) 55%, var(--navy-mid) 100%);
+            padding: 36px 36px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        /* White rounded scoop at the bottom of the header */
+        .card-header::after {
+            content: '';
+            position: absolute; bottom: -1px; left: 0; right: 0;
+            height: 24px; background: var(--white);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .icon-ring {
+            width: 72px; height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.28);
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.07);
+            box-shadow: 0 0 28px rgba(255,255,255,0.10);
+        }
+        .icon-ring i { font-size: 1.8rem; color: rgba(255,255,255,0.85); }
+
+        .card-title {
+            font-family: 'Orbitron', monospace; font-weight: 700;
+            font-size: 1rem; letter-spacing: 3px;
+            color: var(--white); margin-bottom: 6px;
+        }
+
+        .card-subtitle {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.62rem; letter-spacing: 1.5px;
+            color: var(--muted); text-transform: uppercase;
+        }
+
+        /* ── White card body ── */
+        .card-body { padding: 12px 36px 28px; background: var(--white); }
+
+        /* Credentials divider */
+        .form-section-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 2px;
+            text-transform: uppercase; color: rgba(5,16,148,0.35);
+            margin-bottom: 18px; margin-top: 6px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .form-section-label::before {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(to left, rgba(5,16,148,0.15), transparent);
+        }
+        .form-section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(to right, rgba(5,16,148,0.15), transparent);
+        }
+
+        /* ── Alert ── */
+        .alert {
+            display: none; padding: 11px 14px; border-radius: 6px;
+            border-left: 3px solid; font-size: 0.82rem;
+            margin-bottom: 20px; animation: fadeIn 0.3s ease;
+        }
+        @@keyframes fadeIn {
+            from { opacity:0; transform:translateY(-5px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .alert.show    { display: block; }
+        .alert-error   { background:#fef2f2; border-color:#ef4444; color:#991b1b; }
+        .alert-success { background:#f0fdf4; border-color:#22c55e; color:#166534; }
+        .alert-info    { background:#eff6ff; border-color:#3b82f6; color:#1e40af; }
+
+        /* ── Form elements ── */
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--text-mid);
+            margin-bottom: 7px;
+        }
+
+        .input-wrapper { position: relative; }
+
+        /* Left accent bar — reveals on focus */
+        .input-wrapper::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px; background: var(--navy);
+            border-radius: 6px 0 0 6px;
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .input-wrapper:focus-within::before { opacity: 1; }
+
+        .input-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem; color: #94a3b8;
+            pointer-events: none; transition: color 0.2s;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            background: #f8fafc;
+            border: 1.5px solid var(--light-border);
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem; color: var(--text-dark);
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+        .form-input::placeholder { color: #b0bac8; }
+        .form-input:focus {
+            outline: none; background: var(--white);
+            border-color: var(--navy);
+            box-shadow: 0 0 0 3px rgba(5,16,148,0.09),
+                        0 2px 8px rgba(5,16,148,0.06);
+        }
+        .input-wrapper:focus-within .input-icon { color: var(--navy); }
+
+        .password-toggle {
+            position: absolute; right: 12px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: #94a3b8; cursor: pointer;
+            font-size: 1rem; padding: 4px;
+            transition: color 0.2s; display: flex; align-items: center;
+        }
+        .password-toggle:hover { color: var(--navy); }
+
+        /* ── Options row ── */
+        .form-options {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 24px;
+        }
+
+        .remember-me {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.82rem; color: var(--text-mid);
+            cursor: pointer; user-select: none;
+        }
+        .remember-me input[type="checkbox"] {
+            width: 15px; height: 15px;
+            accent-color: var(--navy); cursor: pointer;
+        }
+
+        .forgot-link {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.63rem; letter-spacing: 1px;
+            color: var(--navy); text-decoration: none;
+            text-transform: uppercase; transition: color 0.2s;
+        }
+        .forgot-link:hover { color: var(--navy-deep); text-decoration: underline; }
+
+        /* ── Submit button (solid navy, matches prog-card__btn) ── */
+        .btn-login {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg,
+                var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%);
+            border: none; border-radius: 6px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 2.5px; color: var(--white);
+            cursor: pointer;
+            transition: opacity 0.25s, transform 0.2s, box-shadow 0.25s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 18px rgba(5,16,148,0.30);
+        }
+        .btn-login:hover {
+            opacity: 0.9; transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(5,16,148,0.42);
+        }
+        .btn-login:active   { transform: translateY(0); }
+        .btn-login:disabled { opacity:0.5; cursor:not-allowed; transform:none; pointer-events:none; }
+
+        .loading-spinner {
+            display: none; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: var(--white); border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @@keyframes spin { to { transform:rotate(360deg); } }
+        .btn-login.loading .btn-text        { display: none; }
+        .btn-login.loading .loading-spinner { display: block; }
+
+        /* ── Card footer ── */
+        .card-footer {
+            text-align: center; padding: 16px 36px 22px;
+            border-top: 1px solid var(--light-border);
+            background: #fafbfd;
+        }
+        .card-footer p {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 0.8px;
+            color: #a0aec0; text-transform: uppercase;
+        }
+
+        /* ══ FOOTER (exact _Layout.cshtml) ══ */
+        .oact-footer {
+            position: relative; z-index: 1;
+            background: rgba(2,6,60,0.98);
+            border-top: 1px solid var(--border-dim);
+            padding: 24px 32px; text-align: center;
+        }
+
+        .oact-footer::before {
+            content: ''; display: block; height: 1px;
+            background: linear-gradient(90deg,
+                transparent 0%, var(--navy-mid) 20%,
+                var(--white) 50%, var(--navy-mid) 80%, transparent 100%);
+            margin-bottom: 24px;
+        }
+
+        .footer-logo-row {
+            display: flex; align-items: center;
+            justify-content: center; gap: 10px; margin-bottom: 10px;
+        }
+        .footer-logo-row img {
+            width: 28px; height: 28px; object-fit: contain;
+            filter: brightness(0) invert(1); opacity: 0.5;
+        }
+        .footer-abbr {
+            font-family: 'Orbitron', monospace; font-size: 0.75rem;
+            font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,0.3);
+        }
+        .footer-copy {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.68rem; color: rgba(255,255,255,0.2); letter-spacing: 0.5px;
+        }
+
+        /* ══ RESPONSIVE ══ */
+        @@media (max-width: 768px) {
+            .header-inner  { padding: 0 16px; }
+            .brand-full    { display: none; }
+            .header-status { display: none; }
+        }
+        @@media (max-width: 480px) {
+            .form-banner__content { padding: 2rem 1rem 2.5rem; }
+            .card-body    { padding: 10px 22px 24px; }
+            .card-header  { padding: 28px 22px 26px; }
+            .card-footer  { padding: 14px 22px 18px; }
+            .form-options { flex-direction: column; gap: 12px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="oact-header">
+        <div class="header-inner">
+            <a class="header-brand" href="/">
+                <img src="~/images/logo.png" alt="OACT" class="header-brand-logo" />
+                <div class="header-brand-text">
+                    <span class="brand-abbr">OACT</span>
+                    <span class="brand-full">Orson Aerospace College &amp; Technology</span>
+                </div>
+            </a>
+            <div class="header-status d-none d-lg-flex">
+                <div class="status-dot"></div>
+                PORTAL ONLINE
+            </div>
+        </div>
+    </header>
+
+    <div class="page-body">
+
+        <!-- Banner -->
+        <div class="form-banner">
+            <div class="form-banner__overlay"></div>
+            <div class="form-banner__grid"></div>
+            <div class="form-banner__content">
+                <p class="form-banner__eyebrow">Admin Portal</p>
+                <h1 class="form-banner__title">Secure Sign In</h1>
+                <p class="form-banner__sub">Authorized personnel only — enter your credentials to proceed.</p>
+            </div>
+        </div>
+
+        <!-- Gradient section with card -->
+        <div class="login-section">
+            <div class="login-card">
+
+                <div class="card-shimmer"></div>
+
+                <!-- Dark navy header -->
+                <div class="card-header">
+                    <div class="icon-ring">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h2 class="card-title">ADMIN LOGIN</h2>
+                    <p class="card-subtitle">Sign in to access your dashboard</p>
+                </div>
+
+                <!-- White form body -->
+                <div class="card-body">
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-error show" id="alertMessage">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>@ViewBag.Error
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-error" id="alertMessage">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Invalid credentials. Please try again.
+                        </div>
+                    }
+
+                    <div class="form-section-label">Credentials</div>
+
+                    <form id="loginForm" method="post" asp-action="Login" asp-controller="Admin">
+                        <input type="hidden" name="token" value="@ViewBag.Token" />
+                        @Html.AntiForgeryToken()
+
+                        <div class="form-group">
+                            <label class="form-label" for="username">Username</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="username" name="username"
+                                       class="form-input" placeholder="Enter username"
+                                       required autocomplete="username" />
+                                <i class="bi bi-person input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="password">Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="password" name="password"
+                                       class="form-input" placeholder="Enter password"
+                                       required autocomplete="current-password" />
+                                <i class="bi bi-lock input-icon"></i>
+                                <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-options">
+                            <label class="remember-me">
+                                <input type="checkbox" name="remember" id="remember" />
+                                <span>Remember me</span>
+                            </label>
+                            <a href="#" class="forgot-link">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" class="btn-login" id="loginButton">
+                            <span class="btn-text">SIGN IN &nbsp;→</span>
+                            <div class="loading-spinner"></div>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card-footer">
+                    <p>&copy; @DateTime.Now.Year &mdash; Orson Aerospace College and Technology, Inc.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div><!-- /page-body -->
+
+    <!-- Footer -->
+    <footer class="oact-footer">
+        <div class="footer-logo-row">
+            <img src="~/images/logo.png" alt="OACT" />
+            <span class="footer-abbr">OACT</span>
+        </div>
+        <div class="footer-copy">
+            &copy; @DateTime.Now.Year &mdash; ORSON AEROSPACE COLLEGE AND TECHNOLOGY, INC. &mdash; ALL RIGHTS RESERVED
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const inp  = document.getElementById('password');
+            const icon = document.getElementById('toggleIcon');
+            const show = inp.type === 'password';
+            inp.type   = show ? 'text' : 'password';
+            icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+        });
+
+        const loginForm   = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const alertMsg    = document.getElementById('alertMessage');
+
+        loginForm.addEventListener('submit', function () {
+            loginButton.classList.add('loading');
+            loginButton.disabled = true;
+            alertMsg.classList.remove('show');
+        });
+
+        function autoHide() { setTimeout(() => alertMsg.classList.remove('show'), 5000); }
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('error')) {
+            alertMsg.className = 'alert alert-error show';
+            alertMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>Session expired. Please login again.';
+            autoHide();
+        }
+        if (params.has('logout')) {
+            alertMsg.className = 'alert alert-success show';
+            alertMsg.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>You have been successfully signed out.';
+            autoHide();
+        }
+
+        document.querySelectorAll('.form-input').forEach(i =>
+            i.addEventListener('input', () => alertMsg.classList.remove('show'))
+        );
+
+        window.addEventListener('load', () => document.getElementById('username').focus());
+    </script>
+</body>
+</html>

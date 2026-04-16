@@ -1,0 +1,592 @@
+﻿@model List<OACTsys.Models.Admin>
+@{
+    ViewBag.Title = "Admin Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --navy:        #051094;
+        --navy-deep:   #030b72;
+        --navy-mid:    #0a1fa8;
+        --navy-soft:   #1a3fd4;
+        --navy-tint:   #e8ebff;
+        --navy-pale:   #f0f3ff;
+        --accent:      #3b82f6;
+        --accent-glow: rgba(59,130,246,.18);
+        --green:       #16a34a;
+        --green-bg:    #dcfce7;
+        --amber:       #d97706;
+        --amber-bg:    #fef3c7;
+        --red:         #dc2626;
+        --red-bg:      #fee2e2;
+        --sky:         #0284c7;
+        --sky-bg:      #e0f2fe;
+        --white:       #ffffff;
+        --surface:     #f5f7ff;
+        --border:      #e2e7ff;
+        --text-1:      #0d1b4b;
+        --text-2:      #4a5b8a;
+        --text-3:      #8a97c0;
+        --shadow-sm:   0 1px 3px rgba(5,16,148,.08);
+        --shadow-md:   0 4px 16px rgba(5,16,148,.10);
+        --shadow-lg:   0 12px 40px rgba(5,16,148,.14);
+        --radius:      14px;
+        --radius-sm:   9px;
+        --radius-xs:   6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface); }
+
+    /* ── HERO ── */
+    .am-hero {
+        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-soft) 100%);
+        padding: 2rem 2rem 3.8rem; position: relative; overflow: hidden;
+    }
+    .am-hero::before {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background:
+            radial-gradient(ellipse 55% 70% at 85% -5%, rgba(59,130,246,.25) 0%, transparent 55%),
+            radial-gradient(ellipse 35% 55% at -5% 105%, rgba(255,255,255,.07) 0%, transparent 50%);
+    }
+    .am-hero::after {
+        content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 44px;
+        background: var(--surface); clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .am-hero-inner {
+        position: relative; z-index: 2;
+        display: flex; align-items: flex-start; justify-content: space-between;
+        flex-wrap: wrap; gap: 1.5rem;
+    }
+    .am-hero-title {
+        font-size: clamp(1.55rem, 3vw, 2.2rem); font-weight: 800;
+        color: #fff; letter-spacing: -.5px; margin: 0 0 .3rem; line-height: 1.15;
+    }
+    .am-hero-sub {
+        font-size: .81rem; color: rgba(255,255,255,.62); margin: 0;
+        font-weight: 500; line-height: 1.55; max-width: 480px;
+    }
+    .am-hero-sub strong { color: rgba(255,255,255,.9); }
+
+    /* Stat pills */
+    .am-stats-row { display: flex; gap: .65rem; flex-wrap: wrap; margin-top: 1.35rem; }
+    .am-stat-pill {
+        background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(6px); border-radius: 50px;
+        padding: .33rem .9rem; display: flex; align-items: center; gap: .45rem;
+        font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.88);
+        white-space: nowrap; user-select: none;
+    }
+    .pill-count {
+        background: rgba(255,255,255,.22); border-radius: 50px;
+        padding: .08rem .48rem; font-size: .68rem; font-weight: 800;
+        min-width: 20px; text-align: center;
+    }
+    .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Hero actions */
+    .am-hero-actions { display: flex; gap: .65rem; flex-wrap: wrap; align-items: flex-start; }
+    .btn-create {
+        background: #fff; color: var(--navy); border: none;
+        border-radius: var(--radius-sm); padding: .62rem 1.2rem;
+        font-size: .81rem; font-weight: 800; font-family: inherit;
+        display: inline-flex; align-items: center; gap: .45rem;
+        text-decoration: none; white-space: nowrap; cursor: pointer;
+        box-shadow: 0 4px 18px rgba(0,0,0,.22);
+        transition: transform .2s, box-shadow .2s;
+    }
+    .btn-create:hover { color: var(--navy-deep); transform: translateY(-2px); box-shadow: 0 8px 26px rgba(0,0,0,.28); }
+
+    /* ── TOOLBAR ── */
+    .am-toolbar {
+        background: var(--white); border-bottom: 1px solid var(--border);
+        padding: .8rem 2rem; display: flex; align-items: center;
+        gap: .65rem; flex-wrap: wrap;
+        position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 190px; max-width: 320px; }
+    .search-wrap i { position: absolute; left: .82rem; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: .85rem; pointer-events: none; }
+    .search-input {
+        width: 100%; padding: .58rem .9rem .58rem 2.35rem;
+        border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+        font-family: inherit; font-size: .82rem; color: var(--text-1);
+        background: var(--surface); outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .search-input:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px var(--accent-glow); }
+    .search-input::placeholder { color: var(--text-3); }
+    .role-select {
+        padding: .58rem .9rem; border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm); font-family: inherit;
+        font-size: .82rem; color: var(--text-1); background: var(--surface);
+        outline: none; cursor: pointer; min-width: 150px; transition: border-color .2s;
+    }
+    .role-select:focus { border-color: var(--navy); }
+    .toolbar-div { width: 1px; height: 26px; background: var(--border); flex-shrink: 0; }
+    .result-badge {
+        font-size: .74rem; font-weight: 700; color: var(--text-2);
+        background: var(--navy-pale); border: 1px solid var(--border);
+        border-radius: 50px; padding: .22rem .72rem; white-space: nowrap;
+    }
+
+    /* ── ALERTS ── */
+    .am-alert {
+        display: flex; align-items: flex-start; gap: .7rem;
+        border-radius: var(--radius-sm); padding: .9rem 1.1rem;
+        font-size: .81rem; font-weight: 600; margin-bottom: .75rem;
+        position: relative;
+    }
+    .am-alert i { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+    .am-alert-close {
+        position: absolute; top: .7rem; right: .9rem;
+        background: none; border: none; cursor: pointer; font-size: .9rem;
+        opacity: .5; transition: opacity .15s; line-height: 1;
+    }
+    .am-alert-close:hover { opacity: 1; }
+    .am-alert.success { background: var(--green-bg); border: 1.5px solid #86efac; color: var(--green); }
+    .am-alert.danger  { background: var(--red-bg);   border: 1.5px solid #fca5a5; color: var(--red);   }
+    .am-alert.warning { background: var(--amber-bg); border: 1.5px solid #fcd34d; color: var(--amber); }
+
+    /* Credential box inside warning alert */
+    .cred-box {
+        background: rgba(255,255,255,.7); border: 1px solid #fcd34d;
+        border-radius: var(--radius-xs); padding: .6rem .85rem;
+        margin-top: .55rem; font-size: .79rem; line-height: 1.7;
+    }
+    .cred-box code {
+        background: #fff; border: 1px solid #fcd34d;
+        border-radius: 4px; padding: .12rem .5rem;
+        font-size: .8rem; color: var(--navy); font-weight: 700;
+    }
+
+    /* ── CONTENT ── */
+    .am-content { padding: 1.75rem 2rem 3rem; }
+
+    /* ── ADMIN GRID ── */
+    .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+        gap: 1rem;
+    }
+
+    /* ── ADMIN CARD ── */
+    .admin-card {
+        background: var(--white); border: 1.5px solid var(--border);
+        border-radius: var(--radius); overflow: hidden; position: relative;
+        display: flex; flex-direction: column;
+        transition: transform .22s, box-shadow .22s, border-color .22s;
+        box-shadow: var(--shadow-sm);
+    }
+    .admin-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(5,16,148,.2); }
+
+    /* left accent strip */
+    .admin-card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+        background: var(--navy); border-radius: var(--radius) 0 0 var(--radius);
+    }
+    .admin-card.role-super::before  { background: var(--red); }
+    .admin-card.role-admin::before  { background: var(--navy); }
+    .admin-card.role-other::before  { background: var(--text-3); }
+    .admin-card.inactive::before    { background: var(--border); }
+
+    /* Head */
+    .c-head { padding: 1rem 1rem .65rem 1.55rem; display: flex; align-items: flex-start; gap: .7rem; }
+    .c-avatar {
+        width: 46px; height: 46px; min-width: 46px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
+        color: #fff; font-weight: 800; font-size: .9rem;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; box-shadow: 0 2px 8px rgba(5,16,148,.22);
+    }
+    .admin-card.inactive .c-avatar { background: linear-gradient(135deg,#94a3b8,#cbd5e1); }
+    .c-head-info { flex: 1; min-width: 0; }
+    .c-name { font-size: .87rem; font-weight: 800; color: var(--text-1); margin: 0 0 .12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+    .c-email { font-size: .69rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .c-badges { display: flex; flex-direction: column; gap: .28rem; align-items: flex-end; flex-shrink: 0; }
+
+    /* Badges */
+    .r-badge { font-size: .62rem; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: .18rem .62rem; border-radius: 50px; white-space: nowrap; }
+    .rb-super  { background: var(--red-bg);    color: var(--red);   }
+    .rb-admin  { background: var(--navy-pale);  color: var(--navy);  }
+    .rb-other  { background: #f1f5f9;           color: var(--text-2); }
+    .rb-active   { background: var(--green-bg); color: var(--green); }
+    .rb-inactive { background: #f1f5f9;         color: var(--text-3); }
+
+    /* Body */
+    .c-body { padding: 0 1rem .7rem 1.55rem; flex: 1; display: flex; flex-direction: column; gap: .48rem; }
+
+    /* Username row */
+    .uname-row {
+        display: flex; align-items: center; gap: .45rem;
+        background: var(--navy-pale); border-radius: var(--radius-xs); padding: .38rem .65rem;
+    }
+    .uname-row i { color: var(--text-3); font-size: .77rem; flex-shrink: 0; }
+    .uname-val { font-size: .77rem; font-weight: 700; color: var(--navy); font-family: monospace; }
+
+    /* Meta rows */
+    .c-meta { display: flex; align-items: flex-start; gap: .45rem; font-size: .74rem; color: var(--text-2); line-height: 1.4; }
+    .c-meta i { color: var(--text-3); font-size: .76rem; flex-shrink: 0; margin-top: .1rem; }
+    .c-meta strong { color: var(--text-1); font-weight: 700; }
+
+    /* Permission chips */
+    .perm-chips { display: flex; flex-wrap: wrap; gap: .3rem; }
+    .perm-chip {
+        font-size: .62rem; font-weight: 700; padding: .15rem .52rem;
+        border-radius: 50px; background: var(--navy-tint); color: var(--navy);
+        border: 1px solid var(--border); white-space: nowrap;
+    }
+    .perm-chip.more { background: var(--surface); color: var(--text-3); }
+
+    /* Last login chip */
+    .login-chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .68rem; font-weight: 700; padding: .18rem .58rem; border-radius: 50px; }
+    .lc-recent  { background: var(--green-bg); color: var(--green); }
+    .lc-old     { background: var(--amber-bg); color: var(--amber); }
+    .lc-never   { background: #f1f5f9;         color: var(--text-3); }
+
+    /* Footer */
+    .c-foot { padding: .6rem 1rem .7rem 1.55rem; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: .45rem; }
+    .btn-edit {
+        flex: 1; background: var(--navy); color: #fff; border: none;
+        border-radius: var(--radius-xs); padding: .48rem .75rem;
+        font-size: .74rem; font-weight: 700; font-family: inherit;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        gap: .38rem; text-decoration: none; transition: background .2s;
+    }
+    .btn-edit:hover { background: var(--navy-deep); color: #fff; }
+    .btn-deact {
+        background: var(--white); color: var(--text-2);
+        border: 1.5px solid var(--border); border-radius: var(--radius-xs);
+        padding: .48rem .58rem; font-size: .8rem; cursor: pointer; transition: all .18s;
+    }
+    .btn-deact:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+    .btn-deact:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { grid-column: 1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; }
+    .empty-icon { width: 70px; height: 70px; border-radius: 50%; background: var(--navy-pale); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; color: var(--text-3); margin-bottom: 1rem; }
+    .empty-state h5 { color: var(--text-1); font-weight: 800; margin-bottom: .3rem; }
+    .empty-state p  { color: var(--text-2); font-size: .82rem; margin: 0 0 1rem; }
+
+    /* ── TOAST ── */
+    #toast-rack { position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 9999; display: flex; flex-direction: column; gap: .45rem; }
+    .toast-item { background: var(--white); border-radius: var(--radius-sm); padding: .72rem 1rem; font-size: .81rem; font-weight: 600; box-shadow: var(--shadow-lg); border-left: 4px solid var(--navy); display: flex; align-items: center; gap: .55rem; min-width: 235px; color: var(--text-1); animation: toastIn .22s ease; transition: opacity .35s; }
+    .toast-item.success { border-color: var(--green); }
+    .toast-item.danger  { border-color: var(--red); }
+    .toast-item i { font-size: .9rem; flex-shrink: 0; }
+    .toast-item.success i { color: var(--green); }
+    .toast-item.danger  i { color: var(--red); }
+    .toast-item.info    i { color: var(--navy); }
+    @@keyframes toastIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+
+    /* ── FOOTER META ── */
+    .am-footer-meta { padding: .65rem 2rem 1.5rem; font-size: .73rem; color: var(--text-3); }
+    .am-footer-meta i { margin-right: 3px; }
+
+    /* ── RESPONSIVE ── */
+    @@media (max-width: 768px) {
+        .am-hero { padding: 1.5rem 1.25rem 3.5rem; }
+        .am-toolbar, .am-content { padding-left: 1.25rem; padding-right: 1.25rem; }
+        .am-hero-inner { flex-direction: column; }
+        .am-hero-actions { width: 100%; }
+        .btn-create { flex: 1; justify-content: center; }
+        .admin-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<!-- ── HERO ── -->
+<div class="am-hero">
+    <div class="am-hero-inner">
+        <div>
+            <h1 class="am-hero-title">
+                <i class="bi bi-shield-lock-fill me-2" style="font-size:.8em;opacity:.75"></i>
+                Admin Management
+            </h1>
+            <p class="am-hero-sub">
+                Manage admin accounts &bull; Assign <strong>roles &amp; permissions</strong> &bull;
+                Monitor last login activity
+            </p>
+            <div class="am-stats-row">
+                <div class="am-stat-pill">
+                    <span class="stat-dot" style="background:#38bdf8"></span>
+                    Total <span class="pill-count">@Model.Count</span>
+                </div>
+                <div class="am-stat-pill">
+                    <span class="stat-dot" style="background:#4ade80"></span>
+                    Active <span class="pill-count">@Model.Count(a => a.IsActive)</span>
+                </div>
+                <div class="am-stat-pill">
+                    <span class="stat-dot" style="background:#fbbf24"></span>
+                    Recently Active <span class="pill-count">@Model.Count(a => a.LastLogin.HasValue && a.LastLogin.Value > DateTime.Now.AddDays(-7))</span>
+                </div>
+                <div class="am-stat-pill">
+                    <i class="bi bi-diagram-3" style="font-size:.72rem"></i>
+                    Roles <span class="pill-count">@Model.Select(a => a.RoleName).Distinct().Count()</span>
+                </div>
+            </div>
+        </div>
+        <div class="am-hero-actions">
+            <a href="@Url.Action("CreateAdmin", "Admin")" class="btn-create">
+                <i class="bi bi-person-plus-fill"></i> Add New Admin
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ── TOOLBAR ── -->
+<div class="am-toolbar">
+    <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="adminSearch" class="search-input" placeholder="Search name, username, email…">
+    </div>
+    <select class="role-select" id="roleFilter">
+        <option value="">All Roles</option>
+        @foreach (var role in Model.Select(a => a.RoleName).Distinct().OrderBy(r => r))
+        {
+            <option value="@role">@role</option>
+        }
+    </select>
+    <div class="toolbar-div"></div>
+    <span class="result-badge">
+        <i class="bi bi-shield-fill" style="margin-right:3px"></i>
+        <span id="resultCount">@Model.Count</span> admin(s)
+    </span>
+</div>
+
+<!-- ── ALERTS ── -->
+<div style="padding: 1rem 2rem 0;">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="am-alert success" id="alert-success">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>@Html.Raw(TempData["SuccessMessage"])</span>
+            <button class="am-alert-close" onclick="this.closest('.am-alert').remove()">✕</button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="am-alert danger" id="alert-error">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span>@Html.Raw(TempData["ErrorMessage"])</span>
+            <button class="am-alert-close" onclick="this.closest('.am-alert').remove()">✕</button>
+        </div>
+    }
+    @if (TempData["TempPassword"] != null && TempData["NewUsername"] != null)
+    {
+        <div class="am-alert warning" id="alert-creds">
+            <i class="bi bi-key-fill"></i>
+            <div style="flex:1">
+                <strong>New admin account created!</strong> Save these credentials — they won't be shown again.
+                <div class="cred-box">
+                    <div><strong>Username:</strong> <code>@TempData["NewUsername"]</code></div>
+                    <div><strong>Temporary Password:</strong> <code>@TempData["TempPassword"]</code></div>
+                </div>
+            </div>
+            <button class="am-alert-close" onclick="this.closest('.am-alert').remove()">✕</button>
+        </div>
+    }
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="am-content">
+    <div class="admin-grid" id="adminGrid">
+        @if (Model.Any())
+        {
+            @foreach (var admin in Model)
+            {
+                var initials   = GetInitials(admin.FullName);
+                var roleClass  = admin.RoleName.Contains("Super") || admin.RoleName.Contains("System") ? "role-super"
+                               : admin.RoleName.Contains("Admin") ? "role-admin" : "role-other";
+                var badgeClass = admin.RoleName.Contains("Super") || admin.RoleName.Contains("System") ? "rb-super"
+                               : admin.RoleName.Contains("Admin") ? "rb-admin" : "rb-other";
+                var activeClass = admin.IsActive ? "" : "inactive";
+                var perms = admin.AdminPermissions?.ToList() ?? new List<OACTsys.Models.AdminPermission>();
+                var isRecent = admin.LastLogin.HasValue && admin.LastLogin.Value > DateTime.Now.AddDays(-7);
+                var loginChipClass = !admin.LastLogin.HasValue ? "lc-never" : isRecent ? "lc-recent" : "lc-old";
+                var loginText = admin.LastLogin.HasValue
+                    ? admin.LastLogin.Value.ToString("MMM dd, yyyy · hh:mm tt")
+                    : "Never logged in";
+
+                <div class="admin-card @roleClass @activeClass"
+                     data-name="@admin.FullName.ToLower()"
+                     data-username="@admin.Username.ToLower()"
+                     data-email="@admin.Email.ToLower()"
+                     data-role="@admin.RoleName">
+
+                    <div class="c-head">
+                        <div class="c-avatar">@initials</div>
+                        <div class="c-head-info">
+                            <p class="c-name" title="@admin.FullName">@admin.FullName</p>
+                            <p class="c-email" title="@admin.Email">@admin.Email</p>
+                        </div>
+                        <div class="c-badges">
+                            <span class="r-badge @badgeClass">@admin.RoleName</span>
+                            <span class="r-badge @(admin.IsActive ? "rb-active" : "rb-inactive")">
+                                @(admin.IsActive ? "● Active" : "○ Inactive")
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="c-body">
+                        <div class="uname-row">
+                            <i class="bi bi-person-badge"></i>
+                            <span class="uname-val">@admin.Username</span>
+                        </div>
+
+                        <div class="c-meta">
+                            <i class="bi bi-clock-history"></i>
+                            <span class="login-chip @loginChipClass">
+                                <i class="bi @(admin.LastLogin.HasValue ? "bi-circle-fill" : "bi-dash-circle") " style="font-size:.55rem"></i>
+                                @loginText
+                            </span>
+                        </div>
+
+                        <div class="c-meta">
+                            <i class="bi bi-key"></i>
+                            <div>
+                                @if (perms.Any())
+                                {
+                                    <div class="perm-chips">
+                                        @foreach (var p in perms.Take(3))
+                                        {
+                                            <span class="perm-chip">@p.PermissionName</span>
+                                        }
+                                        @if (perms.Count > 3)
+                                        {
+                                            <span class="perm-chip more">+@(perms.Count - 3) more</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span style="font-size:.72rem;color:var(--red);font-weight:600;">No permissions assigned</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="c-meta">
+                            <i class="bi bi-calendar3"></i>
+                            <span>Created <strong>@admin.CreatedAt.ToString("MMM dd, yyyy")</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="c-foot">
+                        <a href="@Url.Action("EditAdmin", "Admin", new { id = admin.Id })" class="btn-edit">
+                            <i class="bi bi-pencil-square"></i> Edit Admin
+                        </a>
+                        @if (admin.IsActive)
+                        {
+                            <button class="btn-deact" title="Deactivate"
+                                    onclick="deactivateAdmin(@admin.Id, '@Html.Raw(admin.FullName.Replace("'","\\\'"))', this)">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-shield-x"></i></div>
+                <h5>No admin accounts found</h5>
+                <p>Create the first admin to get started.</p>
+                <a href="@Url.Action("CreateAdmin", "Admin")" class="btn-create" style="box-shadow:none;background:var(--navy);color:#fff;">
+                    <i class="bi bi-person-plus-fill"></i> Create First Admin
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ── FOOTER META ── -->
+<div class="am-footer-meta">
+    <i class="bi bi-info-circle"></i>
+    @if (Model.Any())
+    {
+        <span>
+            First created: <strong>@Model.OrderBy(a => a.CreatedAt).First().CreatedAt.ToString("MMMM dd, yyyy")</strong>
+            &bull; Last created: <strong>@Model.OrderByDescending(a => a.CreatedAt).First().CreatedAt.ToString("MMMM dd, yyyy")</strong>
+        </span>
+    }
+</div>
+
+<div id="toast-rack"></div>
+
+@section Scripts {
+<script>
+    // ── Live search + role filter
+    function filterCards() {
+        const q    = document.getElementById('adminSearch').value.toLowerCase().trim();
+        const role = document.getElementById('roleFilter').value;
+        const cards = document.querySelectorAll('.admin-card');
+        let visible = 0;
+        cards.forEach(card => {
+            const matchQ = !q || card.dataset.name.includes(q) || card.dataset.username.includes(q) || card.dataset.email.includes(q);
+            const matchR = !role || card.dataset.role === role;
+            const show   = matchQ && matchR;
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        document.getElementById('resultCount').textContent = visible;
+    }
+    document.getElementById('adminSearch').addEventListener('input', filterCards);
+    document.getElementById('roleFilter').addEventListener('change', filterCards);
+
+    // ── Deactivate
+    async function deactivateAdmin(id, name, btn) {
+        if (!confirm(`Deactivate "${name}"?\n\nThey will lose all access immediately.`)) return;
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        try {
+            const res  = await fetch('@Url.Action("DeactivateAdmin", "Admin")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('Admin deactivated successfully.', 'success');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                toast(data.message || 'Deactivation failed.', 'danger');
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        } catch {
+            toast('Network error. Please try again.', 'danger');
+            btn.disabled = false; btn.innerHTML = orig;
+        }
+    }
+
+    // ── Toast
+    function toast(msg, type = 'info') {
+        const rack = document.getElementById('toast-rack');
+        const icons = { success:'bi-check-circle-fill', danger:'bi-x-circle-fill', info:'bi-info-circle-fill' };
+        const el = document.createElement('div');
+        el.className = `toast-item ${type}`;
+        el.innerHTML = `<i class="bi ${icons[type]||icons.info}"></i>${esc(msg)}`;
+        rack.appendChild(el);
+        setTimeout(() => el.style.opacity = '0', 3000);
+        setTimeout(() => el.remove(), 3400);
+    }
+    function esc(s) {
+        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Auto-dismiss alerts after 10s
+    setTimeout(() => {
+        document.querySelectorAll('.am-alert').forEach(a => a.remove());
+    }, 10000);
+</script>
+}
+
+@functions {
+    string GetInitials(string fullName) {
+        if (string.IsNullOrWhiteSpace(fullName)) return "??";
+        var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpper();
+        return (parts[0][0].ToString() + parts[parts.Length - 1][0].ToString()).ToUpper();
+    }
+}

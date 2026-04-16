@@ -1,0 +1,713 @@
+@model OACTsys.Models.Student
+@{
+    ViewBag.Title = "Student Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string ByKey(string key) =>
+        Model.FieldData?
+             .FirstOrDefault(fd => fd.EnrollmentField?.TemplateKey == key
+                                && !string.IsNullOrWhiteSpace(fd.FieldValue))
+             ?.FieldValue?.Trim() ?? "";
+
+    string FileByKey(string key) =>
+        Model.FieldData?
+             .FirstOrDefault(fd => fd.EnrollmentField?.TemplateKey == key
+                                && !string.IsNullOrWhiteSpace(fd.FilePath))
+             ?.FilePath;
+
+    var fullName = ByKey("full_name");
+    if (string.IsNullOrWhiteSpace(fullName))
+    {
+        var fn = ByKey("first_name"); var ln = ByKey("last_name");
+        fullName = $"{fn} {ln}".Trim();
+    }
+    if (string.IsNullOrWhiteSpace(fullName)) fullName = Model.Email ?? $"Student #{Model.StudentId}";
+
+    var photoUrl = FileByKey("photo_2x2");
+    var initials = string.Join("", fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                           .Take(2).Select(w => w[0])).ToUpper();
+
+    var grouped = Model.FieldData?
+        .Where(fd => fd.EnrollmentField != null)
+        .GroupBy(fd => fd.EnrollmentField.Category ?? "General")
+        .OrderBy(g => g.Key)
+        .ToList() ?? new();
+
+    var payments = Model.Payments?.Where(p => p.IsActive)
+                       .OrderByDescending(p => p.PaymentDate).ToList()
+                ?? new List<OACTsys.Models.Payment>();
+
+    var totalVerified = payments.Where(p => p.Status == "Verified").Sum(p => p.Amount);
+    var hasNum = !string.IsNullOrWhiteSpace(Model.StudentNumber);
+
+    string EnrollCls(string s) => (s ?? "").ToLower() switch {
+        "enrolled" => "sb-enrolled",
+        "approved" => "sb-approved",
+        "pending"  => "sb-pending",
+        "rejected" => "sb-rejected",
+        _ => "sb-default"
+    };
+    string EnrollLabel(string s) => (s ?? "").ToLower() switch {
+        "enrolled" => "✓ Enrolled",
+        "approved" => "✓ Approved",
+        "pending"  => "⏳ Pending",
+        "rejected" => "✗ Rejected",
+        _ => s ?? "—"
+    };
+    string PayCls(string s) => (s ?? "").ToLower() switch {
+        "verified" => "sb-approved",
+        "unpaid"   => "sb-pending",
+        _ => "sb-default"
+    };
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --navy:      #051094;
+        --navy-deep: #030b72;
+        --navy-soft: #1a3fd4;
+        --navy-tint: #e8ebff;
+        --navy-pale: #f0f3ff;
+        --green:     #16a34a; --green-bg:  #dcfce7;
+        --amber:     #d97706; --amber-bg:  #fef3c7;
+        --red:       #dc2626; --red-bg:    #fee2e2;
+        --sky:       #0284c7; --sky-bg:    #e0f2fe;
+        --white:     #ffffff;
+        --surface:   #f5f7ff;
+        --border:    #e2e7ff;
+        --text-1:    #0d1b4b;
+        --text-2:    #4a5b8a;
+        --text-3:    #8a97c0;
+        --shadow-sm: 0 1px 3px rgba(5,16,148,.08);
+        --shadow-md: 0 4px 16px rgba(5,16,148,.10);
+        --shadow-lg: 0 12px 40px rgba(5,16,148,.14);
+        --radius:    14px;
+        --radius-sm: 9px;
+        --radius-xs: 6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    /* ── HERO ── */
+    .vsd-hero {
+        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-soft) 100%);
+        padding: 1.75rem 2rem 3.5rem; position: relative; overflow: hidden;
+    }
+    .vsd-hero::before {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background:
+            radial-gradient(ellipse 50% 65% at 90% 0%, rgba(59,130,246,.22) 0%, transparent 55%),
+            radial-gradient(ellipse 30% 50% at 0% 100%, rgba(255,255,255,.06) 0%, transparent 50%);
+    }
+    .vsd-hero::after {
+        content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 40px;
+        background: var(--surface); clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .vsd-hero-inner { position: relative; z-index: 2; display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+
+    /* ── HERO AVATAR ── */
+    .hero-avatar {
+        width: 72px; height: 72px; min-width: 72px; border-radius: 50%;
+        background: rgba(255,255,255,.18); border: 3px solid rgba(255,255,255,.35);
+        color: #fff; font-weight: 800; font-size: 1.4rem;
+        display: flex; align-items: center; justify-content: center; overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,.2);
+    }
+    .hero-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    .hero-name { font-size: clamp(1.2rem, 2.5vw, 1.65rem); font-weight: 800; color: #fff; margin: 0 0 .2rem; letter-spacing: -.3px; }
+    .hero-sub  { font-size: .8rem; color: rgba(255,255,255,.65); font-weight: 500; margin: 0; }
+
+    .hero-badges { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .65rem; }
+    .hero-badge {
+        font-size: .65rem; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+        padding: .22rem .72rem; border-radius: 50px;
+        background: rgba(255,255,255,.15); color: rgba(255,255,255,.9);
+        border: 1px solid rgba(255,255,255,.22);
+    }
+    .hero-badge.enrolled { background: rgba(56,189,248,.22); border-color: rgba(56,189,248,.4); }
+    .hero-badge.approved { background: rgba(74,222,128,.22); border-color: rgba(74,222,128,.4); }
+    .hero-badge.pending  { background: rgba(251,191,36,.22);  border-color: rgba(251,191,36,.4);  }
+    .hero-badge.rejected { background: rgba(248,113,113,.22); border-color: rgba(248,113,113,.4); }
+    .hero-badge.paid     { background: rgba(74,222,128,.22);  border-color: rgba(74,222,128,.4);  }
+    .hero-badge.unpaid   { background: rgba(251,191,36,.22);  border-color: rgba(251,191,36,.4);  }
+
+    .hero-back {
+        background: rgba(255,255,255,.13); color: #fff;
+        border: 1.5px solid rgba(255,255,255,.28); border-radius: var(--radius-sm);
+        padding: .5rem .95rem; font-size: .78rem; font-weight: 700; font-family: inherit;
+        display: inline-flex; align-items: center; gap: .4rem;
+        text-decoration: none; cursor: pointer; white-space: nowrap;
+        transition: background .2s; margin-left: auto; align-self: flex-start;
+    }
+    .hero-back:hover { background: rgba(255,255,255,.22); color: #fff; }
+
+    /* ── CONTENT ── */
+    .vsd-content { padding: 1.75rem 2rem 3rem; background: var(--surface); }
+    .vsd-row { display: grid; grid-template-columns: 300px 1fr; gap: 1.25rem; }
+
+    /* ── CARDS ── */
+    .vsd-card {
+        background: var(--white); border: 1.5px solid var(--border);
+        border-radius: var(--radius); box-shadow: var(--shadow-sm);
+        overflow: hidden; margin-bottom: 1.1rem;
+    }
+    .vsd-card-head {
+        padding: .85rem 1.25rem .6rem;
+        border-bottom: 1px solid var(--border);
+        display: flex; align-items: center; gap: .5rem;
+        background: var(--navy-pale);
+    }
+    .vsd-card-head-icon {
+        width: 30px; height: 30px; border-radius: var(--radius-xs);
+        background: var(--navy); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .82rem; flex-shrink: 0;
+    }
+    .vsd-card-title { font-size: .7rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0; }
+    .vsd-card-body  { padding: 1.1rem 1.25rem; }
+
+    /* ── STATUS BADGES ── */
+    .s-badge { font-size: .62rem; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: .2rem .65rem; border-radius: 50px; white-space: nowrap; }
+    .sb-enrolled { background: var(--sky-bg);    color: var(--sky);   }
+    .sb-approved { background: var(--green-bg);  color: var(--green); }
+    .sb-pending  { background: var(--amber-bg);  color: var(--amber); }
+    .sb-rejected { background: var(--red-bg);    color: var(--red);   }
+    .sb-default  { background: var(--navy-pale); color: var(--navy);  }
+
+    /* ── INFO ROWS ── */
+    .info-row { display: flex; align-items: flex-start; gap: .65rem; padding: .6rem 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-row-icon { width: 28px; height: 28px; border-radius: var(--radius-xs); background: var(--navy-pale); color: var(--navy); display: flex; align-items: center; justify-content: center; font-size: .8rem; flex-shrink: 0; margin-top: 1px; }
+    .info-label { font-size: .68rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: .12rem; }
+    .info-value { font-size: .85rem; font-weight: 700; color: var(--text-1); word-break: break-word; line-height: 1.35; }
+    .info-value.empty { color: var(--text-3); font-style: italic; font-weight: 400; }
+
+    /* ── STUDENT NUMBER EDIT ── */
+    .snum-row {
+        display: flex; align-items: center; gap: .5rem;
+        background: var(--navy-pale); border-radius: var(--radius-xs);
+        padding: .5rem .8rem; margin-bottom: .75rem;
+    }
+    .snum-icon { color: var(--text-3); font-size: .82rem; flex-shrink: 0; }
+    .snum-display {
+        font-size: .85rem; font-weight: 800; color: var(--navy);
+        cursor: pointer; border-bottom: 1.5px dashed var(--navy);
+        flex: 1; transition: color .15s;
+    }
+    .snum-display:hover { color: var(--navy-soft); }
+    .snum-display.unassigned { color: var(--text-3); border-color: var(--border); font-weight: 500; font-style: italic; }
+    .snum-edit-btn { background: none; border: none; color: var(--text-3); cursor: pointer; padding: .15rem .3rem; font-size: .82rem; }
+    .snum-edit-btn:hover { color: var(--navy); }
+    .snum-edit-wrap { display: none; gap: .4rem; align-items: center; flex-wrap: wrap; margin-top: .45rem; }
+    .snum-input { font-size: .83rem; font-weight: 700; color: var(--navy); border: 1.5px solid var(--navy); border-radius: var(--radius-xs); padding: .3rem .7rem; flex: 1; min-width: 140px; outline: none; font-family: inherit; }
+    .snum-input:focus { box-shadow: 0 0 0 3px rgba(5,16,148,.12); }
+    .snum-save { background: var(--navy); color: #fff; border: none; border-radius: var(--radius-xs); padding: .3rem .85rem; font-size: .76rem; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .snum-save:hover { background: var(--navy-deep); }
+    .snum-cancel { background: none; color: var(--text-3); border: none; cursor: pointer; font-size: .88rem; padding: .25rem .35rem; }
+    .snum-cancel:hover { color: var(--red); }
+
+    /* ── STATUS SELECTOR ── */
+    .status-select-wrap { display: flex; gap: .6rem; flex-direction: column; }
+    .vsd-select {
+        padding: .6rem .9rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+        font-family: inherit; font-size: .83rem; color: var(--text-1); background: var(--surface);
+        outline: none; cursor: pointer; transition: border-color .2s; width: 100%;
+    }
+    .vsd-select:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(5,16,148,.1); }
+    .btn-update {
+        background: var(--navy); color: #fff; border: none;
+        border-radius: var(--radius-sm); padding: .58rem 1rem;
+        font-size: .81rem; font-weight: 700; font-family: inherit;
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .4rem;
+        transition: background .2s; width: 100%;
+    }
+    .btn-update:hover { background: var(--navy-deep); }
+
+    /* ── FIELD GRID (enrollment data) ── */
+    .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: .75rem 1.1rem; }
+    .field-item { }
+    .field-label-sm { font-size: .67rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: .22rem; }
+    .field-val { font-size: .84rem; font-weight: 600; color: var(--text-1); word-break: break-word; line-height: 1.4; }
+    .field-val.empty { color: var(--text-3); font-style: italic; font-weight: 400; }
+
+    .file-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-xs); border: 1.5px solid var(--border); cursor: pointer; transition: transform .2s; }
+    .file-thumb:hover { transform: scale(1.06); }
+    .file-link { font-size: .8rem; color: var(--navy); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; }
+    .file-link:hover { color: var(--navy-soft); text-decoration: underline; }
+
+    /* ── PAYMENTS TABLE ── */
+    .pay-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .pay-table th { font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--text-3); padding: .55rem .75rem; border-bottom: 2px solid var(--border); text-align: left; white-space: nowrap; background: var(--navy-pale); }
+    .pay-table td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .pay-table tr:last-child td { border-bottom: none; }
+    .pay-table tr:hover td { background: var(--navy-pale); }
+    .pay-amount { font-weight: 800; color: var(--text-1); }
+    .pay-ref { font-size: .72rem; color: var(--text-2); font-family: monospace; }
+    .pay-total-row td { font-weight: 800; background: var(--navy-pale); border-top: 2px solid var(--border); }
+    .pay-empty { text-align: center; padding: 2.5rem 1rem; color: var(--text-3); }
+    .pay-empty i { font-size: 2rem; display: block; margin-bottom: .5rem; }
+
+    /* ── TOAST ── */
+    #toast-rack { position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 9999; display: flex; flex-direction: column; gap: .45rem; }
+    .toast-item { background: var(--white); border-radius: var(--radius-sm); padding: .7rem 1rem; font-size: .81rem; font-weight: 600; box-shadow: var(--shadow-lg); border-left: 4px solid var(--navy); display: flex; align-items: center; gap: .55rem; min-width: 230px; color: var(--text-1); animation: toastIn .22s ease; transition: opacity .35s; }
+    .toast-item.success { border-color: var(--green); }
+    .toast-item.danger  { border-color: var(--red);   }
+    .toast-item i { font-size: .9rem; flex-shrink: 0; }
+    .toast-item.success i { color: var(--green); }
+    .toast-item.danger  i { color: var(--red);   }
+    .toast-item.info    i { color: var(--navy);  }
+    @@keyframes toastIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+
+    /* ── RESPONSIVE ── */
+    @@media (max-width: 900px) {
+        .vsd-row { grid-template-columns: 1fr; }
+        .vsd-hero { padding: 1.4rem 1.25rem 3rem; }
+        .vsd-content { padding: 1.25rem; }
+    }
+    @@media (max-width: 480px) {
+        .field-grid { grid-template-columns: 1fr 1fr; }
+        .hero-avatar { width: 56px; height: 56px; min-width: 56px; font-size: 1.1rem; }
+    }
+</style>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════ -->
+<div class="vsd-hero">
+    <div class="vsd-hero-inner">
+        <!-- Avatar -->
+        <div class="hero-avatar">
+            @if (!string.IsNullOrEmpty(photoUrl))
+            {
+                <img src="@photoUrl" alt="Photo"
+                     onerror="this.parentElement.innerHTML='<span>@initials</span>'" />
+            }
+            else
+            {
+                <span>@initials</span>
+            }
+        </div>
+
+        <!-- Identity -->
+        <div style="flex:1;min-width:0;">
+            <h1 class="hero-name">@fullName</h1>
+            <p class="hero-sub">
+                @(Model.Program ?? "—") &bull; @(Model.StudentType ?? "—") &bull;
+                Year @Model.CurrentYearLevel &bull; Sem @Model.CurrentSemester
+            </p>
+            <div class="hero-badges">
+                <span class="hero-badge @((Model.EnrollmentStatus ?? "").ToLower())">
+                    @EnrollLabel(Model.EnrollmentStatus)
+                </span>
+                <span class="hero-badge @((Model.PaymentStatus ?? "").ToLower())">
+                    @(Model.PaymentStatus ?? "No Payment")
+                </span>
+                @if (Model.HasAccount)
+                {
+                    <span class="hero-badge approved">
+                        <i class="bi bi-person-check-fill me-1"></i>Has Account
+                    </span>
+                }
+                else
+                {
+                    <span class="hero-badge">No Account</span>
+                }
+            </div>
+        </div>
+
+        <!-- Back button -->
+        <a href="javascript:history.back()" class="hero-back">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     CONTENT
+═══════════════════════════════════════════════════ -->
+<div class="vsd-content">
+    <div class="vsd-row">
+
+        <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
+        <div>
+
+            <!-- Student Number -->
+            <div class="vsd-card">
+                <div class="vsd-card-head">
+                    <div class="vsd-card-head-icon"><i class="bi bi-upc"></i></div>
+                    <span class="vsd-card-title">Student Number</span>
+                </div>
+                <div class="vsd-card-body">
+                    <div class="snum-row">
+                        <i class="bi bi-upc snum-icon"></i>
+                        <span class="snum-display @(hasNum ? "" : "unassigned")"
+                              id="snum-display" title="Click to edit"
+                              onclick="startEditNum()">
+                            @(hasNum ? Model.StudentNumber : "Click to assign number")
+                        </span>
+                        <button class="snum-edit-btn" onclick="startEditNum()" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                    <div class="snum-edit-wrap" id="snum-edit-wrap">
+                        <input class="snum-input" id="snum-input" type="text" maxlength="50"
+                               placeholder="e.g. 2026-0001"
+                               value="@(hasNum ? Model.StudentNumber : "")"
+                               onkeydown="if(event.key==='Enter')saveNum();if(event.key==='Escape')cancelEditNum();" />
+                        <button class="snum-save" onclick="saveNum()">Save</button>
+                        <button class="snum-cancel" onclick="cancelEditNum()">✕</button>
+                        <span style="display:none" id="snum-saving">
+                            <span class="spinner-border spinner-border-sm" style="color:var(--navy)"></span>
+                        </span>
+                    </div>
+                    <div style="display:none;font-size:.74rem;color:var(--red);margin-top:.35rem;font-weight:600;" id="snum-error"></div>
+                </div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="vsd-card">
+                <div class="vsd-card-head">
+                    <div class="vsd-card-head-icon"><i class="bi bi-info-circle"></i></div>
+                    <span class="vsd-card-title">Student Info</span>
+                </div>
+                <div class="vsd-card-body" style="padding:0 1.25rem;">
+                    <div class="info-row">
+                        <div class="info-row-icon"><i class="bi bi-mortarboard"></i></div>
+                        <div>
+                            <div class="info-label">Program</div>
+                            <div class="info-value">@(Model.Program ?? "—")</div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row-icon"><i class="bi bi-person-badge"></i></div>
+                        <div>
+                            <div class="info-label">Student Type</div>
+                            <div class="info-value">@(Model.StudentType ?? "—")</div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row-icon"><i class="bi bi-layers"></i></div>
+                        <div>
+                            <div class="info-label">Year &amp; Semester</div>
+                            <div class="info-value">Year @Model.CurrentYearLevel &bull; Semester @Model.CurrentSemester</div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row-icon"><i class="bi bi-envelope"></i></div>
+                        <div>
+                            <div class="info-label">Email</div>
+                            <div class="info-value @(string.IsNullOrEmpty(Model.Email) ? "empty" : "")">
+                                @(Model.Email ?? "Not provided")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row-icon"><i class="bi bi-calendar3"></i></div>
+                        <div>
+                            <div class="info-label">Enrolled On</div>
+                            <div class="info-value">@(Model.EnrollmentDate?.ToString("MMMM d, yyyy") ?? "—")</div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row-icon"><i class="bi bi-shield-check"></i></div>
+                        <div>
+                            <div class="info-label">Enrollment Status</div>
+                            <div style="margin-top:.2rem;">
+                                <span class="s-badge @EnrollCls(Model.EnrollmentStatus)">@EnrollLabel(Model.EnrollmentStatus)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row-icon"><i class="bi bi-cash-coin"></i></div>
+                        <div>
+                            <div class="info-label">Payment Status</div>
+                            <div style="margin-top:.2rem;">
+                                <span class="s-badge @PayCls(Model.PaymentStatus)">@(Model.PaymentStatus ?? "—")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Status -->
+            <div class="vsd-card">
+                <div class="vsd-card-head">
+                    <div class="vsd-card-head-icon"><i class="bi bi-pencil-square"></i></div>
+                    <span class="vsd-card-title">Change Status</span>
+                </div>
+                <div class="vsd-card-body">
+                    <div class="status-select-wrap">
+                        <select class="vsd-select" id="statusSelect">
+                            @foreach (var st in new[] { "Pending", "Approved", "Enrolled", "Rejected" })
+                            {
+                                if (Model.EnrollmentStatus == st)
+                                {
+                                    <option value="@st" selected>@st</option>
+                                }
+                                else
+                                {
+                                    <option value="@st">@st</option>
+                                }
+                            }
+                        </select>
+                        <button class="btn-update" onclick="saveStatus()">
+                            <i class="bi bi-check-circle-fill"></i> Update Status
+                        </button>
+                    </div>
+                    <div style="display:none;font-size:.76rem;font-weight:600;margin-top:.6rem;" id="statusMsg"></div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /LEFT SIDEBAR -->
+
+        <!-- ══ MAIN CONTENT ════════════════════════════════════ -->
+        <div>
+
+            <!-- Enrollment Field Data -->
+            @if (grouped.Any())
+            {
+                foreach (var group in grouped)
+                {
+                    <div class="vsd-card">
+                        <div class="vsd-card-head">
+                            <div class="vsd-card-head-icon"><i class="bi bi-folder2-open"></i></div>
+                            <span class="vsd-card-title">@group.Key</span>
+                        </div>
+                        <div class="vsd-card-body">
+                            <div class="field-grid">
+                                @foreach (var fd in group.OrderBy(f => f.EnrollmentField.DisplayOrder))
+                                {
+                                    var ftype = fd.EnrollmentField.FieldType ?? "";
+                                    var isFile = ftype == "file" || ftype == "image";
+                                    <div class="field-item">
+                                        <div class="field-label-sm">@fd.EnrollmentField.FieldName</div>
+                                        @if (isFile && !string.IsNullOrWhiteSpace(fd.FilePath))
+                                        {
+                                            var ext = System.IO.Path.GetExtension(fd.FilePath).ToLower();
+                                            var isImg = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" }.Contains(ext);
+                                            if (isImg)
+                                            {
+                                                <a href="@fd.FilePath" target="_blank">
+                                                    <img src="@fd.FilePath" class="file-thumb"
+                                                         onerror="this.src='/img/placeholder.png'"
+                                                         alt="@fd.EnrollmentField.FieldName" />
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a href="@fd.FilePath" target="_blank" class="file-link">
+                                                    <i class="bi bi-file-earmark-arrow-down"></i>Download file
+                                                </a>
+                                            }
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(fd.FieldValue))
+                                        {
+                                            <div class="field-val">@fd.FieldValue</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="field-val empty">Not provided</div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="vsd-card">
+                    <div class="vsd-card-body" style="text-align:center;padding:3rem 1.5rem;color:var(--text-3);">
+                        <i class="bi bi-inbox" style="font-size:2.5rem;display:block;margin-bottom:.75rem;"></i>
+                        No enrollment form data found for this student.
+                    </div>
+                </div>
+            }
+
+            <!-- Payment History -->
+            <div class="vsd-card">
+                <div class="vsd-card-head">
+                    <div class="vsd-card-head-icon"><i class="bi bi-cash-coin"></i></div>
+                    <span class="vsd-card-title">Payment History</span>
+                    @if (payments.Any())
+                    {
+                        <span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--green);background:var(--green-bg);padding:.18rem .62rem;border-radius:50px;">
+                            ₱@totalVerified.ToString("N2") verified
+                        </span>
+                    }
+                </div>
+                <div class="vsd-card-body" style="padding:0;">
+                    @if (payments.Any())
+                    {
+                        <div style="overflow-x:auto;">
+                            <table class="pay-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Purpose</th>
+                                        <th>Method</th>
+                                        <th>Amount</th>
+                                        <th>Reference</th>
+                                        <th>Status</th>
+                                        <th>Verified By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in payments)
+                                    {
+                                        var pCls = (p.Status ?? "").ToLower() switch {
+                                            "verified" => "sb-approved",
+                                            "pending"  => "sb-pending",
+                                            "rejected" => "sb-rejected",
+                                            _ => "sb-default"
+                                        };
+                                        <tr>
+                                            <td>@p.PaymentDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@(p.PaymentType ?? "—")</td>
+                                            <td>
+                                                <span class="s-badge" style="background:var(--sky-bg);color:var(--sky);">@(p.PaymentMethod ?? "—")</span>
+                                            </td>
+                                            <td class="pay-amount">₱@p.Amount.ToString("N2")</td>
+                                            <td class="pay-ref">@(p.ReferenceNumber ?? "—")</td>
+                                            <td><span class="s-badge @pCls">@(p.Status ?? "—")</span></td>
+                                            <td style="font-size:.76rem;color:var(--text-2);">@(p.VerifiedBy ?? "—")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="pay-total-row">
+                                        <td colspan="3" style="text-align:right;font-size:.76rem;text-transform:uppercase;letter-spacing:.5px;">Total Verified</td>
+                                        <td colspan="4" style="color:var(--green);font-size:.9rem;">
+                                            ₱@totalVerified.ToString("N2")
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pay-empty">
+                            <i class="bi bi-receipt"></i>
+                            No payment records found.
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+        <!-- /MAIN CONTENT -->
+
+    </div>
+</div>
+
+<!-- Toast rack -->
+<div id="toast-rack"></div>
+
+@section Scripts {
+<script>
+    const STUDENT_ID = @Model.StudentId;
+
+    function startEditNum() {
+        document.getElementById('snum-display').style.display          = 'none';
+        document.getElementById('snum-edit-wrap').style.display        = 'flex';
+        document.querySelector('.snum-edit-btn').style.display         = 'none';
+        document.getElementById('snum-input').focus();
+    }
+
+    function cancelEditNum() {
+        document.getElementById('snum-edit-wrap').style.display        = 'none';
+        document.getElementById('snum-display').style.display          = '';
+        document.querySelector('.snum-edit-btn').style.display         = '';
+        document.getElementById('snum-error').style.display            = 'none';
+    }
+
+    async function saveNum() {
+        const inp  = document.getElementById('snum-input');
+        const spn  = document.getElementById('snum-saving');
+        const err  = document.getElementById('snum-error');
+        const val  = inp.value.trim();
+
+        err.style.display = 'none';
+        if (!val) { err.textContent = 'Student number cannot be blank.'; err.style.display = 'block'; return; }
+
+        spn.style.display = 'inline-flex'; inp.disabled = true;
+
+        try {
+            const d = await (await fetch('/Admin/AssignStudentNumber', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ studentId: STUDENT_ID, studentNumber: val })
+            })).json();
+
+            if (d.success) {
+                const disp = document.getElementById('snum-display');
+                disp.textContent = d.studentNumber;
+                disp.classList.remove('unassigned');
+                cancelEditNum();
+                toast('Student number saved.', 'success');
+            } else {
+                err.textContent = d.message || 'Save failed.';
+                err.style.display = 'block';
+            }
+        } catch {
+            err.textContent = 'Network error. Please try again.';
+            err.style.display = 'block';
+        } finally {
+            spn.style.display = 'none'; inp.disabled = false;
+        }
+    }
+
+    async function saveStatus() {
+        const status = document.getElementById('statusSelect').value;
+        const msg    = document.getElementById('statusMsg');
+        msg.style.display = 'none';
+
+        try {
+            const d = await (await fetch('/Admin/UpdateEnrollmentStatus', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ studentId: STUDENT_ID, status })
+            })).json();
+
+            if (d.success) {
+                msg.textContent   = d.message;
+                msg.style.color   = 'var(--green)';
+                msg.style.display = 'block';
+                toast(d.message, 'success');
+            } else {
+                msg.textContent   = d.message || 'Update failed.';
+                msg.style.color   = 'var(--red)';
+                msg.style.display = 'block';
+                toast(d.message || 'Update failed.', 'danger');
+            }
+        } catch {
+            msg.textContent   = 'Network error.';
+            msg.style.color   = 'var(--red)';
+            msg.style.display = 'block';
+        }
+    }
+
+    function toast(msg, type = 'info') {
+        const rack  = document.getElementById('toast-rack');
+        const icons = { success:'bi-check-circle-fill', danger:'bi-x-circle-fill', info:'bi-info-circle-fill' };
+        const el    = document.createElement('div');
+        el.className = `toast-item ${type}`;
+        el.innerHTML = `<i class="bi ${icons[type]||icons.info}"></i>${esc(msg)}`;
+        rack.appendChild(el);
+        setTimeout(() => el.style.opacity = '0', 3000);
+        setTimeout(() => el.remove(), 3400);
+    }
+
+    function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+}

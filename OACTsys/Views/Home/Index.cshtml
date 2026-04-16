@@ -1,0 +1,635 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+@* Razor-resolved image URLs injected as CSS custom properties *@
+<style>
+    .hero-section::before {
+        background-image: url("@Url.Content("~/css/assets/images/bg-banner.jpg")");
+    }
+
+    .hero-section::after {
+        background-image: url("@Url.Content("~/css/assets/images/sss.png")");
+    }
+</style>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section id="welcome" class="hero-section">
+
+    <img src="~/css/assets/images/s.png"
+         class="hero-plane-img animate__animated animate__fadeInRight"
+         alt="Aerospace Plane" />
+
+    <!-- White gradient overlay — keeps left text area clean -->
+    <div class="hero-gradient-overlay"></div>
+
+    <div class="container hero-content pt-3 pb-5">
+        <div class="row">
+            <div class="col-xl-5 col-lg-6 col-md-7 text-start">
+
+                <p class="hero-eyebrow">World-Class Aviation Education</p>
+                <h1 class="hero-title">
+                    Welcome to<br>
+                    <span class="hero-title-accent">Orson Aerospace</span><br>
+                    College &amp; Technology
+                </h1>
+                <p class="hero-lead">
+                    Providing world-class aviation education and professional
+                    licensure preparation since ?.
+                </p>
+
+                <!-- Square side-by-side cards -->
+                <div class="d-flex gap-3 mt-4">
+
+                    <a asp-controller="Enrollment" asp-action="Index" class="sq-card">
+                        <div class="sq-card__icon">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+                        <span class="sq-card__title">ENROLLMENT</span>
+                        <span class="sq-card__sub">Start your aviation journey</span>
+                        <div class="sq-card__btn">
+                            Apply Now <i class="bi bi-arrow-right ms-1"></i>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Licensure" asp-action="Index" class="sq-card sq-card--filled">
+                        <div class="sq-card__icon">
+                            <i class="bi bi-award"></i>
+                        </div>
+                        <span class="sq-card__title">LICENSURE</span>
+                        <span class="sq-card__sub">Reserve your exam slot</span>
+                        <div class="sq-card__btn sq-card__btn--outline">
+                            Reserve Now <i class="bi bi-arrow-right ms-1"></i>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── SERVICE STRIP ─────────────────────────────────── -->
+<div class="service-strip">
+    <div class="container">
+        <div class="row g-0">
+            <div class="col-6 col-md-3">
+                <div class="service-strip-item">
+                    <i class="bi bi-patch-check-fill"></i>
+                    <span>Accredited Programs</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="service-strip-item">
+                    <i class="bi bi-joystick"></i>
+                    <span>?</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="service-strip-item">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>?</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="service-strip-item">
+                    <i class="bi bi-globe2"></i>
+                    <span>?</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── ABOUT ─────────────────────────────────────────── -->
+<section id="about" class="about-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-md-6">
+                <div class="about-img-wrap">
+                    <img src="~/css/assets/images/about-min.jpg"
+                         alt="About OACT"
+                         class="img-fluid rounded-3 shadow-lg" />
+                    <div class="about-img-badge">
+                        <span class="badge-number">20+</span>
+                        <span class="badge-label">Years of<br>Excellence</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <p class="section-eyebrow">Get To Know Us</p>
+                <h2 class="section-heading">About Our College</h2>
+                <p class="section-body">
+                    Orson Aerospace College and Technology, Inc. is a premier institution
+                    dedicated to producing world-class aviation professionals. Our facilities
+                    and curriculum are designed to meet international standards.
+                </p>
+                <ul class="about-list">
+                    <li><i class="bi bi-check-circle-fill"></i>Accredited Programs</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Modern Flight Simulators</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Expert Faculty</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── CONTACT ───────────────────────────────────────── -->
+<section id="contact" class="contact-section">
+    <div class="container">
+        <p class="section-eyebrow text-center">Reach Out</p>
+        <h2 class="section-heading text-center mb-5">Contact Us</h2>
+        <div class="row justify-content-center g-4">
+            <div class="col-md-4">
+                <div class="contact-card">
+                    <div class="contact-card-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                    <h5>Address</h5>
+                    <p>RLW BLDG., MV Patalinghug Avenue, Basak, Lapu-Lapu City</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="contact-card">
+                    <div class="contact-card-icon"><i class="bi bi-telephone-fill"></i></div>
+                    <h5>Phone</h5>
+                    <p>(63) 977 381 0089</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="contact-card">
+                    <div class="contact-card-icon"><i class="bi bi-envelope-fill"></i></div>
+                    <h5>Email</h5>
+                    <p>oactech1953@@gmail.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── BACK TO TOP ───────────────────────────────────── -->
+<a href="#welcome" class="back-top-btn" id="backTopBtn" aria-label="back to top">
+    <i class="bi bi-arrow-up"></i>
+</a>
+
+
+<style>
+    /* ══════════════════════════════════════════════
+           ROOT
+        ══════════════════════════════════════════════ */
+    :root {
+        --admiral: #051094;
+        --admiral-dark: #030a6e;
+        --accent: #669bbc;
+        --white: #ffffff;
+        --off-white: #f4f6ff;
+        --text-dark: #0d1b4b;
+        --text-muted: #5a6a8a;
+        --gold: #c9a84c;
+    }
+
+    /* ══════════════════════════════════════════════
+           HERO — gradient bg: pure white left → fades
+           into the banner photo on the right
+        ══════════════════════════════════════════════ */
+    .hero-section {
+        position: relative;
+        min-height: 88vh;
+        display: flex;
+        align-items: center;
+        padding-top: 3rem;
+        overflow: hidden;
+        isolation: isolate;
+        background: var(--white);
+    }
+
+        /* Building photo — full background via ::before */
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+
+        /* Cloud photo — right side, fades in softly via ::after */
+        .hero-section::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 60%;
+            height: 100%;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            -webkit-mask-image: linear-gradient( to right, transparent 0%, rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.90) 48%, black 62% );
+            mask-image: linear-gradient( to right, transparent 0%, rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.90) 48%, black 62% );
+            z-index: 1;
+        }
+
+    /* Cloud diagonal removed — handled via CSS background-image layers */
+
+
+    /* White-to-transparent gradient overlay — left side text protection */
+    .hero-gradient-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient( to right, rgba(255,255,255,1.00) 0%, rgba(255,255,255,0.97) 22%, rgba(255,255,255,0.75) 42%, rgba(255,255,255,0.20) 62%, rgba(255,255,255,0.00) 75% );
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    /* ── Plane ── */
+    .hero-plane-img {
+        position: absolute;
+        right: -2%;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 58%;
+        z-index: 3;
+        filter: drop-shadow(0 28px 40px rgba(0,0,0,0.22));
+        animation: planeFloat 4s ease-in-out infinite;
+        max-width: calc(100% - 460px);
+    }
+
+    @@keyframes planeFloat {
+        0%, 100% {
+            transform: translateY(-50%) translateX(0);
+        }
+
+        50% {
+            transform: translateY(-55%) translateX(-10px);
+        }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 4;
+    }
+
+    /* ── Text ── */
+    .hero-eyebrow {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.35rem;
+    }
+
+    .hero-title {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        font-weight: 800;
+        line-height: 1.15;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
+        margin-bottom: 0.6rem;
+    }
+
+    .hero-title-accent {
+        color: var(--admiral);
+    }
+
+    .hero-lead {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.65;
+        margin-bottom: 0;
+    }
+
+    /* ── Square Cards ── */
+    .sq-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        background: rgba(255,255,255,0.93);
+        backdrop-filter: blur(8px);
+        border: 2px solid var(--admiral);
+        border-radius: 14px;
+        padding: 1.25rem;
+        text-decoration: none;
+        aspect-ratio: 1 / 1;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        max-width: 200px;
+    }
+
+        .sq-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(5,16,148,0.18);
+            text-decoration: none;
+        }
+
+    .sq-card--filled {
+        background: var(--admiral);
+        border-color: var(--admiral);
+    }
+
+    .sq-card__icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: var(--off-white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--admiral);
+        flex-shrink: 0;
+    }
+
+    .sq-card--filled .sq-card__icon {
+        background: rgba(255,255,255,0.18);
+        color: var(--white);
+    }
+
+    .sq-card__title {
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: var(--admiral);
+        line-height: 1.2;
+    }
+
+    .sq-card--filled .sq-card__title {
+        color: var(--white);
+    }
+
+    .sq-card__sub {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+        flex: 1;
+    }
+
+    .sq-card--filled .sq-card__sub {
+        color: rgba(255,255,255,0.7);
+    }
+
+    .sq-card__btn {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 0.38rem 0.85rem;
+        border-radius: 7px;
+        background: var(--admiral);
+        color: var(--white);
+        white-space: nowrap;
+        margin-top: auto;
+    }
+
+    .sq-card__btn--outline {
+        background: transparent;
+        border: 1.5px solid rgba(255,255,255,0.75);
+        color: var(--white);
+    }
+
+    .sq-card--filled:hover .sq-card__btn--outline {
+        background: var(--white);
+        color: var(--admiral);
+    }
+
+    @@media (max-width: 991px) {
+        .hero-plane-img {
+            display: none;
+        }
+
+        .hero-section {
+            text-align: center;
+            min-height: auto;
+            padding: 4rem 0;
+            background-image: linear-gradient(to bottom, #ffffff 0%, var(--off-white) 100%);
+        }
+
+        .sq-card {
+            max-width: 100%;
+            aspect-ratio: unset;
+        }
+    }
+
+    /* ══════════════════════════════════════════════
+           SERVICE STRIP
+        ══════════════════════════════════════════════ */
+    .service-strip {
+        background: var(--admiral);
+        padding: 1.25rem 0;
+    }
+
+    .service-strip-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        color: rgba(255,255,255,0.9);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 0.5rem 0;
+        border-right: 1px solid rgba(255,255,255,0.15);
+    }
+
+        .service-strip-item:last-child {
+            border-right: none;
+        }
+
+        .service-strip-item i {
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+    /* ══════════════════════════════════════════════
+           SHARED
+        ══════════════════════════════════════════════ */
+    .section-eyebrow {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .section-heading {
+        font-size: clamp(1.8rem, 3vw, 2.5rem);
+        font-weight: 800;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
+        margin-bottom: 1rem;
+    }
+
+    .section-body {
+        color: var(--text-muted);
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ══════════════════════════════════════════════
+           ABOUT
+        ══════════════════════════════════════════════ */
+    .about-section {
+        padding: 6rem 0;
+        background: var(--off-white);
+    }
+
+    .about-img-wrap {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .about-img-badge {
+        position: absolute;
+        bottom: -1.5rem;
+        right: -1rem;
+        background: var(--admiral);
+        color: var(--white);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        text-align: center;
+        box-shadow: 0 8px 24px rgba(5,16,148,0.25);
+    }
+
+    .badge-number {
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .badge-label {
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        opacity: 0.8;
+    }
+
+    .about-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+        .about-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+            .about-list li i {
+                color: var(--admiral);
+                font-size: 1.1rem;
+            }
+
+    /* ══════════════════════════════════════════════
+           CONTACT
+        ══════════════════════════════════════════════ */
+    .contact-section {
+        padding: 6rem 0;
+        background: var(--white);
+    }
+
+    .contact-card {
+        background: var(--off-white);
+        border-radius: 14px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(5,16,148,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+
+        .contact-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(5,16,148,0.1);
+        }
+
+    .contact-card-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--admiral);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.3rem;
+        color: var(--white);
+    }
+
+    .contact-card h5 {
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text-dark);
+        margin-bottom: 0.4rem;
+    }
+
+    .contact-card p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* ══════════════════════════════════════════════
+           BACK TO TOP
+        ══════════════════════════════════════════════ */
+    .back-top-btn {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 46px;
+        height: 46px;
+        background: var(--admiral);
+        color: var(--white);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(5,16,148,0.35);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition: opacity 0.3s, visibility 0.3s, transform 0.3s, background 0.2s;
+        z-index: 999;
+    }
+
+        .back-top-btn.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-top-btn:hover {
+            background: var(--admiral-dark);
+            color: var(--white);
+            transform: translateY(-4px);
+        }
+</style>
+
+@section Scripts {
+    <script>
+        const backTopBtn = document.getElementById('backTopBtn');
+        window.addEventListener('scroll', function () {
+            if (window.scrollY > 120) {
+                backTopBtn.classList.add('active');
+            } else {
+                backTopBtn.classList.remove('active');
+            }
+        });
+    </script>
+}

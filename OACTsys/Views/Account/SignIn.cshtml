@@ -1,0 +1,484 @@
+﻿@{
+    ViewData["Title"] = "Sign In";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+<style>
+    /* ── Variables (from _Layout / Login) ── */
+    :root {
+        --navy:         #051094;
+        --navy-deep:    #020b5c;
+        --navy-mid:     #0d2f6e;
+        --navy-dark:    #040d4a;
+        --white:        #ffffff;
+        --off-white:    #e8edf8;
+        --muted:        rgba(255,255,255,0.55);
+        --border-dim:   rgba(255,255,255,0.15);
+        --light-border: #dde3ef;
+        --text-dark:    #0a1640;
+        --text-mid:     #4a5575;
+    }
+
+    /* ── Banner — bg-banner.jpg + navy left→right overlay ── */
+    .si-banner {
+        position: relative;
+        background-image: url('/css/assets/images/bg-banner.jpg');
+        background-size: cover;
+        background-position: center;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        margin: 0 -12px;
+    }
+
+    .si-banner__overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(
+            to right,
+            rgba(4,  13,  74,  0.93)  0%,
+            rgba(5,  16,  148, 0.82) 30%,
+            rgba(13, 47,  110, 0.60) 60%,
+            rgba(13, 47,  110, 0.28) 100%
+        );
+        z-index: 1;
+    }
+
+    .si-banner__grid {
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 60px 60px;
+        z-index: 2; pointer-events: none;
+    }
+
+    .si-banner__content {
+        position: relative; z-index: 3;
+        padding: 2.5rem 2rem 3rem;
+        width: 100%;
+        animation: fadeDown 0.5s ease both;
+    }
+
+    @@keyframes fadeDown {
+        from { opacity:0; transform:translateY(-10px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .si-banner__eyebrow {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.63rem; letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.55); margin-bottom: 0.3rem;
+    }
+
+    .si-banner__title {
+        font-family: 'Orbitron', monospace; font-weight: 700;
+        font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+        color: var(--white); letter-spacing: 1.5px;
+        margin-bottom: 0.3rem; line-height: 1.2;
+    }
+
+    .si-banner__sub {
+        font-size: 0.88rem; color: rgba(255,255,255,0.70); margin: 0;
+    }
+
+    /* ── Gradient section — left white → right navy ── */
+    .si-section {
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.97)   0%,
+            rgba(244, 246, 255, 0.92)  40%,
+            rgba(102, 155, 188, 0.18)  70%,
+            rgba(5,   16,  148, 0.10) 100%
+        );
+        margin: 0 -12px;
+        padding: 0 12px 80px;
+        margin-top: -90px;
+        min-height: 60vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    /* ── Card ── */
+    .si-card {
+        width: 100%; max-width: 460px;
+        background: var(--white);
+        border-radius: 14px;
+        border-top:  4px solid var(--navy);
+        border-left: 5px solid var(--navy);
+        box-shadow:
+            0 0 0 1px rgba(5,16,148,0.12),
+            0 0 40px rgba(5,16,148,0.18),
+            0 24px 64px rgba(4,13,74,0.24),
+            inset 4px 0 16px rgba(5,16,148,0.04);
+        overflow: hidden;
+        animation: slideUp 0.55s cubic-bezier(0.4,0,0.2,1) both;
+        animation-delay: 0.08s;
+        transition: box-shadow 0.3s, transform 0.3s;
+    }
+
+    .si-card:hover {
+        box-shadow:
+            0 0 0 1px rgba(5,16,148,0.20),
+            0 0 52px rgba(5,16,148,0.26),
+            0 32px 76px rgba(4,13,74,0.28),
+            inset 4px 0 22px rgba(5,16,148,0.06);
+        transform: translateY(-3px);
+    }
+
+    @@keyframes slideUp {
+        from { opacity:0; transform:translateY(32px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* Shimmer top line */
+    .si-shimmer {
+        height: 2px;
+        background: linear-gradient(90deg,
+            transparent 0%, var(--navy-mid) 20%,
+            var(--navy) 50%, var(--navy-mid) 80%, transparent 100%);
+    }
+
+    /* ── Card Header (dark navy) ── */
+    .si-card-header {
+        background: linear-gradient(135deg,
+            var(--navy-dark) 0%, var(--navy) 55%, var(--navy-mid) 100%);
+        padding: 34px 36px 28px;
+        text-align: center;
+        position: relative;
+    }
+
+    /* White rounded scoop */
+    .si-card-header::after {
+        content: '';
+        position: absolute; bottom: -1px; left: 0; right: 0;
+        height: 24px; background: var(--white);
+        border-radius: 24px 24px 0 0;
+    }
+
+    /* ── Logo — NO circle, just the image, bigger ── */
+    .si-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        background: none;
+        border: none;
+        box-shadow: none;
+    }
+
+    .si-logo img {
+        width: 110px;
+        height: 110px;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
+    }
+
+    .si-card-header h1 {
+        font-family: 'Orbitron', monospace; font-weight: 700;
+        font-size: 0.95rem; letter-spacing: 2.5px;
+        color: var(--white); margin-bottom: 5px;
+    }
+
+    .si-card-header p {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.62rem; letter-spacing: 1.5px;
+        color: var(--muted); text-transform: uppercase; margin: 0;
+    }
+
+    /* ── Card Body (white) ── */
+    .si-card-body {
+        padding: 12px 36px 28px;
+        background: var(--white);
+    }
+
+    /* ── Alerts ── */
+    .si-alert {
+        padding: 10px 12px; border-radius: 6px;
+        border-left: 3px solid; font-size: 0.82rem;
+        margin-bottom: 16px;
+        display: flex; align-items: flex-start;
+        gap: 8px; line-height: 1.5;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity:0; transform:translateY(-5px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .si-alert.danger  { background:#fef2f2; border-color:#ef4444; color:#991b1b; }
+    .si-alert.success { background:#f0fdf4; border-color:#22c55e; color:#166534; }
+    .si-alert.warning { background:#fffbeb; border-color:#f59e0b; color:#92400e; }
+
+    /* ── Google button ── */
+    .google-btn {
+        width: 100%; padding: 11px;
+        border: 1.5px solid var(--light-border);
+        border-radius: 8px; background: white;
+        display: flex; align-items: center;
+        justify-content: center; gap: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; font-weight: 600;
+        color: var(--text-dark); cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+        margin-bottom: 4px;
+    }
+
+    .google-btn:hover {
+        background: #f8fafc;
+        border-color: var(--navy);
+        box-shadow: 0 2px 8px rgba(5,16,148,0.10);
+        color: var(--navy);
+    }
+
+    /* ── Divider ── */
+    .si-divider {
+        display: flex; align-items: center; gap: 10px;
+        margin: 18px 0; color: var(--text-mid); font-size: 0.75rem;
+        font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;
+    }
+
+    .si-divider hr {
+        flex: 1; border: none;
+        border-top: 1px solid var(--light-border); margin: 0;
+    }
+
+    /* ── Form elements ── */
+    .si-form-group { margin-bottom: 16px; }
+
+    .si-label {
+        display: block;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.65rem; font-weight: 700;
+        color: var(--text-mid); text-transform: uppercase;
+        letter-spacing: 1.5px; margin-bottom: 6px;
+    }
+
+    .input-row { display: flex; }
+
+    .si-control {
+        width: 100%; padding: 11px 14px;
+        border: 1.5px solid var(--light-border);
+        border-radius: 6px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; color: var(--text-dark);
+        background: #f8fafc; outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .input-row .si-control { border-radius: 6px 0 0 6px; }
+
+    .si-control:focus {
+        background: var(--white);
+        border-color: var(--navy);
+        box-shadow: 0 0 0 3px rgba(5,16,148,0.09),
+                    0 2px 6px rgba(5,16,148,0.06);
+    }
+
+    .si-control::placeholder { color: #b0bac8; }
+
+    .toggle-pw {
+        padding: 0 13px;
+        border: 1.5px solid var(--light-border);
+        border-left: none;
+        border-radius: 0 6px 6px 0;
+        background: #f8fafc; color: #94a3b8;
+        cursor: pointer; font-size: 0.95rem;
+        transition: background 0.15s, color 0.15s;
+        flex-shrink: 0;
+    }
+
+    .toggle-pw:hover { background: #f0f4ff; color: var(--navy); }
+
+    .forgot-row {
+        display: flex; justify-content: flex-end; margin-top: 5px;
+    }
+
+    .forgot-link {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.63rem; letter-spacing: 1px;
+        color: var(--navy); font-weight: 600;
+        text-decoration: none; text-transform: uppercase;
+        transition: color 0.2s;
+    }
+
+    .forgot-link:hover { color: var(--navy-deep); text-decoration: underline; }
+
+    /* ── Submit button ── */
+    .si-btn {
+        width: 100%; padding: 13px;
+        background: linear-gradient(135deg,
+            var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%);
+        color: white; border: none; border-radius: 6px;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 2.5px; cursor: pointer;
+        transition: opacity 0.25s, transform 0.2s, box-shadow 0.25s;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        box-shadow: 0 4px 18px rgba(5,16,148,0.28);
+        margin-top: 6px;
+    }
+
+    .si-btn:hover {
+        opacity: 0.9; transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(5,16,148,0.40);
+    }
+
+    .si-btn:active { transform: translateY(0); }
+
+    /* ── Card Footer ── */
+    .si-card-foot {
+        padding: 14px 36px 20px;
+        border-top: 1px solid var(--light-border);
+        background: #fafbfd;
+        text-align: center;
+        font-size: 0.82rem; color: var(--text-mid);
+    }
+
+    .si-card-foot a {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.7rem; letter-spacing: 1px;
+        color: var(--navy); font-weight: 700;
+        text-decoration: none; text-transform: uppercase;
+        transition: color 0.2s;
+    }
+
+    .si-card-foot a:hover { color: var(--navy-deep); text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @@media (max-width: 480px) {
+        .si-card-body        { padding: 10px 22px 24px; }
+        .si-card-header      { padding: 28px 22px 26px; }
+        .si-card-foot        { padding: 14px 22px 18px; }
+        .si-banner__content  { padding: 2rem 1rem 2.8rem; }
+        .si-logo img         { width: 90px; height: 90px; }
+    }
+</style>
+
+<!-- ══ Banner ══ -->
+<div class="si-banner">
+    <div class="si-banner__overlay"></div>
+    <div class="si-banner__grid"></div>
+    <div class="si-banner__content">
+        <p class="si-banner__eyebrow">Student Portal</p>
+        <h1 class="si-banner__title">Sign In</h1>
+        <p class="si-banner__sub">Welcome back — sign in to access your account.</p>
+    </div>
+</div>
+
+<!-- ══ Gradient section ══ -->
+<div class="si-section">
+    <div class="si-card">
+
+        <div class="si-shimmer"></div>
+
+        <!-- Dark navy header -->
+        <div class="si-card-header">
+            <div class="si-logo">
+                <img src="~/images/logo.png" alt="OACT Logo" />
+            </div>
+            <h1>OACT STUDENT PORTAL</h1>
+            <p>Sign in to access your account</p>
+        </div>
+
+        <!-- White body -->
+        <div class="si-card-body">
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="si-alert success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>@TempData["Success"]</span>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="si-alert danger">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span>@TempData["Error"]</span>
+                </div>
+            }
+            @if (TempData["LoginError"] != null)
+            {
+                <div class="si-alert danger">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span>@TempData["LoginError"]</span>
+                </div>
+            }
+            @if (TempData["AuthMessage"] != null)
+            {
+                <div class="si-alert warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>@TempData["AuthMessage"]</span>
+                </div>
+            }
+
+            <!-- Google -->
+            <a asp-action="GoogleLogin" class="google-btn">
+                <img src="~/images/google.png" width="20" alt="Google" />
+                Continue with Google
+            </a>
+
+            <div class="si-divider">
+                <hr /> <span>OR</span> <hr />
+            </div>
+
+            <!-- Login form -->
+            <form asp-controller="Account" asp-action="LoginLogic" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="si-form-group">
+                    <label class="si-label">Username or Email</label>
+                    <input type="text" name="identifier"
+                           class="si-control"
+                           placeholder="username or email@example.com"
+                           required autocomplete="username" />
+                </div>
+
+                <div class="si-form-group">
+                    <label class="si-label">Password</label>
+                    <div class="input-row">
+                        <input type="password" id="loginPassword" name="password"
+                               class="si-control"
+                               placeholder="Enter your password"
+                               required autocomplete="current-password" />
+                        <button type="button" class="toggle-pw" onclick="toggleLoginPassword()">
+                            <i class="bi bi-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                    <div class="forgot-row">
+                        <a asp-action="ForgotPassword" class="forgot-link">Forgot password?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="si-btn">
+                    <i class="bi bi-box-arrow-in-right"></i> SIGN IN
+                </button>
+            </form>
+
+        </div><!-- /si-card-body -->
+
+        <div class="si-card-foot">
+            Don't have an account?&nbsp;
+            <a asp-action="CreateAccount">Create Account</a>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleLoginPassword() {
+            const field = document.getElementById('loginPassword');
+            const icon  = document.getElementById('eyeIcon');
+            const show  = field.type === 'password';
+            field.type     = show ? 'text' : 'password';
+            icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+        }
+    </script>
+}

@@ -1,0 +1,733 @@
+﻿@model OACTsys.Models.Payment
+
+@{
+    ViewBag.Title = "Payment Proof Viewer";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var student    = Model?.Student;
+    var refNum     = Model?.ReferenceNumber ?? "—";
+    var proofPath  = Model?.ProofOfPaymentPath;
+    var amount     = Model?.Amount ?? 0;
+    var payType    = Model?.PaymentType ?? "—";
+    var payMethod  = Model?.PaymentMethod ?? "—";
+    var payDate    = Model?.PaymentDate.ToString("MMMM dd, yyyy • hh:mm tt") ?? "—";
+    var status     = Model?.Status ?? "—";
+    var verifiedBy = Model?.VerifiedBy ?? "—";
+    var verifiedOn = Model?.VerifiedDate?.ToString("MMM dd, yyyy") ?? "—";
+    var remarks    = Model?.Remarks ?? "—";
+    var studentNum = student?.StudentNumber ?? "—";
+
+    string displayName = "—";
+    if (student?.FieldData != null)
+    {
+        string GetField(params string[] names)
+        {
+            foreach (var name in names)
+            {
+                var val = student.FieldData.FirstOrDefault(f =>
+                    f.EnrollmentField != null &&
+                    f.EnrollmentField.FieldName.ToLower().Contains(name.ToLower()))?.FieldValue;
+                if (!string.IsNullOrWhiteSpace(val)) return val.Trim();
+            }
+            return "";
+        }
+        var ln = GetField("last name","lastname","surname");
+        var fn = GetField("first name","firstname","given name");
+        if (!string.IsNullOrEmpty(ln) || !string.IsNullOrEmpty(fn))
+            displayName = $"{ln}, {fn}".Trim(',').Trim();
+        else
+            displayName = studentNum;
+    }
+    else { displayName = studentNum; }
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --navy:        #051094;
+        --navy-deep:   #030b72;
+        --navy-soft:   #1a3fd4;
+        --navy-tint:   #e8ebff;
+        --navy-pale:   #f0f3ff;
+        --accent-glow: rgba(59,130,246,.18);
+        --green:       #16a34a;
+        --green-bg:    #dcfce7;
+        --amber:       #d97706;
+        --amber-bg:    #fef3c7;
+        --red:         #dc2626;
+        --red-bg:      #fee2e2;
+        --sky:         #0284c7;
+        --white:       #ffffff;
+        --surface:     #f5f7ff;
+        --border:      #e2e7ff;
+        --text-1:      #0d1b4b;
+        --text-2:      #4a5b8a;
+        --text-3:      #8a97c0;
+        --shadow-sm:   0 1px 3px rgba(5,16,148,.08);
+        --shadow-md:   0 4px 16px rgba(5,16,148,.10);
+        --shadow-lg:   0 12px 40px rgba(5,16,148,.14);
+        --radius:      14px;
+        --radius-sm:   9px;
+        --radius-xs:   6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface); }
+
+    /* ── HERO ── */
+    .pp-hero {
+        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-soft) 100%);
+        padding: 2rem 2rem 3.8rem; position: relative; overflow: hidden;
+    }
+    .pp-hero::before {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background:
+            radial-gradient(ellipse 55% 70% at 85% -5%, rgba(59,130,246,.25) 0%, transparent 55%),
+            radial-gradient(ellipse 35% 55% at -5% 105%, rgba(255,255,255,.07) 0%, transparent 50%);
+    }
+    .pp-hero::after {
+        content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 44px;
+        background: var(--surface); clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .pp-hero-inner {
+        position: relative; z-index: 2;
+        display: flex; align-items: flex-start; justify-content: space-between;
+        flex-wrap: wrap; gap: 1.5rem;
+    }
+    .pp-hero-title {
+        font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 800;
+        color: #fff; letter-spacing: -.5px; margin: 0 0 .3rem; line-height: 1.15;
+    }
+    .pp-hero-sub { font-size: .81rem; color: rgba(255,255,255,.62); margin: 0; font-weight: 500; line-height: 1.55; }
+    .pp-hero-sub strong { color: rgba(255,255,255,.9); }
+    .btn-back {
+        background: rgba(255,255,255,.13); color: #fff;
+        border: 1.5px solid rgba(255,255,255,.28); border-radius: var(--radius-sm);
+        padding: .62rem 1.1rem; font-size: .81rem; font-weight: 700; font-family: inherit;
+        display: inline-flex; align-items: center; gap: .45rem;
+        text-decoration: none; cursor: pointer; white-space: nowrap; transition: background .2s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,.23); color: #fff; }
+
+    /* Status pill */
+    .hero-status-pill {
+        display: inline-flex; align-items: center; gap: .45rem;
+        border-radius: 50px; padding: .32rem .9rem; margin-top: .75rem;
+        font-size: .75rem; font-weight: 800; letter-spacing: .3px; text-transform: uppercase;
+        backdrop-filter: blur(6px);
+    }
+    .hsp-verified { background: rgba(74,222,128,.18); color: #4ade80; border: 1px solid rgba(74,222,128,.35); }
+    .hsp-pending  { background: rgba(251,191,36,.18);  color: #fbbf24; border: 1px solid rgba(251,191,36,.35); }
+    .hsp-rejected { background: rgba(248,113,113,.18); color: #f87171; border: 1px solid rgba(248,113,113,.35); }
+
+    /* ── CONTENT ── */
+    .pp-content {
+        padding: 1.75rem 2rem 3rem;
+        display: grid; grid-template-columns: 1fr 370px;
+        gap: 1.25rem; max-width: 1200px; margin: 0 auto;
+    }
+    @@media (max-width: 900px) {
+        .pp-content { grid-template-columns: 1fr; padding-left: 1.25rem; padding-right: 1.25rem; }
+        .pp-hero { padding: 1.5rem 1.25rem 3.5rem; }
+        .pp-hero-inner { flex-direction: column; }
+    }
+
+    /* ── CARD ── */
+    .pp-card {
+        background: var(--white); border: 1.5px solid var(--border);
+        border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
+    }
+    .card-head {
+        display: flex; align-items: center; gap: .6rem;
+        padding: .9rem 1.25rem; border-bottom: 1.5px solid var(--border);
+        background: var(--navy-pale);
+    }
+    .card-head-icon {
+        width: 30px; height: 30px; border-radius: var(--radius-xs);
+        background: var(--navy); color: #fff; font-size: .78rem;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .card-head-title { font-size: .84rem; font-weight: 800; color: var(--text-1); margin: 0; }
+    .card-body { padding: 1.25rem; }
+
+    /* ── IMAGE VIEWER ── */
+    .img-wrap {
+        background: #0f172a; border-radius: var(--radius-sm);
+        min-height: 400px; display: flex; align-items: center; justify-content: center;
+        position: relative; overflow: hidden;
+    }
+    .img-wrap img {
+        max-width: 100%; max-height: 540px; object-fit: contain;
+        border-radius: 10px; cursor: zoom-in; display: none;
+        box-shadow: 0 6px 32px rgba(0,0,0,.6);
+    }
+    .img-wrap img.loaded { display: block; }
+    .img-loading { text-align: center; color: #64748b; font-size: .83rem; }
+    @@keyframes spin { to{transform:rotate(360deg)} }
+    .spinner-ring {
+        width: 36px; height: 36px; border: 3px solid #1e3a5f; border-top-color: #7dd3fc;
+        border-radius: 50%; animation: spin .65s linear infinite; margin: 0 auto .8rem;
+    }
+    .img-error { text-align: center; padding: 2.5rem 1.5rem; display: none; }
+    .img-error .err-icon { font-size: 2.8rem; margin-bottom: .6rem; }
+    .img-error p { color: #f87171; font-weight: 700; font-size: .9rem; margin-bottom: .35rem; }
+    .img-error small { color: #475569; font-family: monospace; font-size: .7rem; word-break: break-all; }
+    .no-proof-wrap { text-align: center; padding: 3rem 1.5rem; }
+    .no-proof-wrap .np-icon { font-size: 3rem; opacity: .35; margin-bottom: .75rem; }
+    .no-proof-wrap p { color: var(--text-3); font-size: .85rem; margin: 0; }
+    .zoom-hint { font-size: .72rem; color: var(--text-3); text-align: center; margin-top: .6rem; display: none; }
+    .zoom-hint.show { display: block; }
+
+    /* ── REF DISPLAY ── */
+    .ref-display {
+        background: var(--navy-pale); border: 1.5px solid var(--navy-tint);
+        border-radius: var(--radius-sm); padding: .9rem 1.1rem;
+        display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+        margin-bottom: 1.1rem;
+    }
+    .ref-label { font-size: .68rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .22rem; }
+    .ref-value { font-family: 'Courier New', monospace; font-size: 1.15rem; font-weight: 800; color: var(--navy); letter-spacing: .04em; word-break: break-all; }
+    .ref-value.empty { color: var(--text-3); font-size: .85rem; font-style: italic; font-weight: 500; }
+    .copy-btn {
+        display: inline-flex; align-items: center; gap: .35rem;
+        background: var(--navy); color: #fff; border: none;
+        border-radius: var(--radius-xs); padding: .42rem .85rem;
+        font-size: .75rem; font-weight: 700; font-family: inherit;
+        cursor: pointer; white-space: nowrap; transition: background .18s; flex-shrink: 0;
+    }
+    .copy-btn:hover { background: var(--navy-deep); }
+    .copy-btn.copied { background: var(--green); }
+
+    /* ── META ROWS ── */
+    .meta-row {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding: .58rem 0; border-bottom: 1px solid var(--border);
+        font-size: .81rem; gap: .5rem;
+    }
+    .meta-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .ml { color: var(--text-3); flex-shrink: 0; font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .3px; }
+    .mv { color: var(--text-1); font-weight: 700; text-align: right; word-break: break-word; max-width: 62%; }
+    .mv.green { color: var(--green); }
+    .mv.red   { color: var(--red); }
+    .mv.navy  { color: var(--navy); font-family: monospace; }
+
+    .s-badge { font-size: .65rem; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: .2rem .65rem; border-radius: 50px; white-space: nowrap; }
+    .sb-verified { background: var(--green-bg); color: var(--green); }
+    .sb-pending  { background: var(--amber-bg); color: var(--amber); }
+    .sb-rejected { background: var(--red-bg);   color: var(--red);   }
+
+    .meta-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+
+    /* ── ACTION AREA ── */
+    .action-area { display: flex; flex-direction: column; gap: .6rem; margin-top: 1.25rem; padding-top: 1.1rem; border-top: 1.5px solid var(--border); }
+    .btn-approve {
+        display: flex; align-items: center; justify-content: center; gap: .5rem;
+        background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm);
+        padding: .72rem 1rem; font-size: .86rem; font-weight: 800; font-family: inherit;
+        cursor: pointer; transition: background .2s, transform .2s, box-shadow .2s;
+        box-shadow: 0 3px 12px rgba(22,163,74,.3);
+    }
+    .btn-approve:hover { background: #15803d; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(22,163,74,.35); }
+    .btn-approve:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .btn-decline {
+        display: flex; align-items: center; justify-content: center; gap: .5rem;
+        background: transparent; color: var(--red); border: 1.5px solid var(--red);
+        border-radius: var(--radius-sm); padding: .7rem 1rem;
+        font-size: .86rem; font-weight: 800; font-family: inherit; cursor: pointer; transition: all .2s;
+    }
+    .btn-decline:hover { background: var(--red-bg); transform: translateY(-1px); }
+    .btn-decline:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .btn-open-full {
+        display: flex; align-items: center; justify-content: center; gap: .5rem;
+        background: var(--surface); color: var(--text-2); border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm); padding: .62rem 1rem; font-size: .81rem; font-weight: 700;
+        font-family: inherit; text-decoration: none; cursor: pointer; transition: all .2s;
+    }
+    .btn-open-full:hover { border-color: var(--navy); color: var(--navy); background: var(--navy-pale); }
+
+    /* ── ARCHIVED BANNER (shown after decline) ── */
+    .archived-banner {
+        display: none; background: var(--red-bg); border: 1.5px solid #fca5a5;
+        border-radius: var(--radius-sm); padding: .85rem 1rem;
+        font-size: .82rem; font-weight: 700; color: var(--red);
+        margin-top: 1.1rem; align-items: center; gap: .6rem;
+    }
+    .archived-banner.show { display: flex; }
+
+    /* ── DECLINE MODAL overlay (custom, no Bootstrap dependency) ── */
+    .decline-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(5,16,148,.18); backdrop-filter: blur(4px);
+        z-index: 1050; align-items: center; justify-content: center;
+    }
+    .decline-overlay.open { display: flex; }
+    .decline-box {
+        background: var(--white); border: 1.5px solid var(--border);
+        border-radius: var(--radius); width: 100%; max-width: 440px;
+        max-height: 90vh; overflow-y: auto;
+        box-shadow: var(--shadow-lg); animation: decIn .22s ease;
+    }
+    @@keyframes decIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+    .decline-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 1.25rem; border-bottom: 1.5px solid #fecaca;
+        background: var(--red-bg);
+    }
+    .decline-head h5 { margin: 0; color: var(--red); font-size: .93rem; font-weight: 800; }
+    .decline-close { background: none; border: none; color: var(--red); font-size: 1.1rem; cursor: pointer; opacity: .6; }
+    .decline-close:hover { opacity: 1; }
+    .decline-body { padding: 1.25rem; }
+    .decline-foot {
+        padding: .85rem 1.25rem; border-top: 1.5px solid var(--border);
+        background: var(--navy-pale); display: flex; gap: .55rem; justify-content: flex-end;
+    }
+
+    .reason-btn {
+        width: 100%; text-align: left; border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm); padding: .55rem .9rem;
+        font-size: .84rem; background: #fff; cursor: pointer;
+        transition: all .15s; margin-bottom: .4rem; font-family: inherit; color: var(--text-1);
+    }
+    .reason-btn:hover, .reason-btn.active { border-color: var(--red); background: var(--red-bg); color: var(--red); font-weight: 600; }
+
+    .btn-cancel-sm {
+        background: var(--white); color: var(--text-2); border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm); padding: .52rem 1.1rem;
+        font-size: .8rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s;
+    }
+    .btn-cancel-sm:hover { border-color: var(--text-2); }
+    .btn-confirm-decline {
+        background: var(--red); color: #fff; border: none;
+        border-radius: var(--radius-sm); padding: .55rem 1.2rem;
+        font-size: .8rem; font-weight: 800; font-family: inherit;
+        cursor: pointer; display: inline-flex; align-items: center; gap: .38rem; transition: background .18s;
+    }
+    .btn-confirm-decline:hover { background: #b91c1c; }
+    .btn-confirm-decline:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* ── TOAST ── */
+    #toast-rack { position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 9999; display: flex; flex-direction: column; gap: .45rem; }
+    .toast-item { background: var(--white); border-radius: var(--radius-sm); padding: .72rem 1rem; font-size: .81rem; font-weight: 600; box-shadow: var(--shadow-lg); border-left: 4px solid var(--navy); display: flex; align-items: center; gap: .55rem; min-width: 235px; color: var(--text-1); animation: toastIn .22s ease; transition: opacity .35s; }
+    .toast-item.success { border-color: var(--green); }
+    .toast-item.danger  { border-color: var(--red); }
+    .toast-item.warning { border-color: var(--amber); }
+    .toast-item i { font-size: .9rem; flex-shrink: 0; }
+    .toast-item.success i { color: var(--green); }
+    .toast-item.danger  i { color: var(--red); }
+    .toast-item.warning i { color: var(--amber); }
+    @@keyframes toastIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+</style>
+
+<!-- ── HERO ── -->
+<div class="pp-hero">
+    <div class="pp-hero-inner">
+        <div>
+            <h1 class="pp-hero-title">
+                <i class="bi bi-file-earmark-image me-2" style="font-size:.8em;opacity:.75"></i>
+                Payment Proof Viewer
+            </h1>
+            <p class="pp-hero-sub">
+                Student: <strong>@displayName</strong> &bull;
+                Student No: <strong>@studentNum</strong>
+            </p>
+            @{
+                var hspClass   = status == "Verified" ? "hsp-verified" : status == "Pending" ? "hsp-pending" : "hsp-rejected";
+                var statusIcon = status == "Verified" ? "bi-check-circle-fill" : status == "Pending" ? "bi-clock-fill" : "bi-x-circle-fill";
+            }
+            <div class="hero-status-pill @hspClass">
+                <i class="bi @statusIcon" style="font-size:.72rem"></i>
+                @status
+            </div>
+        </div>
+        <div>
+            <a href="/Admin/Payments" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Back to Payments
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="pp-content">
+
+    <!-- LEFT: Image Viewer -->
+    <div class="pp-card">
+        <div class="card-head">
+            <div class="card-head-icon"><i class="bi bi-image"></i></div>
+            <p class="card-head-title">Proof of Payment Screenshot</p>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(proofPath))
+            {
+                <div class="img-wrap" id="imgWrap">
+                    <div class="img-loading" id="imgLoading">
+                        <div class="spinner-ring"></div>
+                        Loading image…
+                    </div>
+                    <div class="img-error" id="imgError">
+                        <div class="err-icon">🖼️</div>
+                        <p>Could not load image</p>
+                        <small>@proofPath</small>
+                        <br /><br />
+                        <a href="@proofPath" target="_blank" class="btn-open-full" style="display:inline-flex;width:auto;">
+                            <i class="bi bi-box-arrow-up-right"></i> Open file directly
+                        </a>
+                    </div>
+                    <img id="proofImg" src="@proofPath" alt="Payment Proof"
+                         onclick="window.open(this.src,'_blank')" />
+                </div>
+                <p class="zoom-hint" id="zoomHint">
+                    <i class="bi bi-zoom-in me-1"></i>Click image to open full size
+                </p>
+            }
+            else
+            {
+                <div class="img-wrap">
+                    <div class="no-proof-wrap">
+                        <div class="np-icon">📂</div>
+                        <p>No proof of payment has been uploaded yet.</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- RIGHT: Details & Actions -->
+    <div style="display:flex;flex-direction:column;gap:1.1rem;">
+
+        <!-- GCash Ref -->
+        <div class="pp-card">
+            <div class="card-head">
+                <div class="card-head-icon"><i class="bi bi-hash"></i></div>
+                <p class="card-head-title">GCash Reference Number</p>
+            </div>
+            <div class="card-body">
+                <div class="ref-display">
+                    <div>
+                        <div class="ref-label">Reference No.</div>
+                        @if (!string.IsNullOrEmpty(Model?.ReferenceNumber))
+                        {
+                            <div class="ref-value" id="refValue">@refNum</div>
+                        }
+                        else
+                        {
+                            <div class="ref-value empty">Not yet submitted</div>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model?.ReferenceNumber))
+                    {
+                        <button class="copy-btn" id="copyBtn" onclick="copyRef('@Html.Raw(refNum)')">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="pp-card" style="flex:1;">
+            <div class="card-head">
+                <div class="card-head-icon"><i class="bi bi-receipt"></i></div>
+                <p class="card-head-title">Payment Details</p>
+            </div>
+            <div class="card-body">
+
+                <div class="meta-row">
+                    <span class="ml">Status</span>
+                    <span class="mv">
+                        <span class="s-badge sb-@(status.ToLower())" id="statusBadge">@status</span>
+                    </span>
+                </div>
+                <div class="meta-row">
+                    <span class="ml">Student</span>
+                    <span class="mv">@displayName</span>
+                </div>
+                <div class="meta-row">
+                    <span class="ml">Student No.</span>
+                    <span class="mv navy">@studentNum</span>
+                </div>
+                <div class="meta-row">
+                    <span class="ml">Amount</span>
+                    <span class="mv green">₱@amount.ToString("N2")</span>
+                </div>
+                <div class="meta-row">
+                    <span class="ml">Purpose</span>
+                    <span class="mv">@payType</span>
+                </div>
+                <div class="meta-row">
+                    <span class="ml">Method</span>
+                    <span class="mv">@payMethod</span>
+                </div>
+                <div class="meta-row">
+                    <span class="ml">Submitted</span>
+                    <span class="mv" style="font-size:.75rem;">@payDate</span>
+                </div>
+
+                @if (status == "Verified")
+                {
+                    <div class="meta-divider"></div>
+                    <div class="meta-row">
+                        <span class="ml">Verified By</span>
+                        <span class="mv green">@verifiedBy</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="ml">Verified On</span>
+                        <span class="mv" style="font-size:.75rem;">@verifiedOn</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model?.Remarks) && Model.Remarks != "—")
+                {
+                    <div class="meta-divider"></div>
+                    <div class="meta-row">
+                        <span class="ml">Remarks</span>
+                        <span class="mv @(status == "Rejected" ? "red" : "")" id="remarksDisplay">@remarks</span>
+                    </div>
+                }
+
+                <!-- Archived banner — shown dynamically after decline -->
+                <div class="archived-banner" id="archivedBanner">
+                    <i class="bi bi-archive-fill"></i>
+                    <span>This payment has been <strong>archived</strong> and moved to the Archived tab.</span>
+                </div>
+
+                @if (status == "Pending")
+                {
+                    <div class="action-area" id="actionArea">
+                        <button class="btn-approve" id="approveBtn" onclick="approvePayment(@(Model?.PaymentId ?? 0))">
+                            <i class="bi bi-check-circle-fill"></i> Approve Payment
+                        </button>
+                        <button class="btn-decline" id="declineBtn" onclick="openDecline(@(Model?.PaymentId ?? 0))">
+                            <i class="bi bi-archive-fill"></i> Decline & Archive
+                        </button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(proofPath))
+                {
+                    <div class="action-area" style="@(status == "Pending" ? "padding-top:.5rem;margin-top:0;border-top:none;" : "")">
+                        <a href="@proofPath" target="_blank" class="btn-open-full">
+                            <i class="bi bi-box-arrow-up-right"></i> Open Full-Size Proof
+                        </a>
+                    </div>
+                }
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast-rack"></div>
+
+<!-- ── DECLINE & ARCHIVE MODAL ── -->
+<div class="decline-overlay" id="declineOverlay">
+    <div class="decline-box">
+        <div class="decline-head">
+            <h5><i class="bi bi-archive-fill me-2"></i>Decline & Archive Payment</h5>
+            <button class="decline-close" onclick="closeDecline()">✕</button>
+        </div>
+        <div class="decline-body">
+            <p style="font-size:.83rem;color:var(--text-2);margin-bottom:1rem;">
+                Select a reason — the payment will be <strong>moved to the Archived tab</strong> immediately.
+            </p>
+            <button class="reason-btn" onclick="pickR(this,'Screenshot unclear or unreadable')">📷 Screenshot unclear or unreadable</button>
+            <button class="reason-btn" onclick="pickR(this,'Reference number does not match')">🔢 Reference number does not match</button>
+            <button class="reason-btn" onclick="pickR(this,'Amount sent does not match')">💰 Amount sent does not match</button>
+            <button class="reason-btn" onclick="pickR(this,'Duplicate submission')">🔁 Duplicate submission</button>
+            <button class="reason-btn" onclick="pickR(this,'Other')">✏️ Other (specify below)</button>
+            <div id="customBox" style="display:none;margin-top:.5rem;">
+                <textarea id="customReason" class="form-control form-control-sm" rows="2"
+                          placeholder="Type your reason…"></textarea>
+            </div>
+            <div id="declineAlert" style="display:none;font-size:.78rem;font-weight:700;padding:.42rem .7rem;border-radius:var(--radius-xs);margin-top:.65rem;"></div>
+        </div>
+        <div class="decline-foot">
+            <button class="btn-cancel-sm" onclick="closeDecline()">
+                <i class="bi bi-x-lg"></i> Cancel
+            </button>
+            <button class="btn-confirm-decline" id="confirmDeclineBtn" onclick="submitDecline()">
+                <i class="bi bi-archive-fill"></i> Confirm & Archive
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let _declinePid = null, _declineReason = '';
+
+    // ── Image load handler
+    const proofImg = document.getElementById('proofImg');
+    if (proofImg) {
+        proofImg.onload = function () {
+            document.getElementById('imgLoading').style.display = 'none';
+            proofImg.classList.add('loaded');
+            document.getElementById('zoomHint').classList.add('show');
+        };
+        proofImg.onerror = function () {
+            document.getElementById('imgLoading').style.display = 'none';
+            document.getElementById('imgError').style.display = 'block';
+        };
+        if (proofImg.complete && proofImg.naturalWidth > 0) proofImg.onload();
+        else if (proofImg.complete) proofImg.onerror();
+    }
+
+    // Close overlay on background click
+    document.getElementById('declineOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDecline();
+    });
+
+    // ── Copy ref
+    function copyRef(ref) {
+        navigator.clipboard.writeText(ref).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+            }, 2000);
+        });
+    }
+
+    // ── Approve
+    async function approvePayment(paymentId) {
+        if (!confirm('Approve this payment?')) return;
+        const approveBtn = document.getElementById('approveBtn');
+        const declineBtn = document.getElementById('declineBtn');
+        approveBtn.disabled = true;
+        declineBtn.disabled = true;
+        approveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Approving…';
+        try {
+            const r = await fetch('/PaymentAdmin/UpdatePaymentStatus', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId, status: 'Verified', remarks: '' })
+            });
+            const d = await r.json();
+            if (d.success) {
+                toast('Payment approved successfully!', 'success');
+                // Update status badge inline
+                const badge = document.getElementById('statusBadge');
+                badge.textContent = 'Verified';
+                badge.className = 's-badge sb-verified';
+                // Hide action buttons
+                document.getElementById('actionArea').style.display = 'none';
+                setTimeout(() => window.location.href = '/Admin/Payments', 1400);
+            } else {
+                toast(d.message || 'Error approving payment.', 'danger');
+                approveBtn.disabled = false;
+                declineBtn.disabled = false;
+                approveBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Approve Payment';
+            }
+        } catch {
+            toast('Network error. Please try again.', 'danger');
+            approveBtn.disabled = false;
+            declineBtn.disabled = false;
+            approveBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Approve Payment';
+        }
+    }
+
+    // ── Decline modal
+    function openDecline(paymentId) {
+        _declinePid = paymentId;
+        _declineReason = '';
+        document.querySelectorAll('.reason-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('customBox').style.display = 'none';
+        document.getElementById('customReason').value = '';
+        document.getElementById('declineAlert').style.display = 'none';
+        document.getElementById('confirmDeclineBtn').disabled = false;
+        document.getElementById('confirmDeclineBtn').innerHTML = '<i class="bi bi-archive-fill"></i> Confirm & Archive';
+        document.getElementById('declineOverlay').classList.add('open');
+    }
+
+    function closeDecline() {
+        document.getElementById('declineOverlay').classList.remove('open');
+    }
+
+    function pickR(btn, reason) {
+        document.querySelectorAll('.reason-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _declineReason = reason;
+        document.getElementById('customBox').style.display = reason === 'Other' ? 'block' : 'none';
+        document.getElementById('declineAlert').style.display = 'none';
+    }
+
+    async function submitDecline() {
+        const reason = _declineReason === 'Other'
+            ? document.getElementById('customReason').value.trim()
+            : _declineReason;
+
+        if (!reason) {
+            showDeclineAlert('Please select or type a reason before archiving.', 'danger');
+            return;
+        }
+
+        const confirmBtn = document.getElementById('confirmDeclineBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Archiving…';
+
+        try {
+            const r = await fetch('/PaymentAdmin/UpdatePaymentStatus', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                // Status "Rejected" = archived in the system
+                body: JSON.stringify({ paymentId: _declinePid, status: 'Rejected', remarks: reason })
+            });
+            const d = await r.json();
+            if (d.success) {
+                closeDecline();
+                toast('Payment declined and archived.', 'warning');
+
+                // Update badge and show archived banner inline
+                const badge = document.getElementById('statusBadge');
+                badge.textContent = 'Rejected';
+                badge.className = 's-badge sb-rejected';
+
+                // Show archived banner
+                document.getElementById('archivedBanner').classList.add('show');
+
+                // Show remarks if not already visible
+                const remarksEl = document.getElementById('remarksDisplay');
+                if (remarksEl) { remarksEl.textContent = reason; }
+
+                // Hide action buttons
+                const actionArea = document.getElementById('actionArea');
+                if (actionArea) actionArea.style.display = 'none';
+
+                setTimeout(() => window.location.href = '/Admin/Payments', 1600);
+            } else {
+                showDeclineAlert(d.message || 'Error archiving payment.', 'danger');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="bi bi-archive-fill"></i> Confirm & Archive';
+            }
+        } catch {
+            showDeclineAlert('Network error. Please try again.', 'danger');
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-archive-fill"></i> Confirm & Archive';
+        }
+    }
+
+    function showDeclineAlert(msg, type) {
+        const el = document.getElementById('declineAlert');
+        const styles = {
+            danger:  'background:var(--red-bg);color:var(--red)',
+            warning: 'background:var(--amber-bg);color:var(--amber)'
+        };
+        el.style.cssText = `display:block;font-size:.78rem;font-weight:700;padding:.42rem .7rem;border-radius:var(--radius-xs);margin-top:.65rem;${styles[type]||styles.danger}`;
+        el.textContent = msg;
+    }
+
+    // ── Toast
+    function toast(msg, type = 'info') {
+        const rack  = document.getElementById('toast-rack');
+        const icons = { success: 'bi-check-circle-fill', danger: 'bi-x-circle-fill', warning: 'bi-exclamation-circle-fill', info: 'bi-info-circle-fill' };
+        const el    = document.createElement('div');
+        el.className = `toast-item ${type}`;
+        el.innerHTML = `<i class="bi ${icons[type] || icons.info}"></i>${(msg || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}`;
+        rack.appendChild(el);
+        setTimeout(() => el.style.opacity = '0', 3000);
+        setTimeout(() => el.remove(), 3400);
+    }
+</script>
+}
